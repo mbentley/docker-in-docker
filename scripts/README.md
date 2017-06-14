@@ -16,3 +16,9 @@ Usage: ./dind_ddc {create_all|create_swarm|connect_engine|install_ucp|install_dt
   * `recycle_engines` - stop, remove, and re-create the docker engines, keeping persistent data (useful for upgrades)
   * `destroy_swarm` - remove Swarm, the engines, and all persistent data
 
+### Environment Variable Overrides
+  * `UCP_VERSION` - change the UCP version installed
+  * `DTR_VERSION` - change the DTR version installed
+  * `HOST_IP` - set the host IP that is used for installing UCP and DTR (used for all communication to UCP/DTR)
+  * `DIND_SUBNET` - subnet used for the bridge network created
+  * `DIND_DIR` - directory used to store `/var/run` from the daemons to allow Docker daemon access to the engines running in Docker
