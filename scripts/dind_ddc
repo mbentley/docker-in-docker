@@ -50,6 +50,7 @@ launch_engines() {
     --privileged \
     --net dind \
     --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
+    -v /lib/modules:/lib/modules:ro \
     -v docker${ENGINE_NUM}:/var/lib/docker \
     -v "${DIND_DIR}"/docker${ENGINE_NUM}:/var/run \
     mbentley/docker-in-docker \
@@ -66,6 +67,7 @@ launch_engines() {
     --privileged \
     --net dind \
     --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
+    -v /lib/modules:/lib/modules:ro \
     -v docker${ENGINE_NUM}:/var/lib/docker \
     -v "${DIND_DIR}"/docker${ENGINE_NUM}:/var/run \
     mbentley/docker-in-docker \
@@ -80,6 +82,7 @@ launch_engines() {
     --privileged \
     --net dind \
     --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
+    -v /lib/modules:/lib/modules:ro \
     -v docker${ENGINE_NUM}:/var/lib/docker \
     -v "${DIND_DIR}"/docker${ENGINE_NUM}:/var/run \
     mbentley/docker-in-docker \
