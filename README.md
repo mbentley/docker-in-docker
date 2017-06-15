@@ -6,7 +6,8 @@ Docker CE
 ```
 docker build \
   -t mbentley/docker-in-docker:ce-17.03 \
-  -t mbentley/docker-in-docker:ce .
+  -t mbentley/docker-in-docker:ce \
+  -f Dockerfile.ce .
 ```
 
 Docker EE
