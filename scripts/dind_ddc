@@ -3,15 +3,30 @@
 set -e
 
 # set default values; allow for override
+DIND_TAG="${DIND_TAG:-ee-17.03}"
 UCP_VERSION="${UCP_VERSION:-2.1.4}"
 DTR_VERSION="${DTR_VERSION:-2.2.5}"
+UCP_IMAGES="${UCP_IMAGES:-/data/ucp_images_"${UCP_VERSION}".tar.gz}"
+DTR_IMAGES="${DTR_IMAGES:-/data/dtr-"${DTR_VERSION}".tar.gz}"
+DIND_DIR="${DIND_DIR:-/data/dind}"
 HOST_IP="${HOST_IP:-$(ip route get 1 | awk '{print $NF;exit}')}"
 DIND_SUBNET="${DIND_SUBNET:-172.19.0.0/16}"
-DIND_DIR="${DIND_DIR:-/data/dind}"
-DIND_TAG="${DIND_TAG:-ee-17.03}"
 
 # unset DOCKER_HOST to ensure we are not talking to a machine we shouldn't be
 unset DOCKER_HOST
+
+output_info() {
+  echo -e "DIND_TAG\t${DIND_TAG}"
+  echo -e "UCP_VERSION:\t${UCP_VERSION}"
+  echo -e "DTR_VERSION:\t${DTR_VERSION}"
+  echo -e "UCP_IMAGES:\t${UCP_IMAGES}"
+  echo -e "DTR_IMAGES:\t${DTR_IMAGES}"
+  echo -e "DIND_DIR:\t${DIND_DIR}"
+  echo -e "HOST_IP:\t${HOST_IP}"
+  echo -e "DIND_SUBNET:\t${DIND_SUBNET}"
+
+  exit 0
+}
 
 create_all() {
   create_swarm
@@ -150,7 +165,7 @@ install_ucp() {
 
   # load all UCP images to docker1
   echo "Loading UCP images on docker1..."
-  docker -H unix://"${DIND_DIR}"/docker1/docker.sock load -i /data/ucp_images_"${UCP_VERSION}".tar.gz
+  docker -H unix://"${DIND_DIR}"/docker1/docker.sock load -i "${UCP_IMAGES}"
   echo -e "done.\n"
 
   # load docker/ucp-agent from docker1 to docker2 and docker3
@@ -168,7 +183,7 @@ install_ucp() {
 
 install_dtr() {
   echo "Loading DTR images on docker2..."
-  docker -H unix://"${DIND_DIR}"/docker2/docker.sock load -i /data/dtr-"${DTR_VERSION}".tar.gz
+  docker -H unix://"${DIND_DIR}"/docker2/docker.sock load -i "${DTR_IMAGES}"
   echo -e "done.\n"
 
   echo "Installing DTR on docker2 using DTR replica ports 80 and 443..."
@@ -209,7 +224,7 @@ check_subnet() {
 
 main() {
   case ${1} in
-    create_all|create_swarm|start_engines|stop_engines|recycle_engines|install_ucp|install_dtr|destroy_swarm)
+    create_all|create_swarm|start_engines|stop_engines|recycle_engines|install_ucp|install_dtr|destroy_swarm|output_info)
       ${1}
       ;;
     connect_engine)
@@ -222,7 +237,7 @@ main() {
       fi
       ;;
     *)
-      echo "Usage: $0 {create_all|create_swarm|connect_engine|install_ucp|install_dtr|start_engines|stop_engines|recycle_engines|destroy_swarm}"
+      echo "Usage: $0 {create_all|create_swarm|connect_engine|install_ucp|install_dtr|start_engines|stop_engines|recycle_engines|destroy_swarm|output_info}"
       ;;
   esac
 }

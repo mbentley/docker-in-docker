@@ -17,9 +17,18 @@ Usage: ./dind_ddc {create_all|create_swarm|connect_engine|install_ucp|install_dt
   * `destroy_swarm` - remove Swarm, the engines, and all persistent data
 
 ### Environment Variable Overrides
+  * `DIND_TAG` - docker image tag used to run docker
+    * see https://hub.docker.com/r/mbentley/docker-in-docker/tags/ for the tags
   * `UCP_VERSION` - change the UCP version installed
+    * see https://hub.docker.com/r/docker/ucp/tags/ for the tags
   * `DTR_VERSION` - change the DTR version installed
+    * see https://hub.docker.com/r/docker/dtr/tags/ for the tags
+  * `UCP_IMAGES` - path to location of the `.tar.gz` of the UCP images
+    * see https://docs.docker.com/datacenter/ucp/2.1/guides/admin/install/install-offline/#versions-available for the tar.gz
+  * `DTR_IMAGES` - path to the `.tar.gz` of the DTR images
+    * see https://docs.docker.com/datacenter/dtr/2.2/guides/admin/install/install-offline/#versions-available for the tar.gz
+  * `DIND_DIR` - directory used to store `/var/run` from the daemons to allow Docker socket access to the engines running in Docker
   * `HOST_IP` - set the host IP that is used for installing UCP and DTR (used for all communication to UCP/DTR)
   * `DIND_SUBNET` - subnet used for the bridge network created
-  * `DIND_DIR` - directory used to store `/var/run` from the daemons to allow Docker daemon access to the engines running in Docker
-  * `DIND_TAG` - docker image tag used to run docker
+
+*Note*: To see the default values, run `./dind_ddc output_info`
