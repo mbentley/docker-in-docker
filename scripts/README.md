@@ -39,3 +39,19 @@ Usage: ./dind_ddc {create_all|create_swarm|connect_engine|install_ucp|install_dt
   * `DIND_DNS` - DNS server to use for the docker daemons running in docker
 
 *Note*: To see the default values, run `./dind_ddc output_info`
+
+### Pre-production UCP
+
+Create .tar.gz of the images you want to run
+```
+docker run --rm dockerorcadev/ucp:2.2.0-tp5 images --list --image-version dev: | xargs -L 1 docker pull
+docker save -o ucp_images_2.2.0-tp5.tar.gz $(docker run --rm dockerorcadev/ucp:2.2.0-tp5 images --list --image-version dev:)
+docker rmi $(docker run --rm dockerorcadev/ucp:2.2.0-tp5 images --list --image-version dev:)
+```
+
+Launch UCP with dev images
+```
+export UCP_REPO="dockerorcadev/ucp" UCP_VERSION="2.2.0-tp5" UCP_OPTIONS="--image-version dev:" DIND_TAG="ce-test"
+./dind_ddc create_swarm
+./dind_ddc install_ucp
+```
