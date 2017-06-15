@@ -8,5 +8,7 @@ RUN echo "@docker-ce http://alpine.mbentley.net/docker/v17.03" | tee -a /etc/apk
 
 RUN apk --no-cache add docker-ce@docker-ce
 
-ENTRYPOINT ["dockerd"]
-CMD ["-s","overlay2","-H","unix:///var/run/docker.sock"]
+COPY entrypoint.sh /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["dockerd","-s","overlay2","-H","unix:///var/run/docker.sock"]
