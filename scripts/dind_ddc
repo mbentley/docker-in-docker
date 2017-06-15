@@ -10,12 +10,12 @@ initialize() {
   DIND_TAG="${DIND_TAG:-ee-17.03}"
   UCP_REPO="${UCP_REPO:-docker/ucp}"
   UCP_VERSION="${UCP_VERSION:-2.1.4}"
-  UCP_IMAGES="${UCP_IMAGES:-/data/ucp_images_"${UCP_VERSION}".tar.gz}"
+  UCP_IMAGES="${UCP_IMAGES:-${HOME}/ddc/ucp_images_"${UCP_VERSION}".tar.gz}"
   UCP_OPTIONS="${UCP_OPTIONS:-}"
   DTR_REPO="${UCP_REPO:-docker/dtr}"
   DTR_VERSION="${DTR_VERSION:-2.2.5}"
-  DTR_IMAGES="${DTR_IMAGES:-/data/dtr-"${DTR_VERSION}".tar.gz}"
-  DIND_DIR="${DIND_DIR:-/data/dind}"
+  DTR_IMAGES="${DTR_IMAGES:-${HOME}/ddc/dtr-"${DTR_VERSION}".tar.gz}"
+  DIND_DIR="${DIND_DIR:-${HOME}/dind/}"
   HOST_IP="${HOST_IP:-$(ip route get 1 | awk '{print $NF;exit}')}"
   DIND_SUBNET="${DIND_SUBNET:-172.19.0.0/16}"
   DIND_DNS="${DIND_DNS:-$(get_dns)}"
@@ -186,7 +186,7 @@ install_ucp() {
   for i in 2 3
   do
     echo "Loading ${UCP_REPO}-agent:${UCP_VERSION} on docker ${i}..."
-    docker -H unix:///data/dind/docker1/docker.sock save "${UCP_REPO}"-agent:"${UCP_VERSION}" | docker -H unix:///data/dind/docker${i}/docker.sock load
+    docker -H unix://"${DIND_DIR}"/docker1/docker.sock save "${UCP_REPO}"-agent:"${UCP_VERSION}" | docker -H unix://"${DIND_DIR}"/docker${i}/docker.sock load
     echo -e "done.\n"
   done
 
