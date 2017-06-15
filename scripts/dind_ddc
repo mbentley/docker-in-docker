@@ -8,9 +8,12 @@ unset DOCKER_HOST
 initialize() {
   # set default values; allow for override
   DIND_TAG="${DIND_TAG:-ee-17.03}"
+  UCP_REPO="${UCP_REPO:-docker/ucp}"
   UCP_VERSION="${UCP_VERSION:-2.1.4}"
-  DTR_VERSION="${DTR_VERSION:-2.2.5}"
   UCP_IMAGES="${UCP_IMAGES:-/data/ucp_images_"${UCP_VERSION}".tar.gz}"
+  UCP_OPTIONS="${UCP_OPTIONS:-}"
+  DTR_REPO="${UCP_REPO:-docker/dtr}"
+  DTR_VERSION="${DTR_VERSION:-2.2.5}"
   DTR_IMAGES="${DTR_IMAGES:-/data/dtr-"${DTR_VERSION}".tar.gz}"
   DIND_DIR="${DIND_DIR:-/data/dind}"
   HOST_IP="${HOST_IP:-$(ip route get 1 | awk '{print $NF;exit}')}"
@@ -20,9 +23,12 @@ initialize() {
 
 output_info() {
   echo -e "DIND_TAG\t${DIND_TAG}"
+  echo -e "UCP_REPO:\t${UCP_REPO}"
   echo -e "UCP_VERSION:\t${UCP_VERSION}"
-  echo -e "DTR_VERSION:\t${DTR_VERSION}"
   echo -e "UCP_IMAGES:\t${UCP_IMAGES}"
+  echo -e "UCP_OPTIONS:\t${UCP_OPTIONS}"
+  echo -e "DTR_REPO:\t${DTR_REPO}"
+  echo -e "DTR_VERSION:\t${DTR_VERSION}"
   echo -e "DTR_IMAGES:\t${DTR_IMAGES}"
   echo -e "DIND_DIR:\t${DIND_DIR}"
   echo -e "HOST_IP:\t${HOST_IP}"
@@ -179,13 +185,14 @@ install_ucp() {
   # load docker/ucp-agent from docker1 to docker2 and docker3
   for i in 2 3
   do
-    echo "Loading docker/ucp-agent:${UCP_VERSION} on docker ${i}..."
-    docker -H unix:///data/dind/docker1/docker.sock save docker/ucp-agent:"${UCP_VERSION}" | docker -H unix:///data/dind/docker${i}/docker.sock load
+    echo "Loading ${UCP_REPO}-agent:${UCP_VERSION} on docker ${i}..."
+    docker -H unix:///data/dind/docker1/docker.sock save "${UCP_REPO}"-agent:"${UCP_VERSION}" | docker -H unix:///data/dind/docker${i}/docker.sock load
     echo -e "done.\n"
   done
 
   echo "Installing UCP on docker1 using controller port 4443..."
-  docker -H unix://"${DIND_DIR}"/docker1/docker.sock run -it --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock docker/ucp:"${UCP_VERSION}" install --admin-username admin --admin-password docker123 --host-address "${DOCKER1_IP}" --controller-port 4443 --san "${DOCKER1_IP}" --san "$(ip route get 1 | awk '{print $NF;exit}')" --san "$(hostname)" --san "$(hostname --fqdn)" --license "$(cat /media/sf_mbentley/Downloads/docker_subscription.lic)"
+  #shellcheck disable=SC2086
+  docker -H unix://"${DIND_DIR}"/docker1/docker.sock run -it --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock "${UCP_REPO}":"${UCP_VERSION}" install ${UCP_OPTIONS} --admin-username admin --admin-password docker123 --host-address "${DOCKER1_IP}" --controller-port 4443 --san "${DOCKER1_IP}" --san "$(ip route get 1 | awk '{print $NF;exit}')" --san "$(hostname)" --san "$(hostname --fqdn)" --license "$(cat /media/sf_mbentley/Downloads/docker_subscription.lic)"
   echo -e "done.\n"
 }
 
@@ -195,7 +202,7 @@ install_dtr() {
   echo -e "done.\n"
 
   echo "Installing DTR on docker2 using DTR replica ports 80 and 443..."
-  docker -H unix://"${DIND_DIR}"/docker2/docker.sock run -it --rm docker/dtr:"${DTR_VERSION}" install --ucp-url https://"${HOST_IP}:4443" --ucp-username admin --ucp-password docker123 --ucp-node docker2 --ucp-ca "$(curl -ks https://"${HOST_IP}":4443/ca)" --dtr-external-url "${HOST_IP}"
+  docker -H unix://"${DIND_DIR}"/docker2/docker.sock run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install --ucp-url https://"${HOST_IP}:4443" --ucp-username admin --ucp-password docker123 --ucp-node docker2 --ucp-ca "$(curl -ks https://"${HOST_IP}":4443/ca)" --dtr-external-url "${HOST_IP}"
   echo -e "done.\n"
 }
 
