@@ -8,6 +8,7 @@ DTR_VERSION="${DTR_VERSION:-2.2.5}"
 HOST_IP="${HOST_IP:-$(ip route get 1 | awk '{print $NF;exit}')}"
 DIND_SUBNET="${DIND_SUBNET:-172.19.0.0/16}"
 DIND_DIR="${DIND_DIR:-/data/dind}"
+DIND_TAG="${DIND_TAG:-ee-17.03}"
 
 # unset DOCKER_HOST to ensure we are not talking to a machine we shouldn't be
 unset DOCKER_HOST
@@ -53,8 +54,8 @@ launch_engines() {
     -v /lib/modules:/lib/modules:ro \
     -v docker${ENGINE_NUM}:/var/lib/docker \
     -v "${DIND_DIR}"/docker${ENGINE_NUM}:/var/run \
-    mbentley/docker-in-docker \
-    -s overlay2 -H unix:///var/run/docker.sock -G "${GROUP_ID}"
+    mbentley/docker-in-docker:"${DIND_TAG}" \
+    dockerd -s overlay2 -H unix:///var/run/docker.sock -G "${GROUP_ID}"
 
   # launch docker2
   ENGINE_NUM="2"
@@ -70,8 +71,8 @@ launch_engines() {
     -v /lib/modules:/lib/modules:ro \
     -v docker${ENGINE_NUM}:/var/lib/docker \
     -v "${DIND_DIR}"/docker${ENGINE_NUM}:/var/run \
-    mbentley/docker-in-docker \
-    -s overlay2 -H unix:///var/run/docker.sock -G "${GROUP_ID}"
+    mbentley/docker-in-docker:"${DIND_TAG}" \
+    dockerd -s overlay2 -H unix:///var/run/docker.sock -G "${GROUP_ID}"
 
   # launch docker3
   ENGINE_NUM="3"
@@ -85,8 +86,8 @@ launch_engines() {
     -v /lib/modules:/lib/modules:ro \
     -v docker${ENGINE_NUM}:/var/lib/docker \
     -v "${DIND_DIR}"/docker${ENGINE_NUM}:/var/run \
-    mbentley/docker-in-docker \
-    -s overlay2 -H unix:///var/run/docker.sock -G "${GROUP_ID}"
+    mbentley/docker-in-docker:"${DIND_TAG}" \
+    dockerd -s overlay2 -H unix:///var/run/docker.sock -G "${GROUP_ID}"
   echo -e "done.\n"
 }
 
