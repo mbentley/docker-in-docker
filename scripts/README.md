@@ -30,5 +30,6 @@ Usage: ./dind_ddc {create_all|create_swarm|connect_engine|install_ucp|install_dt
   * `DIND_DIR` - directory used to store `/var/run` from the daemons to allow Docker socket access to the engines running in Docker
   * `HOST_IP` - set the host IP that is used for installing UCP and DTR (used for all communication to UCP/DTR)
   * `DIND_SUBNET` - subnet used for the bridge network created
+  * `DIND_DNS` - DNS server to use for the docker daemons running in docker
 
 *Note*: To see the default values, run `./dind_ddc output_info`

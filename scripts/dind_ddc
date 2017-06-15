@@ -2,18 +2,21 @@
 
 set -e
 
-# set default values; allow for override
-DIND_TAG="${DIND_TAG:-ee-17.03}"
-UCP_VERSION="${UCP_VERSION:-2.1.4}"
-DTR_VERSION="${DTR_VERSION:-2.2.5}"
-UCP_IMAGES="${UCP_IMAGES:-/data/ucp_images_"${UCP_VERSION}".tar.gz}"
-DTR_IMAGES="${DTR_IMAGES:-/data/dtr-"${DTR_VERSION}".tar.gz}"
-DIND_DIR="${DIND_DIR:-/data/dind}"
-HOST_IP="${HOST_IP:-$(ip route get 1 | awk '{print $NF;exit}')}"
-DIND_SUBNET="${DIND_SUBNET:-172.19.0.0/16}"
-
 # unset DOCKER_HOST to ensure we are not talking to a machine we shouldn't be
 unset DOCKER_HOST
+
+initialize() {
+  # set default values; allow for override
+  DIND_TAG="${DIND_TAG:-ee-17.03}"
+  UCP_VERSION="${UCP_VERSION:-2.1.4}"
+  DTR_VERSION="${DTR_VERSION:-2.2.5}"
+  UCP_IMAGES="${UCP_IMAGES:-/data/ucp_images_"${UCP_VERSION}".tar.gz}"
+  DTR_IMAGES="${DTR_IMAGES:-/data/dtr-"${DTR_VERSION}".tar.gz}"
+  DIND_DIR="${DIND_DIR:-/data/dind}"
+  HOST_IP="${HOST_IP:-$(ip route get 1 | awk '{print $NF;exit}')}"
+  DIND_SUBNET="${DIND_SUBNET:-172.19.0.0/16}"
+  DIND_DNS="${DIND_DNS:-$(get_dns)}"
+}
 
 output_info() {
   echo -e "DIND_TAG\t${DIND_TAG}"
@@ -24,8 +27,13 @@ output_info() {
   echo -e "DIND_DIR:\t${DIND_DIR}"
   echo -e "HOST_IP:\t${HOST_IP}"
   echo -e "DIND_SUBNET:\t${DIND_SUBNET}"
+  echo -e "DIND_DNS:\t${DIND_DNS}"
 
   exit 0
+}
+
+get_dns() {
+  grep ^nameserver /etc/resolv.conf | awk 'NR==1{print $2}'
 }
 
 create_all() {
@@ -70,7 +78,7 @@ launch_engines() {
     -v docker${ENGINE_NUM}:/var/lib/docker \
     -v "${DIND_DIR}"/docker${ENGINE_NUM}:/var/run \
     mbentley/docker-in-docker:"${DIND_TAG}" \
-    dockerd -s overlay2 -H unix:///var/run/docker.sock -G "${GROUP_ID}"
+    dockerd -s overlay2 -H unix:///var/run/docker.sock -G "${GROUP_ID}" --dns "${DIND_DNS}"
 
   # launch docker2
   ENGINE_NUM="2"
@@ -87,7 +95,7 @@ launch_engines() {
     -v docker${ENGINE_NUM}:/var/lib/docker \
     -v "${DIND_DIR}"/docker${ENGINE_NUM}:/var/run \
     mbentley/docker-in-docker:"${DIND_TAG}" \
-    dockerd -s overlay2 -H unix:///var/run/docker.sock -G "${GROUP_ID}"
+    dockerd -s overlay2 -H unix:///var/run/docker.sock -G "${GROUP_ID}" --dns "${DIND_DNS}"
 
   # launch docker3
   ENGINE_NUM="3"
@@ -102,7 +110,7 @@ launch_engines() {
     -v docker${ENGINE_NUM}:/var/lib/docker \
     -v "${DIND_DIR}"/docker${ENGINE_NUM}:/var/run \
     mbentley/docker-in-docker:"${DIND_TAG}" \
-    dockerd -s overlay2 -H unix:///var/run/docker.sock -G "${GROUP_ID}"
+    dockerd -s overlay2 -H unix:///var/run/docker.sock -G "${GROUP_ID}" --dns "${DIND_DNS}"
   echo -e "done.\n"
 }
 
@@ -223,6 +231,8 @@ check_subnet() {
 }
 
 main() {
+  initialize
+
   case ${1} in
     create_all|create_swarm|start_engines|stop_engines|recycle_engines|install_ucp|install_dtr|destroy_swarm|output_info)
       ${1}
