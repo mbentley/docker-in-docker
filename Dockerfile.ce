@@ -1,12 +1,13 @@
-FROM alpine:latest
+FROM ubuntu:16.04
 MAINTAINER Matt Bentley <mbentley@mbentley.net>
 
-RUN wget "http://alpine.mbentley.net/mbentley@mbentley.net-5865c989.rsa.pub" -O "/etc/apk/keys/mbentley@mbentley.net-5865c989.rsa.pub" &&\
-  chmod 644 /etc/apk/keys/mbentley@mbentley.net-5865c989.rsa.pub
-
-RUN echo "@docker-ce http://alpine.mbentley.net/docker/v17.03" | tee -a /etc/apk/repositories
-
-RUN apk --no-cache add docker-ce@docker-ce
+RUN apt-get update &&\
+  apt-get install -y apt-transport-https ca-certificates curl &&\
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - &&\
+  echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable" > /etc/apt/sources.list.d/docker.list &&\
+  apt-get update &&\
+  apt-get install -y docker-ce &&\
+  rm -rf /var/lib/apt/lists/* /etc/apt/sources.list.d/docker.list
 
 COPY entrypoint.sh /entrypoint.sh
 
