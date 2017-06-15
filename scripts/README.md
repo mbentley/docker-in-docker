@@ -22,3 +22,4 @@ Usage: ./dind_ddc {create_all|create_swarm|connect_engine|install_ucp|install_dt
   * `HOST_IP` - set the host IP that is used for installing UCP and DTR (used for all communication to UCP/DTR)
   * `DIND_SUBNET` - subnet used for the bridge network created
   * `DIND_DIR` - directory used to store `/var/run` from the daemons to allow Docker daemon access to the engines running in Docker
+  * `DIND_TAG` - docker image tag used to run docker
