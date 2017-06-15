@@ -13,8 +13,11 @@ Usage: ./dind_ddc {create_all|create_swarm|connect_engine|install_ucp|install_dt
   * `connect_engine` - helper script used to set `DOCKER_HOST` to communicate to a specific engine
   * `install_ucp` - run through the UCP installation of 1 manager and 2 workers
   * `install_dtr` - install DTR on `docker2`
+  * `start_engines` - start docker1, docker2, and docker3 daemon containers
+  * `stop_engines` - stop docker1, docker2, and docker3 daemon containers
   * `recycle_engines` - stop, remove, and re-create the docker engines, keeping persistent data (useful for upgrades)
   * `destroy_swarm` - remove Swarm, the engines, and all persistent data
+  * `output_info` - display enviroment variable overrides currently set
 
 ### Environment Variable Overrides
   * `DIND_TAG` - docker image tag used to run docker
