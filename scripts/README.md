@@ -44,9 +44,10 @@ Usage: ./dind_ddc {create_all|create_swarm|connect_engine|install_ucp|install_dt
 
 Create .tar.gz of the images you want to run
 ```
-docker run --rm dockerorcadev/ucp:2.2.0-tp5 images --list --image-version dev: | xargs -L 1 docker pull
-docker save -o ucp_images_2.2.0-tp5.tar.gz $(docker run --rm dockerorcadev/ucp:2.2.0-tp5 images --list --image-version dev:)
-docker rmi $(docker run --rm dockerorcadev/ucp:2.2.0-tp5 images --list --image-version dev:)
+TAG="2.2.0-tp5"
+docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev: | xargs -L 1 docker pull
+docker save -o ucp_images_"${TAG}".tar.gz $(docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev:) dockerorcadev/ucp:"${TAG}"
+docker rmi $(docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev:) dockerorcadev/ucp:"${TAG}"
 ```
 
 Launch UCP with dev images
