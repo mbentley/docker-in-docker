@@ -5,6 +5,7 @@ scripts
 
 ## Prerequisites
   * Docker for Mac installed
+    * I would suggest increasing the RAM in the Docker for Mac VM to 4 GB
   * Have the `.tar.gz` of the UCP and DTR images in `~/ddc`, keeping the default names
     * Alternatively, use the `UCP_IMAGES` and `DTR_IMAGES` env vars to override
     * For pre-release images, see [Pre-production DDC](#pre-production-ddc)
