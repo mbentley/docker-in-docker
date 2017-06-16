@@ -240,7 +240,7 @@ init_swarm() {
 }
 
 connect_engine() {
-  ENGINE_NUM="${1}"
+  ENGINE_NUM="$(echo "${1}" | grep -o '[0-9]\+')"
   echo "# to connect to a given engine, use:"
   #shellcheck disable=SC2016
   echo '# eval "$(./dind_swarm connect_engine '"${1}"')"'
