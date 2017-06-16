@@ -130,22 +130,67 @@ Commercial support is available at
 
 ### Pre-production DDC
 
-#### UCP
+#### Create .tar.gz archives
 
-Create .tar.gz of the images you want to run
-```
-TAG="2.2.0-tp5"
-docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev: | xargs -L 1 docker pull
-docker save -o ucp_images_"${TAG}".tar.gz $(docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev:) dockerorcadev/ucp:"${TAG}"
-docker rmi $(docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev:) dockerorcadev/ucp:"${TAG}"
-```
+* UCP
+  ```
+  TAG="2.2.0-tp5"
+  docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev: | xargs -L 1 docker pull
+  docker save -o ucp_images_"${TAG}".tar.gz $(docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev:) dockerorcadev/ucp:"${TAG}"
+  docker rmi $(docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev:) dockerorcadev/ucp:"${TAG}"
+  ```
 
-Launch UCP with dev images
-```
-export UCP_REPO="dockerorcadev/ucp" UCP_VERSION="2.2.0-tp5" UCP_OPTIONS="--image-version dev:" DIND_TAG="ce-test"
-./dind_ddc create_swarm
-./dind_ddc install_ucp
-```
+* DTR
+  ```
+  TAG="2.3.0-tp5"
+  docker run --rm dockerhubenterprise/dtr:"${TAG}" images | xargs -L 1 docker pull
+  docker save -o dtr-"${TAG}".tar.gz $(docker run --rm dockerhubenterprise/dtr:"${TAG}" images)
+  docker rmi $(docker run --rm dockerhubenterprise/dtr:"${TAG}" images)
+  ```
 
-#### DTR
-to add later
+### Launching UCP and DTR in various configurations
+
+Before you can run UCP and/or DTR dev or tech preview (TP) images, you should [create offline tarballs](#create-targz-archives) of the images.
+
+* UCP (dev/TP) only
+  ```
+  export UCP_REPO="dockerorcadev/ucp" \
+    UCP_VERSION="2.2.0-tp5" \
+    UCP_OPTIONS="--image-version dev:" \
+    DIND_TAG="ce-test"
+
+  ./dind_ddc create_swarm
+
+  ./dind_ddc install_ucp
+  ```
+
+* UCP and DTR - UCP (dev/TP) images and DTR (stable)
+  ```
+  export UCP_REPO="dockerorcadev/ucp" \
+    UCP_VERSION="2.2.0-tp5" \
+    UCP_OPTIONS="--image-version dev:" \
+    DIND_TAG="ce-test"
+
+  ./dind_ddc create_all
+  ```
+
+* UCP and DTR - UCP (stable) and DTR (dev/TP)
+  ```
+  export DTR_REPO="dockerhubenterprise/dtr" \
+    DTR_VERSION="2.3.0-tp5" \
+    DIND_TAG="ce-test"
+
+  ./dind_ddc create_all
+  ```
+
+* UCP and DTR - UCP (dev/TP) and DTR (dev/TP)
+  ```
+  export UCP_REPO="dockerorcadev/ucp" \
+    UCP_VERSION="2.2.0-tp5" \
+    UCP_OPTIONS="--image-version dev:" \
+    DTR_REPO="dockerhubenterprise/dtr" \
+    DTR_VERSION="2.3.0-tp5" \
+    DIND_TAG="ce-test"
+
+  ./dind_ddc create_all
+  ```
