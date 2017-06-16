@@ -3,7 +3,16 @@ scripts
 
 ## `dind_ddc`
 
+## Prerequisites
+  * Docker for Mac installed
+  * Have the `.tar.gz` of the UCP and DTR images in `~/ddc`, keeping the default names
+    * Alternatively, use the `UCP_IMAGES` and `DTR_IMAGES` env vars to override
+    * For pre-release images, see [Pre-production DDC](#pre-production-ddc)
+  * Have a DDC license file in `~/Downloads/docker_subscription.lic`
+    * Alternatively, use the `DDC_LICENSE` env var to override
+
 ```
+$ ./dind_ddc
 Basic Usage:
   ./dind_ddc {create_all|create_swarm|install_ucp|install_dtr|destroy_swarm|output_info}
 
@@ -19,6 +28,7 @@ UCP_OPTIONS:
 DTR_REPO:       docker/dtr
 DTR_VERSION:    2.2.5
 DTR_IMAGES:     /Users/mbentley/ddc/dtr-2.2.5.tar.gz
+DDC_LICENSE:    /Users/mbentley/Downloads/docker_subscription.lic
 DIND_DIR:       /Users/mbentley/dind/
 DIND_SUBNET:    172.19.0.0/16
 DIND_DNS:       8.8.8.8
@@ -48,7 +58,7 @@ ALIAS_IP:       10.1.2.3
   * `UCP_REPO` - image to use for UCP (without the tag)
   * `UCP_VERSION` - change the UCP version installed
     * see https://hub.docker.com/r/docker/ucp/tags/ for the tags
-  * `UCP_IMAGES` - path to location of the `.tar.gz` of the UCP images
+  * `UCP_IMAGES` - path to the `.tar.gz` of the UCP images
     * see https://docs.docker.com/datacenter/ucp/2.1/guides/admin/install/install-offline/#versions-available for the tar.gz
   * `UCP_OPTIONS` - additional UCP install options
   * `DTR_REPO` - image to use for DTR (without the tag)
@@ -56,6 +66,7 @@ ALIAS_IP:       10.1.2.3
     * see https://hub.docker.com/r/docker/dtr/tags/ for the tags
   * `DTR_IMAGES` - path to the `.tar.gz` of the DTR images
     * see https://docs.docker.com/datacenter/dtr/2.2/guides/admin/install/install-offline/#versions-available for the tar.gz
+  * `DDC_LICENSE` - path to your DDC license
   * `DIND_DIR` - directory used to store `/var/run` from the daemons to allow Docker socket access to the engines running in Docker
   * `DIND_SUBNET` - subnet used for the bridge network created
   * `DIND_DNS` - DNS server to use for the docker daemons running in docker
@@ -315,7 +326,9 @@ done.
 ```
 </details>
 
-### Pre-production UCP
+### Pre-production DDC
+
+#### UCP
 
 Create .tar.gz of the images you want to run
 ```
@@ -331,3 +344,6 @@ export UCP_REPO="dockerorcadev/ucp" UCP_VERSION="2.2.0-tp5" UCP_OPTIONS="--image
 ./dind_ddc create_swarm
 ./dind_ddc install_ucp
 ```
+
+#### DTR
+to add later

@@ -11,11 +11,11 @@ initialize() {
   UCP_REPO="${UCP_REPO:-docker/ucp}"
   UCP_VERSION="${UCP_VERSION:-2.1.4}"
   UCP_IMAGES="${UCP_IMAGES:-${HOME}/ddc/ucp_images_"${UCP_VERSION}".tar.gz}"
-  UCP_LICENSE="${UCP_LICENSE:-${HOME}/Downloads/docker_subscription.lic}"
   UCP_OPTIONS="${UCP_OPTIONS:-}"
   DTR_REPO="${DTR_REPO:-docker/dtr}"
   DTR_VERSION="${DTR_VERSION:-2.2.5}"
   DTR_IMAGES="${DTR_IMAGES:-${HOME}/ddc/dtr-"${DTR_VERSION}".tar.gz}"
+  DDC_LICENSE="${DDC_LICENSE:-${HOME}/Downloads/docker_subscription.lic}"
   DIND_DIR="${DIND_DIR:-${HOME}/dind/}"
   DIND_SUBNET="${DIND_SUBNET:-172.19.0.0/16}"
   DIND_DNS="${DIND_DNS:-8.8.8.8}"
@@ -39,6 +39,7 @@ output_info() {
   echo -e "DTR_REPO:\t${DTR_REPO}"
   echo -e "DTR_VERSION:\t${DTR_VERSION}"
   echo -e "DTR_IMAGES:\t${DTR_IMAGES}"
+  echo -e "DDC_LICENSE:\t${DDC_LICENSE}"
   echo -e "DIND_DIR:\t${DIND_DIR}"
   echo -e "DIND_SUBNET:\t${DIND_SUBNET}"
   echo -e "DIND_DNS:\t${DIND_DNS}"
@@ -260,7 +261,7 @@ install_ucp() {
 
   echo "Installing UCP on docker1 using controller port 4443..."
   #shellcheck disable=SC2086
-  docker -H tcp://127.0.0.1:1001 run -it --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock "${UCP_REPO}":"${UCP_VERSION}" install ${UCP_OPTIONS} --admin-username admin --admin-password docker123 --host-address "${DOCKER1_IP}" --controller-port 4443 --san "${DOCKER1_IP}" --san "${ALIAS_IP}" --san "$(hostname)" --san "$(hostname --fqdn)" --license "$(cat ${UCP_LICENSE})"
+  docker -H tcp://127.0.0.1:1001 run -it --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock "${UCP_REPO}":"${UCP_VERSION}" install ${UCP_OPTIONS} --admin-username admin --admin-password docker123 --host-address "${DOCKER1_IP}" --controller-port 4443 --san "${DOCKER1_IP}" --san "${ALIAS_IP}" --san "$(hostname)" --san "$(hostname --fqdn)" --license "$(cat ${DDC_LICENSE})"
 
   echo -e "\nUCP should now be available at https://${ALIAS_IP}:4443/"
   echo -e "  Username: admin\tPassword: docker123"
