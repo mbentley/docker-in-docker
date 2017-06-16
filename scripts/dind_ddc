@@ -64,14 +64,23 @@ create_net_alias() {
       else
         # skip creation; already exists
         echo "IP alias (${ALIAS_IP}) already exists"
+        echo -e "done.\n"
       fi
     else
       # skip because custom address provided
       echo "Skipping creation of network IP alias; custom address provided"
+      echo -e "done.\n"
     fi
   else
     echo "Skipping creation of network IP alias; you're not on a Mac"
-    echo "Make sure to set ALIAS_IP to your host's IP address or installations will fail"
+
+    # check to see if the default ALIAS_IP is set
+    if [ "${ALIAS_IP}" = "10.1.2.3" ]
+    then
+      echo "ERROR: ALIAS_IP is not set; set to your host's IP address or installations will fail"
+      exit 1
+    fi
+    echo -e "done.\n"
   fi
 }
 
@@ -92,13 +101,16 @@ remove_net_alias() {
       else
         # skip creation; already exists
         echo "IP alias (${ALIAS_IP}) does not exists; skipping removal"
+        echo -e "done.\n"
       fi
     else
       # skip because custom address provided
       echo "Skipping removal of network IP alias; custom address provided"
+      echo -e "done.\n"
     fi
   else
     echo "Skipping removal of network IP alias; you're not on a Mac"
+    echo -e "done.\n"
   fi
 }
 
