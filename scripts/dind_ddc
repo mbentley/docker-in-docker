@@ -253,7 +253,11 @@ install_ucp() {
   for i in 2 3
   do
     echo "Loading ${UCP_REPO}-agent:${UCP_VERSION} on docker ${i}..."
-    docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-agent:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${i} load
+    docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-agent:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${i} load || true
+    echo -e "done.\n"
+
+    echo "Loading ${UCP_REPO}-hrm:${UCP_VERSION} on docker ${i}..."
+    docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-hrm:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${i} load || true
     echo -e "done.\n"
   done
 
