@@ -32,16 +32,16 @@ docker push mbentley/docker-in-docker:ee
 docker run -d \
   --name docker \
   --privileged \
+  -p 127.0.0.1:1000:2375 \
   -v /lib/modules:/lib/modules:ro \
   -v docker:/var/lib/docker \
-  -v /data/docker:/var/run \
   mbentley/docker-in-docker \
-  dockerd -s overlay2 -H unix:///var/run/docker.sock -G "$(getent group docker | awk -F ':' '{print $3}')"
+  dockerd -s overlay2 -H unix:///var/run/docker.sock
 ```
 
 ### Communicate to that engine
 ```
-docker -H unix:///data/docker/docker.sock info
+docker -H tcp://localhost:1000 info
 ```
 
 ## Check version
@@ -54,7 +54,6 @@ docker version
 docker kill docker
 docker rm docker
 docker volume rm docker
-sudo rm -rf /data/docker/*
 ```
 
 ## Swarm
@@ -65,38 +64,38 @@ do
   docker run -d \
     --name docker${ENGINE_NUM} \
     --privileged \
+    -p 127.0.0.1:100${ENGINE_NUM}:2375 \
     -v /lib/modules:/lib/modules:ro \
     -v docker${ENGINE_NUM}:/var/lib/docker \
-    -v /data/docker${ENGINE_NUM}:/var/run \
     mbentley/docker-in-docker \
-    dockerd -s overlay2 -H unix:///var/run/docker.sock -G "$(getent group docker | awk -F ':' '{print $3}')"
+    dockerd -s overlay2 -H unix:///var/run/docker.sock
 done
 ```
 
 ### Create a new Swarm
 ```
-docker -H unix:///data/docker1/docker.sock swarm init
+docker -H tcp://localhost:1001 swarm init
 ```
 
 ### Get the worker join token and command
 ```
-TOKEN=$(docker -H unix:///data/docker1/docker.sock swarm join-token worker -q)
+TOKEN=$(docker -H tcp://localhost:1001 swarm join-token worker -q)
 JOIN_COMMAND="swarm join --token ${TOKEN} $(docker container inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker1):2377"
 ```
 
 ### Join engine 2
 ```
-docker -H unix:///data/docker2/docker.sock ${JOIN_COMMAND}
+docker -H tcp://localhost:1002 ${JOIN_COMMAND}
 ```
 
 ### Join engine 3
 ```
-docker -H unix:///data/docker3/docker.sock ${JOIN_COMMAND}
+docker -H tcp://localhost:1003 ${JOIN_COMMAND}
 ```
 
 ### Check status
 ```
-docker -H unix:///data/docker1/docker.sock node ls
+docker -H tcp://localhost:1001 node ls
 ```
 
 ### Destroy Swarm cluster
@@ -104,5 +103,4 @@ docker -H unix:///data/docker1/docker.sock node ls
 docker kill docker1 docker2 docker3
 docker rm docker1 docker2 docker3
 docker volume rm docker1 docker2 docker3
-sudo rm -rf /data/docker*/*
 ```
