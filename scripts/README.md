@@ -10,6 +10,13 @@ scripts
     * For pre-release images, see [Pre-production DDC](#pre-production-ddc)
   * Have a DDC license file in `~/Downloads/docker_subscription.lic`
     * Alternatively, use the `DDC_LICENSE` env var to override
+  * Must have the following ports available on your host:
+    * 1001, 1002, 1003 - TCP connection to Docker engines
+    * 80 - DTR (HTTP)
+    * 443 - DTR (HTTPS)
+    * 4443 - UCP (HTTPS)
+    * 8080 - UCP HRM (HTTP) - you must specify this port if you configure HRM
+    * 8443 - UCP HRM (HTTPS) - you must specify this port if you configure HRM
 
 ```
 $ ./dind_ddc
@@ -79,6 +86,43 @@ ALIAS_IP:       10.1.2.3
 ```
 
 [![asciicast](https://asciinema.org/a/125041.png)](https://asciinema.org/a/125041)
+
+### HRM Example Usage
+
+Enable HRM in the UCP UI, specify ports 8080 and 8443 for HTTP and HTTPS, respectively.  Create a service and test it.  You can also add a hosts file entry so you can bring up the site in a browser but you will still need to specify the port for now.
+
+```
+# create the service
+$ docker -H tcp://localhost:1001 service create --name nginx --network ucp-hrm --label "com.docker.ucp.mesh.http.80=external_route=http://nginx.test,internal_port=80" nginx:latest
+
+# test with curl
+$ curl -H "Host: nginx.test" http://10.1.2.3:8080
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+```
 
 ### Pre-production DDC
 

@@ -144,6 +144,8 @@ launch_engines() {
   docker -H unix:///var/run/docker.sock run -d \
     -p 127.0.0.1:100${ENGINE_NUM}:12375 \
     -p 4443:4443 \
+    -p 8080:8080 \
+    -p 8443:8443 \
     --name docker${ENGINE_NUM} \
     --hostname docker${ENGINE_NUM} \
     --privileged \
