@@ -155,16 +155,16 @@ Commercial support is available at
 
 Before you can run UCP and/or DTR dev or tech preview (TP) images, you should [create offline tarballs](#create-targz-archives) of the images.
 
-* UCP (dev/TP) only
+* UCP and DTR - UCP (dev/TP) and DTR (dev/TP)
   ```
   export UCP_REPO="dockerorcadev/ucp" \
     UCP_VERSION="2.2.0-tp5" \
     UCP_OPTIONS="--image-version dev:" \
+    DTR_REPO="dockerhubenterprise/dtr" \
+    DTR_VERSION="2.3.0-tp5" \
     DIND_TAG="ce-test"
 
-  ./dind_ddc create_swarm
-
-  ./dind_ddc install_ucp
+  ./dind_ddc create_all
   ```
 
 * UCP and DTR - UCP (dev/TP) images and DTR (stable)
@@ -186,14 +186,14 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you should [c
   ./dind_ddc create_all
   ```
 
-* UCP and DTR - UCP (dev/TP) and DTR (dev/TP)
+* UCP (dev/TP) only; no DTR
   ```
   export UCP_REPO="dockerorcadev/ucp" \
     UCP_VERSION="2.2.0-tp5" \
     UCP_OPTIONS="--image-version dev:" \
-    DTR_REPO="dockerhubenterprise/dtr" \
-    DTR_VERSION="2.3.0-tp5" \
     DIND_TAG="ce-test"
 
-  ./dind_ddc create_all
+  ./dind_ddc create_swarm
+
+  ./dind_ddc install_ucp
   ```
