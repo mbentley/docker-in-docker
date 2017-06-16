@@ -280,7 +280,6 @@ install_dtr() {
 }
 
 destroy_swarm() {
-  sudo bash -c 'echo -n'
   echo "Removing docker engines (docker1, docker2, docker3)..."
   docker -H unix:///var/run/docker.sock kill docker1 docker2 docker3 || true
   docker -H unix:///var/run/docker.sock rm docker1 docker2 docker3 || true
