@@ -14,7 +14,4 @@ then
   rm /var/run/docker/libcontainerd/docker-containerd.pid
 fi
 
-#socat -d -d TCP-L:2375,fork UNIX:/var/run/docker.sock &
-socat -d TCP-L:2375,fork UNIX:/var/run/docker.sock &
-
 exec "${@}"

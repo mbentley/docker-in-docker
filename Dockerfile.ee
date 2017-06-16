@@ -11,11 +11,7 @@ RUN apt-get update &&\
   apt-get install -y docker-ee &&\
   rm -rf /var/lib/apt/lists/* /etc/apt/sources.list.d/docker.list
 
-RUN apt-get update &&\
-  apt-get install -y socat &&\
-  rm -rf /var/lib/apt/lists/*
-
 COPY entrypoint.sh /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["dockerd","-s","overlay2","-H","unix:///var/run/docker.sock"]
+CMD ["dockerd","-s","overlay2","-H","unix:///var/run/docker.sock","-H","0.0.0.0:12375"]
