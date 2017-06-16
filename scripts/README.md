@@ -4,20 +4,43 @@ scripts
 ## `dind_ddc`
 
 ```
-Usage: ./dind_ddc {create_all|create_swarm|connect_engine|install_ucp|install_dtr|recycle_engines|destroy_swarm}
+Basic Usage:
+  ./dind_ddc {create_all|create_swarm|install_ucp|install_dtr|destroy_swarm|output_info}
+
+Additional utility usage:
+  ./dind_ddc {connect_engine|start_engines|stop_engines|recycle_engines|create_net_alias|remove_net_alias}
+
+Current set environment variables:
+DIND_TAG        ee-17.03
+UCP_REPO:       docker/ucp
+UCP_VERSION:    2.1.4
+UCP_IMAGES:     /Users/mbentley/ddc/ucp_images_2.1.4.tar.gz
+UCP_OPTIONS:
+DTR_REPO:       docker/dtr
+DTR_VERSION:    2.2.5
+DTR_IMAGES:     /Users/mbentley/ddc/dtr-2.2.5.tar.gz
+DIND_DIR:       /Users/mbentley/dind/
+DIND_SUBNET:    172.19.0.0/16
+DIND_DNS:       8.8.8.8
+NET_IF:         en0
+ALIAS_IP:       10.1.2.3
 ```
 
-### Commands
+### Basic Usage
   * `create_all` - create a 3 node Swarm mode cluster (1 manager 2 workers), install UCP, and install DTR
   * `create_swarm` - create 3 node Swarm mode cluster; 1 manager and 2 workers
-  * `connect_engine` - helper script used to set `DOCKER_HOST` to communicate to a specific engine
   * `install_ucp` - run through the UCP installation of 1 manager and 2 workers
   * `install_dtr` - install DTR on `docker2`
+  * `destroy_swarm` - remove Swarm, the engines, and all persistent data
+  * `output_info` - display enviroment variable overrides currently set
+
+### Additional utility usage
+  * `connect_engine` - helper script used to set `DOCKER_HOST` to communicate to a specific engine
   * `start_engines` - start docker1, docker2, and docker3 daemon containers
   * `stop_engines` - stop docker1, docker2, and docker3 daemon containers
   * `recycle_engines` - stop, remove, and re-create the docker engines, keeping persistent data (useful for upgrades)
-  * `destroy_swarm` - remove Swarm, the engines, and all persistent data
-  * `output_info` - display enviroment variable overrides currently set
+  * `create_net_alias` - create a network alias used for keeping a persistent IP no matter when you are (only used for D4M)
+  * `remove_net_alias` - remove network alias
 
 ### Environment Variable Overrides
   * `DIND_TAG` - docker image tag used to run docker
@@ -40,6 +63,17 @@ Usage: ./dind_ddc {create_all|create_swarm|connect_engine|install_ucp|install_dt
   * `NET_IF` - customize the network interface name used for creating the ALIAS_IP
 
 *Note*: To see the default values, run `./dind_ddc output_info`
+
+### Example - starting DDC
+```
+./dind_ddc create_all
+```
+<details>
+  <summary>Expanded details</summary>
+```
+foo
+```
+</details>
 
 ### Pre-production UCP
 

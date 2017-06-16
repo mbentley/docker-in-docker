@@ -330,7 +330,12 @@ main() {
       fi
       ;;
     *)
-      echo "Usage: $0 {create_all|create_swarm|connect_engine|install_ucp|install_dtr|start_engines|stop_engines|recycle_engines|create_net_alias|remove_net_alias|destroy_swarm|output_info}"
+      echo "Basic Usage:"
+      echo -e "  $0 {create_all|create_swarm|install_ucp|install_dtr|destroy_swarm|output_info}"
+      echo -e "\nAdditional utility usage:"
+      echo -e "  $0 {connect_engine|start_engines|stop_engines|recycle_engines|create_net_alias|remove_net_alias}"
+      echo -e "\nCurrent set environment variables:"
+      output_info
       ;;
   esac
 }
