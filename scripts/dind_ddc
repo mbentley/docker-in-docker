@@ -338,7 +338,7 @@ main() {
       fi
       ;;
     *)
-      echo "Basic Usage:"
+      echo "Basic Usage: (see README.md for full command details)"
       echo -e "  $0 {create_all|create_swarm|install_ucp|install_dtr|destroy_swarm|output_info}"
       echo -e "\nAdditional utility usage:"
       echo -e "  $0 {connect_engine|start_engines|stop_engines|recycle_engines|create_net_alias|remove_net_alias}"
