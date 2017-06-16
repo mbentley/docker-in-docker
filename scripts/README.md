@@ -78,7 +78,7 @@ ALIAS_IP:       10.1.2.3
 ./dind_ddc create_all
 ```
 
-[![asciicast](https://asciinema.org/a/125036.png)](https://asciinema.org/a/125036)
+[![asciicast](https://asciinema.org/a/125038.png)](https://asciinema.org/a/125038)
 
 ### Pre-production DDC
 
