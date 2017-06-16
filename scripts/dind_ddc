@@ -151,6 +151,7 @@ launch_engines() {
     --privileged \
     --net dind \
     --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
+    --restart unless-stopped \
     -v /lib/modules:/lib/modules:ro \
     -v docker${ENGINE_NUM}:/var/lib/docker \
     mbentley/docker-in-docker:"${DIND_TAG}" \
@@ -167,6 +168,7 @@ launch_engines() {
     --privileged \
     --net dind \
     --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
+    --restart unless-stopped \
     -v /lib/modules:/lib/modules:ro \
     -v docker${ENGINE_NUM}:/var/lib/docker \
     mbentley/docker-in-docker:"${DIND_TAG}" \
@@ -181,6 +183,7 @@ launch_engines() {
     --privileged \
     --net dind \
     --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
+    --restart unless-stopped \
     -v /lib/modules:/lib/modules:ro \
     -v docker${ENGINE_NUM}:/var/lib/docker \
     mbentley/docker-in-docker:"${DIND_TAG}" \
