@@ -11,12 +11,11 @@ scripts
   * Have a DDC license file in `~/Downloads/docker_subscription.lic`
     * Alternatively, use the `DDC_LICENSE` env var to override
   * Must have the following ports available on your host:
-    * 1001, 1002, 1003 - TCP connection to Docker engines
-    * 80 - DTR (HTTP)
-    * 443 - DTR (HTTPS)
-    * 4443 - UCP (HTTPS)
-    * 8080 - UCP HRM (HTTP) - you must specify this port if you configure HRM
-    * 8443 - UCP HRM (HTTPS) - you must specify this port if you configure HRM
+    * `1001`, `1002`, `1003` - TCP connection to Docker engines
+    * `80`, `443`- DTR (HTTP and HTTPS)
+    * `4443` - UCP (HTTPS)
+    * `8181`, `8443` - UCP HRM (HTTP and HTTPS)
+      * see [HRM Example Usage](#hrm-example-usage) for HRM usage
 
 ```
 $ ./dind_ddc
@@ -89,7 +88,7 @@ ALIAS_IP:       10.1.2.3
 
 ### HRM Example Usage
 
-Enable HRM in the UCP UI, specify ports 8080 and 8443 for HTTP and HTTPS, respectively.  Create a service and test it.  You can also add a hosts file entry so you can bring up the site in a browser but you will still need to specify the port for now.
+Enable HRM in the UCP UI, specify ports 8181 and 8443 for HTTP and HTTPS, respectively.  Create a service and test it.  You can also add a hosts file entry so you can bring up the site in a browser but you will still need to specify the port for now.
 
 ```
 # create the service
@@ -101,7 +100,7 @@ $ docker -H tcp://localhost:1001 \
   nginx:latest
 
 # test with curl
-$ curl -H "Host: nginx.test" http://10.1.2.3:8080
+$ curl -H "Host: nginx.test" http://10.1.2.3:8181
 <!DOCTYPE html>
 <html>
 <head>
