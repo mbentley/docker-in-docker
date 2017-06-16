@@ -18,6 +18,7 @@ initialize() {
   DDC_LICENSE="${DDC_LICENSE:-${HOME}/Downloads/docker_subscription.lic}"
   DIND_SUBNET="${DIND_SUBNET:-172.19.0.0/16}"
   DIND_DNS="${DIND_DNS:-8.8.8.8}"
+  DIND_RESTART="${DIND_RESTART:-unless-stopped}"
   ALIAS_IP="${ALIAS_IP:-10.1.2.3}"
 
   # check to see what OS and set network interface
@@ -41,6 +42,7 @@ output_info() {
   echo -e "DDC_LICENSE:\t${DDC_LICENSE}"
   echo -e "DIND_SUBNET:\t${DIND_SUBNET}"
   echo -e "DIND_DNS:\t${DIND_DNS}"
+  echo -e "DIND_RESTART:\t${DIND_RESTART}"
   echo -e "NET_IF:\t\t${NET_IF}"
   echo -e "ALIAS_IP:\t${ALIAS_IP}"
   exit 0
@@ -151,7 +153,7 @@ launch_engines() {
     --privileged \
     --net dind \
     --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
-    --restart unless-stopped \
+    --restart "${DIND_RESTART}" \
     -v /lib/modules:/lib/modules:ro \
     -v docker${ENGINE_NUM}:/var/lib/docker \
     mbentley/docker-in-docker:"${DIND_TAG}" \
@@ -168,7 +170,7 @@ launch_engines() {
     --privileged \
     --net dind \
     --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
-    --restart unless-stopped \
+    --restart "${DIND_RESTART}" \
     -v /lib/modules:/lib/modules:ro \
     -v docker${ENGINE_NUM}:/var/lib/docker \
     mbentley/docker-in-docker:"${DIND_TAG}" \
@@ -183,7 +185,7 @@ launch_engines() {
     --privileged \
     --net dind \
     --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
-    --restart unless-stopped \
+    --restart "${DIND_RESTART}" \
     -v /lib/modules:/lib/modules:ro \
     -v docker${ENGINE_NUM}:/var/lib/docker \
     mbentley/docker-in-docker:"${DIND_TAG}" \

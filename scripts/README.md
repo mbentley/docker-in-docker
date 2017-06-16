@@ -38,6 +38,7 @@ DTR_IMAGES:     /Users/mbentley/ddc/dtr-2.2.5.tar.gz
 DDC_LICENSE:    /Users/mbentley/Downloads/docker_subscription.lic
 DIND_SUBNET:    172.19.0.0/16
 DIND_DNS:       8.8.8.8
+DIND_RESTART:   unless-stopped
 NET_IF:         en0
 ALIAS_IP:       10.1.2.3
 ```
@@ -75,6 +76,7 @@ ALIAS_IP:       10.1.2.3
   * `DDC_LICENSE` - path to your DDC license
   * `DIND_SUBNET` - subnet used for the bridge network created
   * `DIND_DNS` - DNS server to use for the docker daemons running in docker
+  * `DIND_RESTART` - restart policy for the docker daemon containers
   * `ALIAS_IP` - IP address to set as an alias to your network interface; used to keep static IP when changing networks
   * `NET_IF` - customize the network interface name used for creating the ALIAS_IP
 
