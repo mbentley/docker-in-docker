@@ -93,7 +93,12 @@ Enable HRM in the UCP UI, specify ports 8080 and 8443 for HTTP and HTTPS, respec
 
 ```
 # create the service
-$ docker -H tcp://localhost:1001 service create --name nginx --network ucp-hrm --label "com.docker.ucp.mesh.http.80=external_route=http://nginx.test,internal_port=80" nginx:latest
+$ docker -H tcp://localhost:1001 \
+  service create \
+  --name nginx \
+  --network ucp-hrm \
+  --label "com.docker.ucp.mesh.http.80=external_route=http://nginx.test,internal_port=80" \
+  nginx:latest
 
 # test with curl
 $ curl -H "Host: nginx.test" http://10.1.2.3:8080
