@@ -29,7 +29,6 @@ DTR_REPO:       docker/dtr
 DTR_VERSION:    2.2.5
 DTR_IMAGES:     /Users/mbentley/ddc/dtr-2.2.5.tar.gz
 DDC_LICENSE:    /Users/mbentley/Downloads/docker_subscription.lic
-DIND_DIR:       /Users/mbentley/dind/
 DIND_SUBNET:    172.19.0.0/16
 DIND_DNS:       8.8.8.8
 NET_IF:         en0
@@ -67,7 +66,6 @@ ALIAS_IP:       10.1.2.3
   * `DTR_IMAGES` - path to the `.tar.gz` of the DTR images
     * see https://docs.docker.com/datacenter/dtr/2.2/guides/admin/install/install-offline/#versions-available for the tar.gz
   * `DDC_LICENSE` - path to your DDC license
-  * `DIND_DIR` - directory used to store `/var/run` from the daemons to allow Docker socket access to the engines running in Docker
   * `DIND_SUBNET` - subnet used for the bridge network created
   * `DIND_DNS` - DNS server to use for the docker daemons running in docker
   * `ALIAS_IP` - IP address to set as an alias to your network interface; used to keep static IP when changing networks
