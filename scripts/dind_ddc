@@ -11,14 +11,23 @@ initialize() {
   UCP_REPO="${UCP_REPO:-docker/ucp}"
   UCP_VERSION="${UCP_VERSION:-2.1.4}"
   UCP_IMAGES="${UCP_IMAGES:-${HOME}/ddc/ucp_images_"${UCP_VERSION}".tar.gz}"
+  UCP_LICENSE="${UCP_LICENSE:-${HOME}/Downloads/docker_subscription.lic}"
   UCP_OPTIONS="${UCP_OPTIONS:-}"
-  DTR_REPO="${UCP_REPO:-docker/dtr}"
+  DTR_REPO="${DTR_REPO:-docker/dtr}"
   DTR_VERSION="${DTR_VERSION:-2.2.5}"
   DTR_IMAGES="${DTR_IMAGES:-${HOME}/ddc/dtr-"${DTR_VERSION}".tar.gz}"
   DIND_DIR="${DIND_DIR:-${HOME}/dind/}"
-  HOST_IP="${HOST_IP:-$(ip route get 1 | awk '{print $NF;exit}')}"
   DIND_SUBNET="${DIND_SUBNET:-172.19.0.0/16}"
-  DIND_DNS="${DIND_DNS:-$(get_dns)}"
+  DIND_DNS="${DIND_DNS:-8.8.8.8}"
+  ALIAS_IP="${ALIAS_IP:-10.1.2.3}"
+
+  # check to see what OS and set network interface
+  if [ "$(uname -s)" = "Darwin" ]
+  then
+     NET_IF="${NET_IF:-en0}"
+  else
+     NET_IF="${NET_IF:-eth0}"
+  fi
 }
 
 output_info() {
@@ -31,18 +40,70 @@ output_info() {
   echo -e "DTR_VERSION:\t${DTR_VERSION}"
   echo -e "DTR_IMAGES:\t${DTR_IMAGES}"
   echo -e "DIND_DIR:\t${DIND_DIR}"
-  echo -e "HOST_IP:\t${HOST_IP}"
   echo -e "DIND_SUBNET:\t${DIND_SUBNET}"
   echo -e "DIND_DNS:\t${DIND_DNS}"
-
+  echo -e "NET_IF:\t\t${NET_IF}"
+  echo -e "ALIAS_IP:\t${ALIAS_IP}"
   exit 0
 }
 
-get_dns() {
-  grep ^nameserver /etc/resolv.conf | awk 'NR==1{print $2}'
+create_net_alias() {
+  # run this only on a mac
+  if [ "$(uname -s)" = "Darwin" ]
+  then
+    # check to see if the default ALIAS_IP is set
+    if [ "${ALIAS_IP}" = "10.1.2.3" ]
+    then
+      # check to see if the alias IP is already set
+      if ! ifconfig "${NET_IF}" | grep "${ALIAS_IP}" > /dev/null 2>&1
+      then
+        # create it
+        echo "Creating IP alias (requires sudo)..."
+        sudo ifconfig "${NET_IF}" alias "${ALIAS_IP}" 255.255.255.0
+        echo -e "done.\n"
+      else
+        # skip creation; already exists
+        echo "IP alias (${ALIAS_IP}) already exists"
+      fi
+    else
+      # skip because custom address provided
+      echo "Skipping creation of network IP alias; custom address provided"
+    fi
+  else
+    echo "Skipping creation of network IP alias; you're not on a Mac"
+    echo "Make sure to set ALIAS_IP to your host's IP address or installations will fail"
+  fi
+}
+
+remove_net_alias() {
+  # run this only on a mac
+  if [ "$(uname -s)" = "Darwin" ]
+  then
+    # check to see if the default ALIAS_IP is set
+    if [ "${ALIAS_IP}" = "10.1.2.3" ]
+    then
+      # check to see if the alias IP is already set
+      if ifconfig "${NET_IF}" | grep "${ALIAS_IP}" > /dev/null 2>&1
+      then
+        # remove it
+        echo "Removing IP alias (requires sudo)..."
+        sudo ifconfig "${NET_IF}" -alias "${ALIAS_IP}" 255.255.255.0
+        echo -e "done.\n"
+      else
+        # skip creation; already exists
+        echo "IP alias (${ALIAS_IP}) does not exists; skipping removal"
+      fi
+    else
+      # skip because custom address provided
+      echo "Skipping removal of network IP alias; custom address provided"
+    fi
+  else
+    echo "Skipping removal of network IP alias; you're not on a Mac"
+  fi
 }
 
 create_all() {
+  create_net_alias
   create_swarm
   install_ucp
   install_dtr
@@ -169,6 +230,7 @@ connect_engine() {
 }
 
 install_ucp() {
+  create_net_alias
   DOCKER1_IP="$(docker -H unix:///var/run/docker.sock container inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker1)"
 
   # load all UCP images to docker1
@@ -186,8 +248,11 @@ install_ucp() {
 
   echo "Installing UCP on docker1 using controller port 4443..."
   #shellcheck disable=SC2086
-  docker -H tcp://127.0.0.1:1001 run -it --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock "${UCP_REPO}":"${UCP_VERSION}" install ${UCP_OPTIONS} --admin-username admin --admin-password docker123 --host-address "${DOCKER1_IP}" --controller-port 4443 --san "${DOCKER1_IP}" --san "$(ip route get 1 | awk '{print $NF;exit}')" --san "$(hostname)" --san "$(hostname --fqdn)" --license "$(cat /media/sf_mbentley/Downloads/docker_subscription.lic)"
+  docker -H tcp://127.0.0.1:1001 run -it --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock "${UCP_REPO}":"${UCP_VERSION}" install ${UCP_OPTIONS} --admin-username admin --admin-password docker123 --host-address "${DOCKER1_IP}" --controller-port 4443 --san "${DOCKER1_IP}" --san "${ALIAS_IP}" --san "$(hostname)" --san "$(hostname --fqdn)" --license "$(cat ${UCP_LICENSE})"
   echo -e "done.\n"
+
+  echo "UCP should now be available at https://${ALIAS_IP}:4443/"
+  echo -e "  Username: admin\tPassword: docker123"
 }
 
 install_dtr() {
@@ -196,8 +261,11 @@ install_dtr() {
   echo -e "done.\n"
 
   echo "Installing DTR on docker2 using DTR replica ports 80 and 443..."
-  docker -H tcp://127.0.0.1:1002 run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install --ucp-url https://"${HOST_IP}:4443" --ucp-username admin --ucp-password docker123 --ucp-node docker2 --ucp-ca "$(curl -ks https://"${HOST_IP}":4443/ca)" --dtr-external-url "${HOST_IP}"
+  docker -H tcp://127.0.0.1:1002 run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install --ucp-url https://"${ALIAS_IP}:4443" --ucp-username admin --ucp-password docker123 --ucp-node docker2 --ucp-ca "$(curl -ks https://"${ALIAS_IP}":4443/ca)" --dtr-external-url "${ALIAS_IP}"
   echo -e "done.\n"
+
+  echo "DTR should now be available at https://${ALIAS_IP}/"
+  echo -e "  Username: admin\tPassword: docker123"
 }
 
 destroy_swarm() {
@@ -215,6 +283,8 @@ destroy_swarm() {
   echo "Removing 'dind' network..."
   docker -H unix:///var/run/docker.sock network rm dind || true
   echo -e "done.\n"
+
+  remove_net_alias
 }
 
 check_subnet() {
@@ -235,7 +305,7 @@ main() {
   initialize
 
   case ${1} in
-    create_all|create_swarm|start_engines|stop_engines|recycle_engines|install_ucp|install_dtr|destroy_swarm|output_info)
+    create_all|create_swarm|start_engines|stop_engines|recycle_engines|create_net_alias|remove_net_alias|install_ucp|install_dtr|destroy_swarm|output_info)
       ${1}
       ;;
     connect_engine)
@@ -248,7 +318,7 @@ main() {
       fi
       ;;
     *)
-      echo "Usage: $0 {create_all|create_swarm|connect_engine|install_ucp|install_dtr|start_engines|stop_engines|recycle_engines|destroy_swarm|output_info}"
+      echo "Usage: $0 {create_all|create_swarm|connect_engine|install_ucp|install_dtr|start_engines|stop_engines|recycle_engines|create_net_alias|remove_net_alias|destroy_swarm|output_info}"
       ;;
   esac
 }
