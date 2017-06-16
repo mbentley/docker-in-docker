@@ -34,9 +34,10 @@ Usage: ./dind_ddc {create_all|create_swarm|connect_engine|install_ucp|install_dt
   * `DTR_IMAGES` - path to the `.tar.gz` of the DTR images
     * see https://docs.docker.com/datacenter/dtr/2.2/guides/admin/install/install-offline/#versions-available for the tar.gz
   * `DIND_DIR` - directory used to store `/var/run` from the daemons to allow Docker socket access to the engines running in Docker
-  * `HOST_IP` - set the host IP that is used for installing UCP and DTR (used for all communication to UCP/DTR)
   * `DIND_SUBNET` - subnet used for the bridge network created
   * `DIND_DNS` - DNS server to use for the docker daemons running in docker
+  * `ALIAS_IP` - IP address to set as an alias to your network interface; used to keep static IP when changing networks
+  * `NET_IF` - customize the network interface name used for creating the ALIAS_IP
 
 *Note*: To see the default values, run `./dind_ddc output_info`
 
