@@ -16,7 +16,7 @@ initialize() {
   DTR_VERSION="${DTR_VERSION:-2.2.5}"
   DTR_IMAGES="${DTR_IMAGES:-${HOME}/ddc/dtr-"${DTR_VERSION}".tar.gz}"
   DDC_LICENSE="${DDC_LICENSE:-${HOME}/Downloads/docker_subscription.lic}"
-  DIND_SUBNET="${DIND_SUBNET:-172.19.0.0/16}"
+  DIND_SUBNET="${DIND_SUBNET:-172.250.0.0/16}"
   DIND_DNS="${DIND_DNS:-8.8.8.8}"
   DIND_RESTART="${DIND_RESTART:-unless-stopped}"
   ALIAS_IP="${ALIAS_IP:-10.1.2.3}"
