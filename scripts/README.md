@@ -141,7 +141,7 @@ Commercial support is available at
 
 * UCP
   ```
-  TAG="2.2.0-tp5"
+  TAG="2.2.0-tp6"
   docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev: | xargs -L 1 docker pull
   docker save -o ucp_images_"${TAG}".tar.gz $(docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev:) dockerorcadev/ucp:"${TAG}"
   docker rmi $(docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev:) dockerorcadev/ucp:"${TAG}"
@@ -162,7 +162,7 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you should [c
 * UCP and DTR - UCP (dev/TP) and DTR (dev/TP)
   ```
   export UCP_REPO="dockerorcadev/ucp" \
-    UCP_VERSION="2.2.0-tp5" \
+    UCP_VERSION="2.2.0-tp6" \
     UCP_OPTIONS="--image-version dev:" \
     DTR_REPO="dockerhubenterprise/dtr" \
     DTR_VERSION="2.3.0-tp5" \
@@ -174,7 +174,7 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you should [c
 * UCP and DTR - UCP (dev/TP) images and DTR (stable)
   ```
   export UCP_REPO="dockerorcadev/ucp" \
-    UCP_VERSION="2.2.0-tp5" \
+    UCP_VERSION="2.2.0-tp6" \
     UCP_OPTIONS="--image-version dev:" \
     DIND_TAG="ce-test"
 
@@ -193,7 +193,7 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you should [c
 * UCP (dev/TP) only; no DTR
   ```
   export UCP_REPO="dockerorcadev/ucp" \
-    UCP_VERSION="2.2.0-tp5" \
+    UCP_VERSION="2.2.0-tp6" \
     UCP_OPTIONS="--image-version dev:" \
     DIND_TAG="ce-test"
 
