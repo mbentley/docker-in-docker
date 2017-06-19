@@ -1,7 +1,9 @@
 docker-in-docker
 ================
 
-## Build image
+## Build image (optional)
+The images are published to Docker Hub so you do not need to build them unless you want to:
+
 * Docker CE
   ```
   docker build \
@@ -40,7 +42,7 @@ Look at [scripts](./scripts) for detailed instructions on how to automatically c
     docker run -d \
       --name docker \
       --privileged \
-      -p 127.0.0.1:1000:2375 \
+      -p 127.0.0.1:1000:12375 \
       -v /lib/modules:/lib/modules:ro \
       -v docker:/var/lib/docker \
       --tmpfs /run \
@@ -73,7 +75,7 @@ Look at [scripts](./scripts) for detailed instructions on how to automatically c
       docker run -d \
         --name docker${ENGINE_NUM} \
         --privileged \
-        -p 127.0.0.1:100${ENGINE_NUM}:2375 \
+        -p 127.0.0.1:100${ENGINE_NUM}:12375 \
         -v /lib/modules:/lib/modules:ro \
         -v docker${ENGINE_NUM}:/var/lib/docker \
         --tmpfs /run \

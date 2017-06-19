@@ -3,6 +3,9 @@ scripts
 
 ## `dind_ddc`
 
+## tl;dr
+Check out the [Prerequisites](#prerequisites) and then go down to [Example - starting DDC](#example---starting-ddc) for released versions or [Pre-production DDC](#pre-production-ddc) for how to launch an environment with pre-production images.
+
 ## Prerequisites
   * Docker for Mac installed
     * I would suggest increasing the RAM in the Docker for Mac VM to 4 GB
@@ -18,6 +21,7 @@ scripts
     * `8181`, `8443` - UCP HRM (HTTP and HTTPS)
       * see [HRM Example Usage](#hrm-example-usage) for HRM usage
 
+## `dind_ddc` Usage
 ```
 $ ./dind_ddc
 Basic Usage:
@@ -43,7 +47,7 @@ NET_IF:         en0
 ALIAS_IP:       10.1.2.3
 ```
 
-### Basic Usage
+### Basic usage details
   * `create_all` - create a 3 node Swarm mode cluster (1 manager 2 workers), install UCP, and install DTR
   * `create_swarm` - create 3 node Swarm mode cluster; 1 manager and 2 workers
   * `install_ucp` - run through the UCP installation of 1 manager and 2 workers
@@ -51,7 +55,7 @@ ALIAS_IP:       10.1.2.3
   * `destroy_swarm` - remove Swarm, the engines, and all persistent data
   * `output_info` - display enviroment variable overrides currently set
 
-### Additional utility usage
+### Additional utility usage details
   * `connect_engine` - helper script used to set `DOCKER_HOST` to communicate to a specific engine
   * `start_engines` - start docker1, docker2, and docker3 daemon containers
   * `stop_engines` - stop docker1, docker2, and docker3 daemon containers
