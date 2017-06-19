@@ -1,15 +1,24 @@
 docker-in-docker
 ================
 
+## Docker EE (Engine, UCP and DTR)
+Stop! Look at [scripts](./scripts) for instructions on how to automatically create a Swarm mode cluster, a UCP cluster, or a DDC (both UCP & DTR) cluster.  If you want to manually stand up an engine or Swarm mode cluster, read on.
+
 ## Build image (optional)
 The images are published to Docker Hub so you do not need to build them unless you want to:
 
-* Docker CE
+* Docker CE 17.03
   ```
   docker build \
     -t mbentley/docker-in-docker:ce-17.03 \
     -t mbentley/docker-in-docker:ce \
     -f Dockerfile.ce .
+  ```
+* Docker CE 17.06 RC
+  ```
+  docker build \
+    -t mbentley/docker-in-docker:ce-test \
+    -f Dockerfile.ce-test .
   ```
 
 * Docker EE
@@ -31,9 +40,6 @@ The images are published to Docker Hub so you do not need to build them unless y
   * Must have the following ports available on your host:
     * `1000` - TCP connection to a single Docker engine (or whatever you specify)
     * `1001`, `1002`, `1003` - TCP connection to Docker engines for Swarm mode (or whatever you specify)
-
-## Docker EE (Engine, UCP and DTR)
-Look at [scripts](./scripts) for detailed instructions on how to automatically create a Swarm mode cluster, a UCP cluster, or a DDC (bothUCP & DTR) cluster.
 
 ## Single engine
 
