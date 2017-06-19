@@ -9,11 +9,11 @@ Check out the [Prerequisites](#prerequisites) and then go down to [Example - sta
 ## Prerequisites
   * Docker for Mac installed
     * I would suggest increasing the RAM in the Docker for Mac VM to 4 GB
-  * Have the `.tar.gz` of the UCP and DTR images in `~/ddc`, keeping the default names
-    * Alternatively, use the `UCP_IMAGES` and `DTR_IMAGES` env vars to override
+  * Have the tarball of the UCP and DTR images in `~/ddc`, keeping the default names from [UCP offline tarballs](https://docs.docker.com/datacenter/ucp/2.1/guides/admin/install/install-offline/) and [DTR offline tarballs](https://docs.docker.com/datacenter/dtr/2.2/guides/admin/install/install-offline/)
+    * Alternatively, use the `UCP_IMAGES` and `DTR_IMAGES` env vars to override the full path to the tarballs
     * For pre-release images, see [Pre-production DDC](#pre-production-ddc)
   * Have a DDC license file in `~/Downloads/docker_subscription.lic`
-    * Alternatively, use the `DDC_LICENSE` env var to override
+    * Alternatively, use the `DDC_LICENSE` env var to override the full path to the license
   * Must have the following ports available on your host:
     * `1001`, `1002`, `1003` - TCP connection to Docker engines
     * `80`, `443`- DTR (HTTP and HTTPS)
