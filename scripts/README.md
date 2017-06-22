@@ -149,7 +149,7 @@ Commercial support is available at
 
 * DTR
   ```
-  TAG="2.3.0-tp5"
+  TAG="2.3.0-tp6"
   docker run --rm dockerhubenterprise/dtr:"${TAG}" images | xargs -L 1 docker pull
   docker save -o dtr-"${TAG}".tar.gz $(docker run --rm dockerhubenterprise/dtr:"${TAG}" images)
   docker rmi $(docker run --rm dockerhubenterprise/dtr:"${TAG}" images)
