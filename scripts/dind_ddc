@@ -201,9 +201,22 @@ start_engines() {
   docker -H unix:///var/run/docker.sock start docker{1..3} || true
   echo -e "done.\n"
 }
+
 stop_engines() {
   echo "Stopping docker engines (docker1, docker2, docker3); this may take up to 30 seconds..."
   docker -H unix:///var/run/docker.sock stop -t 30 docker{1..3} || true
+  echo -e "done.\n"
+}
+
+pause_engines() {
+  echo "Pausing docker engines (docker1, docker2, docker3)..."
+  docker -H unix:///var/run/docker.sock pause docker{1..3} || true
+  echo -e "done.\n"
+}
+
+unpause_engines() {
+  echo "Unpausing docker engines (docker1, docker2, docker3)..."
+  docker -H unix:///var/run/docker.sock unpause docker{1..3} || true
   echo -e "done.\n"
 }
 
@@ -328,7 +341,7 @@ main() {
   initialize
 
   case ${1} in
-    create_all|create_swarm|start_engines|stop_engines|recycle_engines|create_net_alias|remove_net_alias|install_ucp|install_dtr|destroy_swarm|output_info)
+    create_all|create_swarm|start_engines|stop_engines|pause_engines|unpause_engines|recycle_engines|create_net_alias|remove_net_alias|install_ucp|install_dtr|destroy_swarm|output_info)
       ${1}
       ;;
     connect_engine)
@@ -344,7 +357,7 @@ main() {
       echo "Basic usage: (see README.md for full command details)"
       echo -e "  $0 {create_all|create_swarm|install_ucp|install_dtr|destroy_swarm|output_info}"
       echo -e "\nAdditional utility usage:"
-      echo -e "  $0 {connect_engine|start_engines|stop_engines|recycle_engines|create_net_alias|remove_net_alias}"
+      echo -e "  $0 {connect_engine|start_engines|stop_engines|pause_engines|unpause_engines|recycle_engines|create_net_alias|remove_net_alias}"
       echo -e "\nCurrent set environment variables:"
       output_info
       ;;
