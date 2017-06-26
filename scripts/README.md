@@ -28,7 +28,7 @@ Basic Usage:
   ./dind_ddc {create_all|create_swarm|install_ucp|install_dtr|destroy_swarm|output_info}
 
 Additional utility usage:
-  ./dind_ddc {connect_engine|start_engines|stop_engines|pause_engines|unpause_engines|recycle_engines|create_net_alias|remove_net_alias}
+  ./dind_ddc {connect_engine|start_engines|stop_engines|pause_engines|unpause_engines|recycle_engines|create_net_alias|remove_net_alias|ucp_create_tar|dtr_create_tar}
 
 Current set environment variables:
 DIND_TAG:       ee-17.03
@@ -65,6 +65,8 @@ ALIAS_IP:       10.1.2.3
   * `recycle_engines` - stop, remove, and re-create the docker engines and `dind` network, keeping persistent data (useful for upgrades)
   * `create_net_alias` - create a network alias used for keeping a persistent IP no matter when you are (only used for D4M)
   * `remove_net_alias` - remove network alias
+  * `ucp_create_tar` - create a tarball of the UCP images
+  * `dtr_create_tar` - create a tarball of the DTR images
 
 ### Environment Variable Overrides
   * `DIND_TAG` - docker image tag used to run docker
@@ -144,6 +146,14 @@ Commercial support is available at
 #### Create .tar.gz archives
 
 * UCP
+
+  Automatic:
+  ```
+  export UCP_REPO="dockerorcadev/ucp" UCP_VERSION="2.2.0-tp6" UCP_OPTIONS="--image-version dev:"
+  ./dind_ddc ucp_create_tar
+  ```
+
+  Manual:
   ```
   TAG="2.2.0-tp6"
   docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev: | xargs -L 1 docker pull
@@ -152,6 +162,14 @@ Commercial support is available at
   ```
 
 * DTR
+
+  Automatic:
+  ```
+  export DTR_REPO="dockerhubenterprise/dtr" DTR_VERSION="2.3.0-tp6"
+  ./dind_ddc dtr_create_tar
+  ```
+
+  Manual:
   ```
   TAG="2.3.0-tp6"
   docker run --rm dockerhubenterprise/dtr:"${TAG}" images | xargs -L 1 docker pull

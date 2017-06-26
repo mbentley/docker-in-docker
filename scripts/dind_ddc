@@ -50,6 +50,86 @@ output_info() {
   exit 0
 }
 
+ddc_check_license() {
+  if [ ! -f "${DDC_LICENSE}" ]
+  then
+    echo "Warning: Unable to find DDC_LICENSE (${DDC_LICENSE}); manually apply a license after installation"
+    sleep 5
+  else
+    echo -e "Found DDC license '${DDC_LICENSE}'\n"
+  fi
+}
+
+ucp_check_tar() {
+  if [ ! -f "${UCP_IMAGES}" ]
+  then
+    echo "Error: Unable to find UCP_IMAGES"
+    echo "Hint: try running '$0 ucp_create_tar' or download an offline tarball to '${UCP_IMAGES}'"
+    exit 1
+  else
+    echo -e "Found UCP tarball '${UCP_IMAGES}'\n"
+  fi
+}
+
+dtr_check_tar() {
+  if [ ! -f "${DTR_IMAGES}" ]
+  then
+    echo "Error: Unable to find DTR_IMAGES"
+    echo "Hint: try running '$0 dtr_create_tar' or download an offline tarball to '${DTR_IMAGES}'"
+    exit 1
+  else
+    echo -e "Found DTR tarball '${DTR_IMAGES}'\n"
+  fi
+}
+
+ucp_create_tar() {
+  UCP_IMAGES_DIR="$(dirname "${UCP_IMAGES}")"
+  if [ ! -d "${UCP_IMAGES_DIR}" ]
+  then
+    echo "Creating directory ${UCP_IMAGES_DIR}..."
+    mkdir -p "${UCP_IMAGES_DIR}"
+  fi
+
+  if [ ! -f "${UCP_IMAGES}" ]
+  then
+    echo "Creating tarball of UCP images..."
+    #shellcheck disable=SC2086 disable=SC2046
+    {
+      docker -H unix:///var/run/docker.sock run --rm "${UCP_REPO}":"${UCP_VERSION}" images --list ${UCP_OPTIONS} | xargs -L 1 docker -H unix:///var/run/docker.sock pull
+      docker -H unix:///var/run/docker.sock save -o "${UCP_IMAGES}" $(docker -H unix:///var/run/docker.sock run --rm "${UCP_REPO}":"${UCP_VERSION}" images --list --image-version dev:) "${UCP_REPO}":"${UCP_VERSION}"
+      docker -H unix:///var/run/docker.sock rmi $(docker -H unix:///var/run/docker.sock run --rm "${UCP_REPO}":"${UCP_VERSION}" images --list --image-version dev:) "${UCP_REPO}":"${UCP_VERSION}"
+    }
+    echo -e "done.\n"
+  else
+    echo "Error: Tarball of UCP images (${UCP_IMAGES}) already exists.  If you want to create a new tarball, please remove this file first"
+    exit 1
+  fi
+}
+
+dtr_create_tar() {
+  DTR_IMAGES_DIR="$(dirname "${DTR_IMAGES}")"
+  if [ ! -d "${DTR_IMAGES_DIR}" ]
+  then
+    echo "Creating directory ${DTR_IMAGES_DIR}..."
+    mkdir -p "${DTR_IMAGES_DIR}"
+  fi
+
+  if [ ! -f "${DTR_IMAGES}" ]
+  then
+    echo "Creating tarball of DTR images..."
+    #shellcheck disable=SC2046
+    {
+      docker -H unix:///var/run/docker.sock run --rm "${DTR_REPO}":"${DTR_VERSION}" images | xargs -L 1 docker -H unix:///var/run/docker.sock pull
+      docker -H unix:///var/run/docker.sock save -o "${DTR_IMAGES}" $(docker -H unix:///var/run/docker.sock run --rm "${DTR_REPO}":"${DTR_VERSION}" images)
+      docker -H unix:///var/run/docker.sock rmi $(docker -H unix:///var/run/docker.sock run --rm "${DTR_REPO}":"${DTR_VERSION}" images)
+    }
+    echo -e "done.\n"
+  else
+    echo "Error: Tarball of DTR images (${DTR_IMAGES}) already exists.  If you want to create a new tarball, please remove this file first"
+    exit 1
+  fi
+}
+
 create_net_alias() {
   # run this only on a mac
   if [ "$(uname -s)" = "Darwin" ]
@@ -352,7 +432,22 @@ main() {
   initialize
 
   case ${1} in
-    create_all|create_swarm|start_engines|stop_engines|pause_engines|unpause_engines|recycle_engines|create_net_alias|remove_net_alias|install_ucp|install_dtr|destroy_swarm|output_info)
+    create_all)
+      ddc_check_license
+      ucp_check_tar
+      dtr_check_tar
+      ${1}
+      ;;
+    install_ucp)
+      ddc_check_license
+      ucp_check_tar
+      ${1}
+      ;;
+    install_dtr)
+      dtr_check_tar
+      ${1}
+      ;;
+    create_swarm|start_engines|stop_engines|pause_engines|unpause_engines|recycle_engines|create_net_alias|remove_net_alias|destroy_swarm|ucp_create_tar|dtr_create_tar|output_info)
       ${1}
       ;;
     connect_engine)
@@ -368,7 +463,7 @@ main() {
       echo "Basic usage: (see README.md for full command details)"
       echo -e "  $0 {create_all|create_swarm|install_ucp|install_dtr|destroy_swarm|output_info}"
       echo -e "\nAdditional utility usage:"
-      echo -e "  $0 {connect_engine|start_engines|stop_engines|pause_engines|unpause_engines|recycle_engines|create_net_alias|remove_net_alias}"
+      echo -e "  $0 {connect_engine|start_engines|stop_engines|pause_engines|unpause_engines|recycle_engines|create_net_alias|remove_net_alias|ucp_create_tar|dtr_create_tar}"
       echo -e "\nCurrent set environment variables:"
       output_info
       ;;
