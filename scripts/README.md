@@ -31,7 +31,8 @@ Additional utility usage:
   ./dind_ddc {connect_engine|start_engines|stop_engines|pause_engines|unpause_engines|recycle_engines|create_net_alias|remove_net_alias}
 
 Current set environment variables:
-DIND_TAG        ee-17.03
+DIND_TAG:       ee-17.03
+ENGINE_OPTS:
 UCP_REPO:       docker/ucp
 UCP_VERSION:    2.1.4
 UCP_IMAGES:     /Users/mbentley/ddc/ucp_images_2.1.4.tar.gz
@@ -68,6 +69,7 @@ ALIAS_IP:       10.1.2.3
 ### Environment Variable Overrides
   * `DIND_TAG` - docker image tag used to run docker
     * see https://hub.docker.com/r/mbentley/docker-in-docker/tags/ for the tags
+  * `ENGINE_OPTS` - custom engine options to append to the defaults
   * `UCP_REPO` - image to use for UCP (without the tag)
   * `UCP_VERSION` - change the UCP version installed
     * see https://hub.docker.com/r/docker/ucp/tags/ for the tags

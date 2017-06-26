@@ -8,6 +8,7 @@ unset DOCKER_HOST
 initialize() {
   # set default values; allow for override
   DIND_TAG="${DIND_TAG:-ee-17.03}"
+  ENGINE_OPTS="${ENGINE_OPTS:-}"
   UCP_REPO="${UCP_REPO:-docker/ucp}"
   UCP_VERSION="${UCP_VERSION:-2.1.4}"
   UCP_IMAGES="${UCP_IMAGES:-${HOME}/ddc/ucp_images_"${UCP_VERSION}".tar.gz}"
@@ -31,7 +32,8 @@ initialize() {
 }
 
 output_info() {
-  echo -e "DIND_TAG\t${DIND_TAG}"
+  echo -e "DIND_TAG:\t${DIND_TAG}"
+  echo -e "ENGINE_OPTS:\t${ENGINE_OPTS}"
   echo -e "UCP_REPO:\t${UCP_REPO}"
   echo -e "UCP_VERSION:\t${UCP_VERSION}"
   echo -e "UCP_IMAGES:\t${UCP_IMAGES}"
@@ -143,56 +145,65 @@ launch_engines() {
   echo "Launching docker engines (docker1, docker2, docker3)..."
   # launch docker1
   ENGINE_NUM="1"
-  docker -H unix:///var/run/docker.sock run -d \
-    -p 127.0.0.1:100${ENGINE_NUM}:12375 \
-    -p 4443:4443 \
-    -p 8181:8181 \
-    -p 8443:8443 \
-    --name docker${ENGINE_NUM} \
-    --hostname docker${ENGINE_NUM} \
-    --privileged \
-    --net dind \
-    --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
-    --restart "${DIND_RESTART}" \
-    -v /lib/modules:/lib/modules:ro \
-    -v docker${ENGINE_NUM}:/var/lib/docker \
-    --tmpfs /run \
-    mbentley/docker-in-docker:"${DIND_TAG}" \
-    dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 --dns "${DIND_DNS}"
+  #shellcheck disable=SC2086
+  {
+    docker -H unix:///var/run/docker.sock run -d \
+      -p 127.0.0.1:100${ENGINE_NUM}:12375 \
+      -p 4443:4443 \
+      -p 8181:8181 \
+      -p 8443:8443 \
+      --name docker${ENGINE_NUM} \
+      --hostname docker${ENGINE_NUM} \
+      --privileged \
+      --net dind \
+      --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
+      --restart "${DIND_RESTART}" \
+      -v /lib/modules:/lib/modules:ro \
+      -v docker${ENGINE_NUM}:/var/lib/docker \
+      --tmpfs /run \
+      mbentley/docker-in-docker:"${DIND_TAG}" \
+      dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 --dns "${DIND_DNS}" ${ENGINE_OPTS}
+   }
 
   # launch docker2
   ENGINE_NUM="2"
-  docker -H unix:///var/run/docker.sock run -d \
-    -p 127.0.0.1:100${ENGINE_NUM}:12375 \
-    -p 80:80 \
-    -p 443:443 \
-    --name docker${ENGINE_NUM} \
-    --hostname docker${ENGINE_NUM} \
-    --privileged \
-    --net dind \
-    --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
-    --restart "${DIND_RESTART}" \
-    -v /lib/modules:/lib/modules:ro \
-    -v docker${ENGINE_NUM}:/var/lib/docker \
-    --tmpfs /run \
-    mbentley/docker-in-docker:"${DIND_TAG}" \
-    dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 --dns "${DIND_DNS}"
+  #shellcheck disable=SC2086
+  {
+    docker -H unix:///var/run/docker.sock run -d \
+      -p 127.0.0.1:100${ENGINE_NUM}:12375 \
+      -p 80:80 \
+      -p 443:443 \
+      --name docker${ENGINE_NUM} \
+      --hostname docker${ENGINE_NUM} \
+      --privileged \
+      --net dind \
+      --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
+      --restart "${DIND_RESTART}" \
+      -v /lib/modules:/lib/modules:ro \
+      -v docker${ENGINE_NUM}:/var/lib/docker \
+      --tmpfs /run \
+      mbentley/docker-in-docker:"${DIND_TAG}" \
+      dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 --dns "${DIND_DNS}" ${ENGINE_OPTS}
+  }
 
   # launch docker3
   ENGINE_NUM="3"
-  docker -H unix:///var/run/docker.sock run -d \
-    -p 127.0.0.1:100${ENGINE_NUM}:12375 \
-    --name docker${ENGINE_NUM} \
-    --hostname docker${ENGINE_NUM} \
-    --privileged \
-    --net dind \
-    --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
-    --restart "${DIND_RESTART}" \
-    -v /lib/modules:/lib/modules:ro \
-    -v docker${ENGINE_NUM}:/var/lib/docker \
-    --tmpfs /run \
-    mbentley/docker-in-docker:"${DIND_TAG}" \
-    dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 --dns "${DIND_DNS}"
+  #shellcheck disable=SC2086
+  {
+    docker -H unix:///var/run/docker.sock run -d \
+      -p 127.0.0.1:100${ENGINE_NUM}:12375 \
+      --name docker${ENGINE_NUM} \
+      --hostname docker${ENGINE_NUM} \
+      --privileged \
+      --net dind \
+      --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
+      --restart "${DIND_RESTART}" \
+      -v /lib/modules:/lib/modules:ro \
+      -v docker${ENGINE_NUM}:/var/lib/docker \
+      --tmpfs /run \
+      mbentley/docker-in-docker:"${DIND_TAG}" \
+      dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 --dns "${DIND_DNS}" ${ENGINE_OPTS}
+  }
   echo -e "done.\n"
 }
 
