@@ -28,7 +28,7 @@ Basic Usage:
   ./dind_ddc {create_all|create_swarm|install_ucp|install_dtr|destroy_swarm|output_info}
 
 Additional utility usage:
-  ./dind_ddc {connect_engine|start_engines|stop_engines|recycle_engines|create_net_alias|remove_net_alias}
+  ./dind_ddc {connect_engine|start_engines|stop_engines|pause_engines|unpause_engines|recycle_engines|create_net_alias|remove_net_alias}
 
 Current set environment variables:
 DIND_TAG        ee-17.03
@@ -59,7 +59,9 @@ ALIAS_IP:       10.1.2.3
   * `connect_engine` - helper script used to set `DOCKER_HOST` to communicate to a specific engine
   * `start_engines` - start docker1, docker2, and docker3 daemon containers
   * `stop_engines` - stop docker1, docker2, and docker3 daemon containers
-  * `recycle_engines` - stop, remove, and re-create the docker engines, keeping persistent data (useful for upgrades)
+  * `pause_engines` - pause docker1, docker2, and docker3 daemon containers
+  * `unpause_engines` - unpause docker1, docker2, and docker3 daemon containers
+  * `recycle_engines` - stop, remove, and re-create the docker engines and `dind` network, keeping persistent data (useful for upgrades)
   * `create_net_alias` - create a network alias used for keeping a persistent IP no matter when you are (only used for D4M)
   * `remove_net_alias` - remove network alias
 
