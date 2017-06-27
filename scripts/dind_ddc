@@ -9,6 +9,7 @@ initialize() {
   # set default values; allow for override
   DIND_TAG="${DIND_TAG:-ee-17.03}"
   ENGINE_OPTS="${ENGINE_OPTS:-}"
+  SWARM_HA="${SWARM_HA:-false}"
   UCP_REPO="${UCP_REPO:-docker/ucp}"
   UCP_VERSION="${UCP_VERSION:-2.1.4}"
   UCP_IMAGES="${UCP_IMAGES:-${HOME}/ddc/ucp_images_"${UCP_VERSION}".tar.gz}"
@@ -34,6 +35,7 @@ initialize() {
 output_info() {
   echo -e "DIND_TAG:\t${DIND_TAG}"
   echo -e "ENGINE_OPTS:\t${ENGINE_OPTS}"
+  echo -e "SWARM_HA:\t${SWARM_HA}"
   echo -e "UCP_REPO:\t${UCP_REPO}"
   echo -e "UCP_VERSION:\t${UCP_VERSION}"
   echo -e "UCP_IMAGES:\t${UCP_IMAGES}"
@@ -223,67 +225,27 @@ launch_engines() {
   DIND_SUBNET_PREFIX="$(docker -H unix:///var/run/docker.sock network inspect --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' dind | awk -F '/' '{print $1}' | awk -F '.' '{print $1"."$2"."$3"."}')"
 
   echo "Launching docker engines (docker1, docker2, docker3)..."
-  # launch docker1
-  ENGINE_NUM="1"
-  #shellcheck disable=SC2086
-  {
-    docker -H unix:///var/run/docker.sock run -d \
-      -p 127.0.0.1:100${ENGINE_NUM}:12375 \
-      -p 4443:4443 \
-      -p 8181:8181 \
-      -p 8443:8443 \
-      --name docker${ENGINE_NUM} \
-      --hostname docker${ENGINE_NUM} \
-      --privileged \
-      --net dind \
-      --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
-      --restart "${DIND_RESTART}" \
-      -v /lib/modules:/lib/modules:ro \
-      -v docker${ENGINE_NUM}:/var/lib/docker \
-      --tmpfs /run \
-      mbentley/docker-in-docker:"${DIND_TAG}" \
-      dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 --dns "${DIND_DNS}" ${ENGINE_OPTS}
-   }
+  # launch docker1, docker2, and docker3
+  for ENGINE_NUM in {1..3}
+  do
+    #shellcheck disable=SC2086
+    {
+      docker -H unix:///var/run/docker.sock run -d \
+        -p 127.0.0.1:100${ENGINE_NUM}:12375 \
+        --name docker${ENGINE_NUM} \
+        --hostname docker${ENGINE_NUM} \
+        --privileged \
+        --net dind \
+        --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
+        --restart "${DIND_RESTART}" \
+        -v /lib/modules:/lib/modules:ro \
+        -v docker${ENGINE_NUM}:/var/lib/docker \
+        --tmpfs /run \
+        mbentley/docker-in-docker:"${DIND_TAG}" \
+        dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 --dns "${DIND_DNS}" ${ENGINE_OPTS}
+     }
+   done
 
-  # launch docker2
-  ENGINE_NUM="2"
-  #shellcheck disable=SC2086
-  {
-    docker -H unix:///var/run/docker.sock run -d \
-      -p 127.0.0.1:100${ENGINE_NUM}:12375 \
-      -p 80:80 \
-      -p 443:443 \
-      --name docker${ENGINE_NUM} \
-      --hostname docker${ENGINE_NUM} \
-      --privileged \
-      --net dind \
-      --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
-      --restart "${DIND_RESTART}" \
-      -v /lib/modules:/lib/modules:ro \
-      -v docker${ENGINE_NUM}:/var/lib/docker \
-      --tmpfs /run \
-      mbentley/docker-in-docker:"${DIND_TAG}" \
-      dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 --dns "${DIND_DNS}" ${ENGINE_OPTS}
-  }
-
-  # launch docker3
-  ENGINE_NUM="3"
-  #shellcheck disable=SC2086
-  {
-    docker -H unix:///var/run/docker.sock run -d \
-      -p 127.0.0.1:100${ENGINE_NUM}:12375 \
-      --name docker${ENGINE_NUM} \
-      --hostname docker${ENGINE_NUM} \
-      --privileged \
-      --net dind \
-      --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
-      --restart "${DIND_RESTART}" \
-      -v /lib/modules:/lib/modules:ro \
-      -v docker${ENGINE_NUM}:/var/lib/docker \
-      --tmpfs /run \
-      mbentley/docker-in-docker:"${DIND_TAG}" \
-      dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 --dns "${DIND_DNS}" ${ENGINE_OPTS}
-  }
   echo -e "done.\n"
 }
 
@@ -330,8 +292,15 @@ init_swarm() {
   docker -H tcp://127.0.0.1:1001 swarm init
   echo -e "done.\n"
 
-  # get swarm worker join token
-  TOKEN=$(docker -H tcp://127.0.0.1:1001 swarm join-token worker -q)
+  #check to see if Swarm should be setup with HA or not
+  if [ "${SWARM_HA}" = true ]
+  then
+    # get swarm manager join token
+    TOKEN=$(docker -H tcp://127.0.0.1:1001 swarm join-token manager -q)
+  else
+    # get swarm worker join token
+    TOKEN=$(docker -H tcp://127.0.0.1:1001 swarm join-token worker -q)
+  fi
 
   JOIN_COMMAND="swarm join --token ${TOKEN} $(docker -H unix:///var/run/docker.sock container inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker1):2377"
 
@@ -358,28 +327,64 @@ install_ucp() {
   create_net_alias
   DOCKER1_IP="$(docker -H unix:///var/run/docker.sock container inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker1)"
 
-  # load all UCP images to docker1
-  echo "Loading UCP images on docker1..."
-  docker -H tcp://127.0.0.1:1001 load -i "${UCP_IMAGES}"
-  echo -e "done.\n"
-
-  # load docker/ucp-agent from docker1 to docker2 and docker3
-  for i in 2 3
-  do
-    echo "Loading ${UCP_REPO}-agent:${UCP_VERSION} on docker ${i}..."
-    docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-agent:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${i} load || true
+  #check to see if Swarm should be setup with HA or not
+  if [ "${SWARM_HA}" = true ]
+  then
+    # Swarm is HA; load images to all nodes
+    # load all UCP images to docker1, docker2, and docker3
+    for NODE in {1..3}
+    do
+      echo "Loading UCP images on docker${NODE}..."
+      docker -H tcp://127.0.0.1:100${NODE} load -i "${UCP_IMAGES}"
+      echo -e "done.\n"
+    done
+  else
+    # Swarm is not HA; load images docker1 and only necessary images to docker2 and docker3
+    # load all UCP images to docker1
+    echo "Loading UCP images on docker1..."
+    docker -H tcp://127.0.0.1:1001 load -i "${UCP_IMAGES}"
     echo -e "done.\n"
 
-    echo "Loading ${UCP_REPO}-hrm:${UCP_VERSION} on docker ${i}..."
-    docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-hrm:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${i} load || true
-    echo -e "done.\n"
-  done
+    # load docker/ucp-agent from docker1 to docker2 and docker3
+    for i in 2 3
+    do
+      echo "Loading ${UCP_REPO}-agent:${UCP_VERSION} on docker ${i}..."
+      docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-agent:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${i} load || true
+      echo -e "done.\n"
 
-  echo "Installing UCP on docker1 using controller port 4443..."
+      echo "Loading ${UCP_REPO}-hrm:${UCP_VERSION} on docker ${i}..."
+      docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-hrm:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${i} load || true
+    done
+  fi
+
+  echo "Installing UCP on docker1..."
   #shellcheck disable=SC2086
   docker -H tcp://127.0.0.1:1001 run -it --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock "${UCP_REPO}":"${UCP_VERSION}" install ${UCP_OPTIONS} --admin-username admin --admin-password docker123 --host-address "${DOCKER1_IP}" --controller-port 4443 --san "${DOCKER1_IP}" --san "${ALIAS_IP}" --san "$(hostname)" --san "$(hostname -f)" --license "$(cat ${DDC_LICENSE})"
 
-  echo -e "\nUCP should now be available at https://${ALIAS_IP}:4443/"
+  echo -e "\nLaunching HAProxy..."
+  docker -H unix:///var/run/docker.sock run -d \
+    -p 80:80 \
+    -p 443:443 \
+    -p 4443:4443 \
+    -p 8181:8181 \
+    -p 8443:8443 \
+    --name ddc-lb \
+    --net dind \
+    --restart=unless-stopped \
+    mbentley/docker-in-docker:haproxy
+  echo -e "done.\n"
+
+  #check to see if Swarm should be setup with HA or not
+  if [ "${SWARM_HA}" = true ]
+  then
+    # Swarm is HA; add the ALIAS_IP to the SANs engine label
+    echo "Adding UCP node label for SANs..."
+    docker -H tcp://127.0.0.1:1001 node update --label-add "com.docker.ucp.SANs=$(docker -H tcp://127.0.0.1:1001 node inspect --format '{{(index .Spec.Labels "com.docker.ucp.SANs")}}' docker2),${ALIAS_IP}" docker2
+    docker -H tcp://127.0.0.1:1001 node update --label-add "com.docker.ucp.SANs=$(docker -H tcp://127.0.0.1:1001 node inspect --format '{{(index .Spec.Labels "com.docker.ucp.SANs")}}' docker3),${ALIAS_IP}" docker3
+    echo -e "done.\n"
+  fi
+
+  echo "UCP should now be available at https://${ALIAS_IP}:4443/"
   echo -e "  Username: admin\tPassword: docker123"
   echo -e "done.\n"
 }
@@ -389,7 +394,7 @@ install_dtr() {
   docker -H tcp://127.0.0.1:1002 load -i "${DTR_IMAGES}"
   echo -e "done.\n"
 
-  echo "Installing DTR on docker2 using DTR replica ports 80 and 443..."
+  echo "Installing DTR on docker2..."
   docker -H tcp://127.0.0.1:1002 run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install --ucp-url https://"${ALIAS_IP}:4443" --ucp-username admin --ucp-password docker123 --ucp-node docker2 --ucp-ca "$(curl -ks https://"${ALIAS_IP}":4443/ca)" --dtr-external-url "${ALIAS_IP}"
 
   echo -e "\nDTR should now be available at https://${ALIAS_IP}/"
@@ -398,9 +403,9 @@ install_dtr() {
 }
 
 destroy_swarm() {
-  echo "Removing docker engines (docker1, docker2, docker3)..."
-  docker -H unix:///var/run/docker.sock kill docker1 docker2 docker3 || true
-  docker -H unix:///var/run/docker.sock rm docker1 docker2 docker3 || true
+  echo "Removing HAProxy (ddc-lb) and docker engines (docker1, docker2, docker3)..."
+  docker -H unix:///var/run/docker.sock kill ddc-lb docker1 docker2 docker3 || true
+  docker -H unix:///var/run/docker.sock rm ddc-lb docker1 docker2 docker3 || true
   echo -e "done.\n"
 
   echo "Removing persistent data for docker engines (docker1, docker2, docker3)..."
