@@ -186,7 +186,7 @@ Commercial support is available at
 
 ### Launching UCP and DTR in various configurations
 
-Before you can run UCP and/or DTR dev or tech preview (TP) images, you should [create offline tarballs](#create-targz-archives) of the images.
+Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [create offline tarballs](#create-targz-archives) of the images.
 
 * UCP and DTR - UCP (dev/TP) and DTR (dev/TP)
   ```
