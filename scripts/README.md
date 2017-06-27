@@ -24,16 +24,19 @@ Check out the [Prerequisites](#prerequisites) and then go down to [Example - sta
 ## `dind_ddc` Usage
 ```
 $ ./dind_ddc
-Basic Usage:
+Basic usage: (see README.md for full command details)
   ./dind_ddc {create_all|create_swarm|install_ucp|install_dtr|destroy_swarm|output_info}
 
-Additional utility usage:
-  ./dind_ddc {connect_engine|start_engines|stop_engines|pause_engines|unpause_engines|recycle_engines|create_net_alias|remove_net_alias|ucp_create_tar|dtr_create_tar}
+Container commands:
+  ./dind_ddc {start|stop|pause|unpause|recycle}
+
+Additional commands:
+  ./dind_ddc {connect_engine|create_net_alias|remove_net_alias|ucp_create_tar|dtr_create_tar}
 
 Current set environment variables:
 DIND_TAG:       ee-17.03
-SWARM_HA:       false
 ENGINE_OPTS:
+SWARM_HA:       false
 UCP_REPO:       docker/ucp
 UCP_VERSION:    2.1.4
 UCP_IMAGES:     /Users/mbentley/ddc/ucp_images_2.1.4.tar.gz
@@ -42,7 +45,7 @@ DTR_REPO:       docker/dtr
 DTR_VERSION:    2.2.5
 DTR_IMAGES:     /Users/mbentley/ddc/dtr-2.2.5.tar.gz
 DDC_LICENSE:    /Users/mbentley/Downloads/docker_subscription.lic
-DIND_SUBNET:    172.19.0.0/16
+DIND_SUBNET:    172.250.0.0/16
 DIND_DNS:       8.8.8.8
 DIND_RESTART:   unless-stopped
 NET_IF:         en0
@@ -57,13 +60,15 @@ ALIAS_IP:       10.1.2.3
   * `destroy_swarm` - remove Swarm, the engines, and all persistent data
   * `output_info` - display enviroment variable overrides currently set
 
-### Additional utility usage details
+### Container commands details
+  * `start` - start ddc-lb, docker1, docker2, and docker3 daemon containers
+  * `stop` - stop ddc-lb, docker1, docker2, and docker3 daemon containers
+  * `pause` - pause ddc-lb, docker1, docker2, and docker3 daemon containers
+  * `unpause` - unpause ddc-lb, docker1, docker2, and docker3 daemon containers
+  * `recycle` - stop, remove, and re-create the docker engines and `dind` network, keeping persistent data (useful for upgrades)
+
+### Additional commands details
   * `connect_engine` - helper script used to set `DOCKER_HOST` to communicate to a specific engine
-  * `start_engines` - start docker1, docker2, and docker3 daemon containers
-  * `stop_engines` - stop docker1, docker2, and docker3 daemon containers
-  * `pause_engines` - pause docker1, docker2, and docker3 daemon containers
-  * `unpause_engines` - unpause docker1, docker2, and docker3 daemon containers
-  * `recycle_engines` - stop, remove, and re-create the docker engines and `dind` network, keeping persistent data (useful for upgrades)
   * `create_net_alias` - create a network alias used for keeping a persistent IP no matter when you are (only used for D4M)
   * `remove_net_alias` - remove network alias
   * `ucp_create_tar` - create a tarball of the UCP images
