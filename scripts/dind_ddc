@@ -391,6 +391,7 @@ launch_haproxy() {
     --net dind \
     --restart=unless-stopped \
     mbentley/docker-in-docker:haproxy
+  echo "The HAProxy stats page should now be available at http://${ALIAS_IP}:8181/haproxy?stats"
   echo -e "done.\n"
 }
 
