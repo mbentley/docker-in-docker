@@ -1,0 +1,247 @@
+#!/bin/bash
+
+set -e
+
+# unset DOCKER_HOST to ensure we are not talking to a machine we shouldn't be
+unset DOCKER_HOST
+
+initialize() {
+  # set default values; allow for override
+  DIND_TAG="${DIND_TAG:-ee-17.03}"
+  MANAGERS="${MANAGERS:-3}"
+  WORKERS="${WORKERS:-1}"
+  ENGINE_OPTS="${ENGINE_OPTS:-}"
+  DIND_SUBNET="${DIND_SUBNET:-172.250.0.0/16}"
+  DIND_DNS="${DIND_DNS:-8.8.8.8}"
+  DIND_RESTART="${DIND_RESTART:-unless-stopped}"
+}
+
+output_info() {
+  echo -e "DIND_TAG:\t${DIND_TAG}"
+  echo -e "ENGINE_OPTS:\t${ENGINE_OPTS}"
+  echo -e "MANAGERS:\t${MANAGERS}"
+  echo -e "WORKERS:\t${WORKERS}"
+  echo -e "DIND_SUBNET:\t${DIND_SUBNET}"
+  echo -e "DIND_DNS:\t${DIND_DNS}"
+  echo -e "DIND_RESTART:\t${DIND_RESTART}"
+  exit 0
+}
+
+create_swarm() {
+  launch_engines
+  init_swarm
+}
+
+launch_engines() {
+  # create dind network
+  echo "Checking for subnet availability..."
+  check_subnet
+  echo -e "done.\n"
+
+  echo "Creating 'dind' network with the subnet ${DIND_SUBNET}..."
+  docker -H unix:///var/run/docker.sock network create -d bridge --subnet="${DIND_SUBNET}" dind
+  echo -e "done.\n"
+
+  # get subnet prefix
+  DIND_SUBNET_PREFIX="$(docker -H unix:///var/run/docker.sock network inspect --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' dind | awk -F '/' '{print $1}' | awk -F '.' '{print $1"."$2"."$3"."}')"
+
+  NUM_NODES=$((MANAGERS+WORKERS))
+  echo "Launching ${NUM_NODES} docker engines..."
+  # launch all docker engines
+  for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
+  do
+    #shellcheck disable=SC2086
+    {
+      docker -H unix:///var/run/docker.sock run -d \
+        -p 127.0.0.1:100${ENGINE_NUM}:12375 \
+        --name docker${ENGINE_NUM} \
+        --hostname docker${ENGINE_NUM} \
+        --privileged \
+        --net dind \
+        --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
+        --restart "${DIND_RESTART}" \
+        -v /lib/modules:/lib/modules:ro \
+        -v docker${ENGINE_NUM}:/var/lib/docker \
+        --tmpfs /run \
+        mbentley/docker-in-docker:"${DIND_TAG}" \
+        dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 --dns "${DIND_DNS}" ${ENGINE_OPTS}
+     }
+   done
+
+  echo -e "done.\n"
+}
+
+start_containers() {
+  echo "Starting docker engines..."
+  for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
+  do
+    docker -H unix:///var/run/docker.sock start docker${ENGINE_NUM} || true
+  done
+  echo -e "done.\n"
+}
+
+stop_containers() {
+  echo "Stopping docker engines (this may take up to 30 seconds per engine)..."
+  for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
+  do
+    docker -H unix:///var/run/docker.sock stop -t 30 docker${ENGINE_NUM} || true
+  done
+  echo -e "done.\n"
+}
+
+pause_containers() {
+  echo "Pausing docker engines..."
+  for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
+  do
+    docker -H unix:///var/run/docker.sock pause docker${ENGINE_NUM} || true
+  done
+  echo -e "done.\n"
+}
+
+unpause_containers() {
+  echo "Unpausing docker engines..."
+  for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
+  do
+    docker -H unix:///var/run/docker.sock unpause docker${ENGINE_NUM} || true
+  done
+  echo -e "done.\n"
+}
+
+recycle_containers() {
+  stop_containers
+
+  echo "Removing docker engines..."
+  for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
+  do
+    docker -H unix:///var/run/docker.sock rm docker${ENGINE_NUM} || true
+  done
+  echo -e "done.\n"
+
+  echo "Removing 'dind' network..."
+  docker -H unix:///var/run/docker.sock network rm dind || true
+  echo -e "done.\n"
+
+  launch_engines
+  launch_haproxy
+}
+
+init_swarm() {
+  echo "Initializing Swarm on docker1..."
+  docker -H tcp://127.0.0.1:1001 swarm init
+  echo -e "done.\n"
+
+  # join managers
+
+  # get swarm manager join token
+  MANAGER_TOKEN=$(docker -H tcp://127.0.0.1:1001 swarm join-token manager -q)
+
+  # get swarm worker join token
+  WORKER_TOKEN=$(docker -H tcp://127.0.0.1:1001 swarm join-token worker -q)
+
+  MANAGER_JOIN_COMMAND="swarm join --token ${MANAGER_TOKEN} $(docker -H unix:///var/run/docker.sock container inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker1):2377"
+
+  WORKER_JOIN_COMMAND="swarm join --token ${WORKER_TOKEN} $(docker -H unix:///var/run/docker.sock container inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker1):2377"
+
+  # join managers
+  for ((ENGINE_NUM=2; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
+  do
+    echo "Joining docker${ENGINE_NUM} to the Swarm..."
+    #shellcheck disable=SC2086
+    docker -H tcp://127.0.0.1:100${ENGINE_NUM} ${MANAGER_JOIN_COMMAND}
+    echo -e "done.\n"
+  done
+
+  # join workers
+  for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
+  do
+    echo "Joining docker${ENGINE_NUM} to the Swarm..."
+    #shellcheck disable=SC2086
+    docker -H tcp://127.0.0.1:100${ENGINE_NUM} ${WORKER_JOIN_COMMAND}
+    echo -e "done.\n"
+  done
+
+  # output node info
+  echo -e "Swarm mode cluster ready:"
+  docker -H tcp://127.0.0.1:1001 node ls
+  #shellcheck disable=SC2016
+  echo -e "\nTo connect to the engine/Swarm, use:\neval "'"$(./dind_swarm connect_engine docker1)"'
+  echo -e "done.\n"
+}
+
+connect_engine() {
+  ENGINE_NUM="$(echo "${1}" | grep -o '[0-9]\+')"
+  echo "# to connect to a given engine, use:"
+  #shellcheck disable=SC2016
+  echo '# eval "$(./dind_swarm connect_engine '"${1}"')"'
+  echo "export DOCKER_HOST=tcp://127.0.0.1:100${ENGINE_NUM}"
+}
+
+destroy_swarm() {
+  NUM_NODES=$((MANAGERS+WORKERS))
+  echo "Removing docker engines..."
+  for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
+  do
+    docker -H unix:///var/run/docker.sock kill docker${ENGINE_NUM} || true
+    docker -H unix:///var/run/docker.sock rm docker${ENGINE_NUM} || true
+  done
+  echo -e "done.\n"
+
+  echo "Removing persistent data for docker engines..."
+  for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
+  do
+    docker -H unix:///var/run/docker.sock volume rm docker${ENGINE_NUM} || true
+  done
+  echo -e "done.\n"
+
+  echo "Removing 'dind' network..."
+  docker -H unix:///var/run/docker.sock network rm dind || true
+  echo -e "done.\n"
+}
+
+check_subnet() {
+  for i in $(docker -H unix:///var/run/docker.sock network ls -q)
+  do
+    if [ "$(docker -H unix:///var/run/docker.sock network inspect --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' "${i}")" = "${DIND_SUBNET}" ]
+    then
+      echo "ERROR: the subnet specified (${DIND_SUBNET}) for the 'dind' network conflicts with the existing network '$(docker -H unix:///var/run/docker.sock network inspect --format '{{.Name}}' "${i}")'"
+      echo "Use DIND_SUBNET to specify a different subnet when launching a new environment"
+      exit 1
+    fi
+  done
+
+  echo "Subnet (${DIND_SUBNET}) is available."
+}
+
+main() {
+  initialize
+
+  case ${1} in
+    create_swarm|destroy_swarm|output_info)
+      ${1}
+      ;;
+    start|stop|pause|unpause|recycle)
+      "${1}"_containers
+      ;;
+    connect_engine)
+      if [ -z "${2}" ]
+      then
+        echo "Error: Missing engine name"
+        echo "Usage: $0 connect_engine docker1"
+      else
+        ${1} "${2}"
+      fi
+      ;;
+    *)
+      echo "Basic usage: (see README.md for full command details)"
+      echo -e "  $0 {create_swarm|destroy_swarm|output_info}"
+      echo -e "\nContainer commands:"
+      echo -e "  $0 {start|stop|pause|unpause|recycle}"
+      echo -e "\nAdditional commands:"
+      echo -e "  $0 {connect_engine}"
+      echo -e "\nCurrent set environment variables:"
+      output_info
+      ;;
+  esac
+}
+
+main "${@}"
