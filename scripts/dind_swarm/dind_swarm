@@ -72,6 +72,7 @@ launch_engines() {
 }
 
 start_containers() {
+  NUM_NODES=$((MANAGERS+WORKERS))
   echo "Starting docker engines..."
   for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
   do
@@ -81,6 +82,7 @@ start_containers() {
 }
 
 stop_containers() {
+  NUM_NODES=$((MANAGERS+WORKERS))
   echo "Stopping docker engines (this may take up to 30 seconds per engine)..."
   for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
   do
@@ -90,6 +92,7 @@ stop_containers() {
 }
 
 pause_containers() {
+  NUM_NODES=$((MANAGERS+WORKERS))
   echo "Pausing docker engines..."
   for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
   do
@@ -99,6 +102,7 @@ pause_containers() {
 }
 
 unpause_containers() {
+  NUM_NODES=$((MANAGERS+WORKERS))
   echo "Unpausing docker engines..."
   for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
   do
@@ -108,6 +112,7 @@ unpause_containers() {
 }
 
 recycle_containers() {
+  NUM_NODES=$((MANAGERS+WORKERS))
   stop_containers
 
   echo "Removing docker engines..."
@@ -122,7 +127,6 @@ recycle_containers() {
   echo -e "done.\n"
 
   launch_engines
-  launch_haproxy
 }
 
 init_swarm() {
