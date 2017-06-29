@@ -2,7 +2,7 @@ docker-in-docker
 ================
 
 ## Docker EE (Engine, UCP and DTR)
-Stop! Look at [scripts](./scripts) for instructions on how to automatically create a Swarm mode cluster, a UCP cluster, or a DDC (both UCP & DTR) cluster.  If you want to manually stand up an engine or Swarm mode cluster, read on.
+Stop! Look at [scripts](./scripts) for tools to automatically create a Swarm mode cluster, a UCP cluster, or a DDC (both UCP & DTR) cluster.  If you want to manually stand up an engine or Swarm mode cluster, read on.
 
 ## Build image (optional)
 The images are published to Docker Hub so you do not need to build them unless you want to:
