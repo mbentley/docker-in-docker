@@ -9,7 +9,8 @@ initialize() {
   # set default values; allow for override
   DIND_TAG="${DIND_TAG:-ee-17.03}"
   ENGINE_OPTS="${ENGINE_OPTS:-}"
-  SWARM_HA="${SWARM_HA:-false}"
+  MANAGERS="${MANAGERS:-1}"
+  WORKERS="${WORKERS:-2}"
   UCP_REPO="${UCP_REPO:-docker/ucp}"
   UCP_VERSION="${UCP_VERSION:-2.1.4}"
   UCP_IMAGES="${UCP_IMAGES:-${HOME}/ddc/ucp_images_"${UCP_VERSION}".tar.gz}"
@@ -35,7 +36,8 @@ initialize() {
 env_info() {
   echo -e "DIND_TAG:\t${DIND_TAG}"
   echo -e "ENGINE_OPTS:\t${ENGINE_OPTS}"
-  echo -e "SWARM_HA:\t${SWARM_HA}"
+  echo -e "MANAGERS:\t${MANAGERS}"
+  echo -e "WORKERS:\t${WORKERS}"
   echo -e "UCP_REPO:\t${UCP_REPO}"
   echo -e "UCP_VERSION:\t${UCP_VERSION}"
   echo -e "UCP_IMAGES:\t${UCP_IMAGES}"
@@ -224,9 +226,10 @@ launch_engines() {
   # get subnet prefix
   DIND_SUBNET_PREFIX="$(docker -H unix:///var/run/docker.sock network inspect --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' dind | awk -F '/' '{print $1}' | awk -F '.' '{print $1"."$2"."$3"."}')"
 
-  echo "Creating volumes for docker engines (docker1, docker2, docker3)..."
-  # create volumes for docker1, docker2, and docker3
-  for ENGINE_NUM in {1..3}
+  NUM_NODES=$((MANAGERS+WORKERS))
+
+  echo "Creating volumes for docker engines..."
+  for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
   do
     docker -H unix:///var/run/docker.sock volume create \
       --label project=dind_ddc \
@@ -235,9 +238,9 @@ launch_engines() {
   done
   echo -e "done.\n"
 
-  echo "Launching docker engines (docker1, docker2, docker3)..."
-  # launch docker1, docker2, and docker3
-  for ENGINE_NUM in {1..3}
+  echo "Launching ${NUM_NODES} docker engines..."
+  # launch all docker engines
+  for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
   do
     #shellcheck disable=SC2086
     {
@@ -345,26 +348,41 @@ init_swarm() {
   docker -H tcp://127.0.0.1:1001 swarm init
   echo -e "done.\n"
 
-  #check to see if Swarm should be setup with HA or not
-  if [ "${SWARM_HA}" = true ]
-  then
-    # get swarm manager join token
-    TOKEN=$(docker -H tcp://127.0.0.1:1001 swarm join-token manager -q)
-  else
-    # get swarm worker join token
-    TOKEN=$(docker -H tcp://127.0.0.1:1001 swarm join-token worker -q)
-  fi
+  # join managers
 
-  JOIN_COMMAND="swarm join --token ${TOKEN} $(docker -H unix:///var/run/docker.sock container inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker1):2377"
+  # get swarm manager join token
+  MANAGER_TOKEN=$(docker -H tcp://127.0.0.1:1001 swarm join-token manager -q)
 
-  echo "Joining docker2 to the Swarm..."
-  #shellcheck disable=SC2086
-  docker -H tcp://127.0.0.1:1002 ${JOIN_COMMAND}
-  echo -e "done.\n"
+  # get swarm worker join token
+  WORKER_TOKEN=$(docker -H tcp://127.0.0.1:1001 swarm join-token worker -q)
 
-  echo "Joining docker3 to the Swarm..."
-  #shellcheck disable=SC2086
-  docker -H tcp://127.0.0.1:1003 ${JOIN_COMMAND}
+  MANAGER_JOIN_COMMAND="swarm join --token ${MANAGER_TOKEN} $(docker -H unix:///var/run/docker.sock container inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker1):2377"
+
+  WORKER_JOIN_COMMAND="swarm join --token ${WORKER_TOKEN} $(docker -H unix:///var/run/docker.sock container inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker1):2377"
+
+  # join managers
+  for ((ENGINE_NUM=2; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
+  do
+    echo "Joining docker${ENGINE_NUM} to the Swarm..."
+    #shellcheck disable=SC2086
+    docker -H tcp://127.0.0.1:100${ENGINE_NUM} ${MANAGER_JOIN_COMMAND}
+    echo -e "done.\n"
+  done
+
+  # join workers
+  for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
+  do
+    echo "Joining docker${ENGINE_NUM} to the Swarm..."
+    #shellcheck disable=SC2086
+    docker -H tcp://127.0.0.1:100${ENGINE_NUM} ${WORKER_JOIN_COMMAND}
+    echo -e "done.\n"
+  done
+
+  # output node info
+  echo -e "Swarm mode cluster ready:"
+  docker -H tcp://127.0.0.1:1001 node ls
+  #shellcheck disable=SC2016
+  echo -e "\nTo connect to the engine/Swarm, use:\neval "'"$(./dind_swarm connect_engine docker1)"'
   echo -e "done.\n"
 }
 
@@ -380,35 +398,24 @@ install_ucp() {
   create_net_alias
   DOCKER1_IP="$(docker -H unix:///var/run/docker.sock container inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker1)"
 
-  #check to see if Swarm should be setup with HA or not
-  if [ "${SWARM_HA}" = true ]
-  then
-    # Swarm is HA; load images to all nodes
-    # load all UCP images to docker1, docker2, and docker3
-    for NODE in {1..3}
-    do
-      echo "Loading UCP images on docker${NODE}..."
-      docker -H tcp://127.0.0.1:100${NODE} load -i "${UCP_IMAGES}"
-      echo -e "done.\n"
-    done
-  else
-    # Swarm is not HA; load images docker1 and only necessary images to docker2 and docker3
-    # load all UCP images to docker1
-    echo "Loading UCP images on docker1..."
-    docker -H tcp://127.0.0.1:1001 load -i "${UCP_IMAGES}"
+  # load images on managers
+  for ((ENGINE_NUM=1; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
+  do
+    echo "Loading UCP images for managers on docker${ENGINE_NUM}..."
+    #shellcheck disable=SC2086
+    docker -H tcp://127.0.0.1:100${ENGINE_NUM} load -i "${UCP_IMAGES}"
     echo -e "done.\n"
+  done
 
-    # load docker/ucp-agent from docker1 to docker2 and docker3
-    for i in 2 3
-    do
-      echo "Loading ${UCP_REPO}-agent:${UCP_VERSION} on docker ${i}..."
-      docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-agent:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${i} load || true
-      echo -e "done.\n"
-
-      echo "Loading ${UCP_REPO}-hrm:${UCP_VERSION} on docker ${i}..."
-      docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-hrm:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${i} load || true
-    done
-  fi
+  # load iamges on workers
+  for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
+  do
+    echo "Loading UCP images for workers on docker${ENGINE_NUM}..."
+    #shellcheck disable=SC2086
+    docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-agent:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${ENGINE_NUM} load || true
+    docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-hrm:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${ENGINE_NUM} load || true
+    echo -e "done.\n"
+  done
 
   echo "Installing UCP on docker1..."
   #shellcheck disable=SC2086
@@ -416,15 +423,13 @@ install_ucp() {
 
   launch_haproxy
 
-  #check to see if Swarm should be setup with HA or not
-  if [ "${SWARM_HA}" = true ]
-  then
-    # Swarm is HA; add the ALIAS_IP to the SANs engine label
+  # add the ALIAS_IP to the SANs engine labels of the managers
+  for ((ENGINE_NUM=2; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
+  do
     echo "Adding UCP node label for SANs..."
-    docker -H tcp://127.0.0.1:1001 node update --label-add "com.docker.ucp.SANs=$(docker -H tcp://127.0.0.1:1001 node inspect --format '{{(index .Spec.Labels "com.docker.ucp.SANs")}}' docker2),${ALIAS_IP}" docker2
-    docker -H tcp://127.0.0.1:1001 node update --label-add "com.docker.ucp.SANs=$(docker -H tcp://127.0.0.1:1001 node inspect --format '{{(index .Spec.Labels "com.docker.ucp.SANs")}}' docker3),${ALIAS_IP}" docker3
+    docker -H tcp://127.0.0.1:1001 node update --label-add "com.docker.ucp.SANs=$(docker -H tcp://127.0.0.1:1001 node inspect --format '{{(index .Spec.Labels "com.docker.ucp.SANs")}}' docker${ENGINE_NUM}),${ALIAS_IP}" docker${ENGINE_NUM}
     echo -e "done.\n"
-  fi
+  done
 
   echo "UCP should now be available at https://${ALIAS_IP}:4443/"
   echo -e "  Username: admin\tPassword: docker123"

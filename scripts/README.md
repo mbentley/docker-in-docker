@@ -36,7 +36,8 @@ Additional commands:
 Current set environment variables:
 DIND_TAG:       ee-17.03
 ENGINE_OPTS:
-SWARM_HA:       false
+MANAGERS:       1
+WORKERS:        2
 UCP_REPO:       docker/ucp
 UCP_VERSION:    2.1.4
 UCP_IMAGES:     /Users/mbentley/ddc/ucp_images_2.1.4.tar.gz
@@ -77,7 +78,8 @@ ALIAS_IP:       10.1.2.3
 ### Environment Variable Overrides
   * `DIND_TAG` - docker image tag used to run docker
     * see https://hub.docker.com/r/mbentley/docker-in-docker/tags/ for the tags
-  * `SWARM_HA` - allows you to setup 1 or 3 managers of Swarm; will also install UCP HA if `true`
+  * `MANAGERS` - number of Swarm managers
+  * `WORKERS` - number of Swarm workers
   * `ENGINE_OPTS` - custom engine options to append to the defaults
   * `UCP_REPO` - image to use for UCP (without the tag)
   * `UCP_VERSION` - change the UCP version installed
