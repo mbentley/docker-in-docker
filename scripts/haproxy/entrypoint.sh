@@ -1,7 +1,48 @@
-#!/bin/sh
+#!/bin/bash
+
+ucp_upstreams_4443() {
+  # make upstream include all managers
+  for ((ENGINE_NUM=1; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
+  do
+    echo "        server docker${ENGINE_NUM}:4443 docker${ENGINE_NUM}:4443 weight 100 check check-ssl verify none"
+  done
+}
+
+dtr_upstreams_80() {
+  # make upstream include all workers
+  for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
+  do
+    echo "        server docker${ENGINE_NUM}:80 docker${ENGINE_NUM}:80 check weight 100"
+  done
+}
+
+dtr_upstreams_443() {
+  # make upstream include all workers
+  for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
+  do
+    echo "        server docker${ENGINE_NUM}:443 docker${ENGINE_NUM}:443 weight 100 check check-ssl verify none"
+  done
+}
+
+hrm_upstreams_8181() {
+  # make upstream include all nodes
+  for ((ENGINE_NUM=1; ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
+  do
+    echo "        server docker${ENGINE_NUM}:8181 docker${ENGINE_NUM}:8181 check weight 100"
+  done
+}
+
+hrm_upstreams_8443() {
+  # make upstream include all nodes
+  for ((ENGINE_NUM=1; ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
+  do
+    echo "        server docker${ENGINE_NUM}:8443 docker${ENGINE_NUM}:8443 check weight 100"
+  done
+}
 
 # create template
-echo 'global
+#shellcheck disable=SC2028
+echo "global
         log /dev/log    local0
         log /dev/log    local1 notice
 
@@ -43,50 +84,30 @@ frontend hrm_8443
 ### backends
 backend ucp_upstream_servers
         mode tcp
-        option httpchk GET /_ping HTTP/1.1\r\nHost:\ foo.bar' \
-> /usr/local/etc/haproxy/haproxy.cfg
+        option httpchk GET /_ping HTTP/1.1\r\nHost:\ foo.bar
+$(ucp_upstreams_4443)
 
-echo '        server docker1:4443 docker1:4443 weight 100 check check-ssl verify none
-        server docker2:4443 docker2:4443 weight 100 check check-ssl verify none
-        server docker3:4443 docker3:4443 weight 100 check check-ssl verify none' \
->> /usr/local/etc/haproxy/haproxy.cfg
-
-echo '
 backend dtr_upstream_servers_80
         mode tcp
-        option httpchk GET /health HTTP/1.0\r\nHost:\ foo.bar' \
->> /usr/local/etc/haproxy/haproxy.cfg
+        option httpchk GET /health HTTP/1.0\r\nHost:\ foo.bar
+$(dtr_upstreams_80)
 
-echo '        server docker2:80 docker2:80 check weight 100' \
->> /usr/local/etc/haproxy/haproxy.cfg
-
-echo '
 backend dtr_upstream_servers_443
         mode tcp
-        option httpchk GET /health HTTP/1.1\r\nHost:\ foo.bar' \
->> /usr/local/etc/haproxy/haproxy.cfg
+        option httpchk GET /health HTTP/1.1\r\nHost:\ foo.bar
+$(dtr_upstreams_443)
 
-echo '        server docker2:443 docker2:443 weight 100 check check-ssl verify none' \
->> /usr/local/etc/haproxy/haproxy.cfg
-
-echo '
 backend hrm_upstream_servers_8181
         mode http
         stats enable
         stats admin if TRUE
-        stats refresh 5m' \
->> /usr/local/etc/haproxy/haproxy.cfg
+        stats refresh 5m
+$(hrm_upstreams_8181)
 
-echo '        server docker1:8181 docker1:8181 check weight 100' \
->> /usr/local/etc/haproxy/haproxy.cfg
-
-echo '
 backend hrm_upstream_servers_8443
         mode tcp
-        option tcp-check' \
->> /usr/local/etc/haproxy/haproxy.cfg
-
-echo '        server docker1:8443 docker1:8443 check weight 100' \
->> /usr/local/etc/haproxy/haproxy.cfg
+        option tcp-check
+$(hrm_upstreams_8443)" \
+> /usr/local/etc/haproxy/haproxy.cfg
 
 exec /docker-entrypoint.sh "${@}"

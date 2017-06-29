@@ -348,8 +348,6 @@ init_swarm() {
   docker -H tcp://127.0.0.1:1001 swarm init
   echo -e "done.\n"
 
-  # join managers
-
   # get swarm manager join token
   MANAGER_TOKEN=$(docker -H tcp://127.0.0.1:1001 swarm join-token manager -q)
 
@@ -407,7 +405,7 @@ install_ucp() {
     echo -e "done.\n"
   done
 
-  # load iamges on workers
+  # load images on workers
   for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
   do
     echo "Loading UCP images for workers on docker${ENGINE_NUM}..."
@@ -448,6 +446,8 @@ launch_haproxy() {
     --label project=dind_ddc \
     --net dind \
     --restart=unless-stopped \
+    -e MANAGERS="${MANAGERS}" \
+    -e WORKERS="${WORKERS}" \
     mbentley/docker-in-docker:haproxy
   echo "The HAProxy stats page should now be available at http://${ALIAS_IP}:8181/haproxy?stats"
   echo -e "done.\n"
