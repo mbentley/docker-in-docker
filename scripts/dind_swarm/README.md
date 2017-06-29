@@ -63,3 +63,10 @@ DIND_RESTART:   unless-stopped
 ```
 ./dind_swarm create_swarm
 ```
+
+### Example - creating Swarm with 3 managers, 3 workers
+```
+export MANAGERS=3 \
+  WORKERS=3
+./dind_swarm create_swarm
+```
