@@ -1,4 +1,7 @@
-global
+#!/bin/sh
+
+# create template
+echo 'global
         log /dev/log    local0
         log /dev/log    local1 notice
 
@@ -40,35 +43,50 @@ frontend hrm_8443
 ### backends
 backend ucp_upstream_servers
         mode tcp
-        option httpchk GET /_ping HTTP/1.1\r\nHost:\ foo.bar
-        server docker1:4443 docker1:4443 weight 100 check check-ssl verify none
-        server docker2:4443 docker2:4443 weight 100 check check-ssl verify none
-        server docker3:4443 docker3:4443 weight 100 check check-ssl verify none
+        option httpchk GET /_ping HTTP/1.1\r\nHost:\ foo.bar' \
+> /usr/local/etc/haproxy/haproxy.cfg
 
+echo '        server docker1:4443 docker1:4443 weight 100 check check-ssl verify none
+        server docker2:4443 docker2:4443 weight 100 check check-ssl verify none
+        server docker3:4443 docker3:4443 weight 100 check check-ssl verify none' \
+>> /usr/local/etc/haproxy/haproxy.cfg
+
+echo '
 backend dtr_upstream_servers_80
         mode tcp
-        option httpchk GET /health HTTP/1.0\r\nHost:\ foo.bar
-        server docker2:80 docker2:80 check weight 100
+        option httpchk GET /health HTTP/1.0\r\nHost:\ foo.bar' \
+>> /usr/local/etc/haproxy/haproxy.cfg
 
+echo '        server docker2:80 docker2:80 check weight 100' \
+>> /usr/local/etc/haproxy/haproxy.cfg
+
+echo '
 backend dtr_upstream_servers_443
         mode tcp
-        option httpchk GET /health HTTP/1.1\r\nHost:\ foo.bar
-        server docker1:443 docker1:443 weight 100 check check-ssl verify none
-        server docker2:443 docker2:443 weight 100 check check-ssl verify none
-        server docker3:443 docker3:443 weight 100 check check-ssl verify none
+        option httpchk GET /health HTTP/1.1\r\nHost:\ foo.bar' \
+>> /usr/local/etc/haproxy/haproxy.cfg
 
+echo '        server docker2:443 docker2:443 weight 100 check check-ssl verify none' \
+>> /usr/local/etc/haproxy/haproxy.cfg
+
+echo '
 backend hrm_upstream_servers_8181
         mode http
         stats enable
         stats admin if TRUE
-        stats refresh 5m
-        server docker1:8181 docker1:8181 check weight 100
-        server docker2:8181 docker2:8181 check weight 100
-        server docker3:8181 docker3:8181 check weight 100
+        stats refresh 5m' \
+>> /usr/local/etc/haproxy/haproxy.cfg
 
+echo '        server docker1:8181 docker1:8181 check weight 100' \
+>> /usr/local/etc/haproxy/haproxy.cfg
+
+echo '
 backend hrm_upstream_servers_8443
         mode tcp
-        option tcp-check
-        server docker1:8443 docker1:8443 check weight 100
-        server docker2:8443 docker2:8443 check weight 100
-        server docker3:8443 docker3:8443 check weight 100
+        option tcp-check' \
+>> /usr/local/etc/haproxy/haproxy.cfg
+
+echo '        server docker1:8443 docker1:8443 check weight 100' \
+>> /usr/local/etc/haproxy/haproxy.cfg
+
+exec /docker-entrypoint.sh "${@}"
