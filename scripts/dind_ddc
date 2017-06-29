@@ -454,12 +454,13 @@ launch_haproxy() {
 }
 
 install_dtr() {
-  echo "Loading DTR images on docker2..."
-  docker -H tcp://127.0.0.1:1002 load -i "${DTR_IMAGES}"
+  DTR_NODE=$((MANAGERS+1))
+  echo "Loading DTR images on docker${DTR_NODE}..."
+  docker -H tcp://127.0.0.1:100${DTR_NODE} load -i "${DTR_IMAGES}"
   echo -e "done.\n"
 
-  echo "Installing DTR on docker2..."
-  docker -H tcp://127.0.0.1:1002 run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install --ucp-url https://"${ALIAS_IP}:4443" --ucp-username admin --ucp-password docker123 --ucp-node docker2 --ucp-ca "$(curl -ks https://"${ALIAS_IP}":4443/ca)" --dtr-external-url "${ALIAS_IP}"
+  echo "Installing DTR on docker${DTR_NODE}..."
+  docker -H tcp://127.0.0.1:100${DTR_NODE} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install --ucp-url https://"${ALIAS_IP}:4443" --ucp-username admin --ucp-password docker123 --ucp-node docker${DTR_NODE} --ucp-ca "$(curl -ks https://"${ALIAS_IP}":4443/ca)" --dtr-external-url "${ALIAS_IP}"
 
   echo -e "\nDTR should now be available at https://${ALIAS_IP}/"
   echo -e "  Username: admin\tPassword: docker123"

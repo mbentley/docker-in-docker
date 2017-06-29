@@ -9,19 +9,25 @@ ucp_upstreams_4443() {
 }
 
 dtr_upstreams_80() {
-  # make upstream include all workers
-  for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
-  do
-    echo "        server docker${ENGINE_NUM}:80 docker${ENGINE_NUM}:80 check weight 100"
-  done
+  ## make upstream include all workers
+  #for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
+  #do
+  #  echo "        server docker${ENGINE_NUM}:80 docker${ENGINE_NUM}:80 check weight 100"
+  #done
+
+  # for now just use the first worker
+  echo "        server docker$((MANAGERS+1)):80 docker$((MANAGERS+1)):80 check weight 100"
 }
 
 dtr_upstreams_443() {
-  # make upstream include all workers
-  for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
-  do
-    echo "        server docker${ENGINE_NUM}:443 docker${ENGINE_NUM}:443 weight 100 check check-ssl verify none"
-  done
+  ## make upstream include all workers
+  #for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
+  #do
+  #  echo "        server docker${ENGINE_NUM}:443 docker${ENGINE_NUM}:443 weight 100 check check-ssl verify none"
+  #done
+
+  # for now just use the first worker
+  echo "        server docker$((MANAGERS+1)):443 docker$((MANAGERS+1)):443 weight 100 check check-ssl verify none"
 }
 
 hrm_upstreams_8181() {
