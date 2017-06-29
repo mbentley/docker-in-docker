@@ -14,7 +14,7 @@ Check out the [Prerequisites](#prerequisites) and then go down to [Example - cre
 ```
 $ ./dind_swarm
 Basic usage: (see README.md for full command details)
-  ./dind_swarm {create_swarm|destroy_swarm|output_info}
+  ./dind_swarm {create_swarm|destroy_swarm|env_info|status}
 
 Container commands:
   ./dind_swarm {start|stop|pause|unpause|recycle}
@@ -35,7 +35,7 @@ DIND_RESTART:   unless-stopped
 ### Basic usage details
   * `create_swarm` - create 3 node Swarm mode cluster; 1 manager and 2 workers
   * `destroy_swarm` - remove Swarm, the engines, and all persistent data
-  * `output_info` - display enviroment variable overrides currently set
+  * `env_info` - display enviroment variable overrides currently set
 
 ### Container commands details
   * `start` - start docker daemon containers
@@ -57,7 +57,7 @@ DIND_RESTART:   unless-stopped
   * `DIND_DNS` - DNS server to use for the docker daemons running in docker
   * `DIND_RESTART` - restart policy for the docker daemon containers
 
-*Note*: To see the default values, run `./dind_swarm output_info`
+*Note*: To see the default values, run `./dind_swarm env_info`
 
 ### Example - creating Swarm
 ```

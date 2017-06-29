@@ -32,7 +32,7 @@ initialize() {
   fi
 }
 
-output_info() {
+env_info() {
   echo -e "DIND_TAG:\t${DIND_TAG}"
   echo -e "ENGINE_OPTS:\t${ENGINE_OPTS}"
   echo -e "SWARM_HA:\t${SWARM_HA}"
@@ -218,11 +218,22 @@ launch_engines() {
   echo -e "done.\n"
 
   echo "Creating 'dind' network with the subnet ${DIND_SUBNET}..."
-  docker -H unix:///var/run/docker.sock network create -d bridge --subnet="${DIND_SUBNET}" dind
+  docker -H unix:///var/run/docker.sock network create --driver bridge --label project=dind_ddc --subnet="${DIND_SUBNET}" dind
   echo -e "done.\n"
 
   # get subnet prefix
   DIND_SUBNET_PREFIX="$(docker -H unix:///var/run/docker.sock network inspect --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' dind | awk -F '/' '{print $1}' | awk -F '.' '{print $1"."$2"."$3"."}')"
+
+  echo "Creating volumes for docker engines (docker1, docker2, docker3)..."
+  # create volumes for docker1, docker2, and docker3
+  for ENGINE_NUM in {1..3}
+  do
+    docker -H unix:///var/run/docker.sock volume create \
+      --label project=dind_ddc \
+      --driver local \
+      docker${ENGINE_NUM}
+  done
+  echo -e "done.\n"
 
   echo "Launching docker engines (docker1, docker2, docker3)..."
   # launch docker1, docker2, and docker3
@@ -234,6 +245,7 @@ launch_engines() {
         -p 127.0.0.1:100${ENGINE_NUM}:12375 \
         --name docker${ENGINE_NUM} \
         --hostname docker${ENGINE_NUM} \
+        --label project=dind_ddc \
         --privileged \
         --net dind \
         --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
@@ -244,48 +256,88 @@ launch_engines() {
         mbentley/docker-in-docker:"${DIND_TAG}" \
         dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 --dns "${DIND_DNS}" ${ENGINE_OPTS}
      }
-   done
-
+  done
   echo -e "done.\n"
 }
 
+get_container_list() {
+  docker ps -a --filter label=project=dind_ddc --format '{{.Names}}'
+}
+
+get_volume_list() {
+  docker volume ls --filter label=project=dind_ddc --format '{{.Name}}'
+}
+
+get_network_list() {
+  docker network ls --filter label=project=dind_ddc --format '{{.Name}}'
+}
+
 start_containers() {
-  echo "Starting HAProxy and docker engines (ddc-lb, docker1, docker2, docker3)..."
-  docker -H unix:///var/run/docker.sock start ddc-lb docker{1..3} || true
+  echo "Starting project containers..."
+  #shellcheck disable=SC2046
+  docker -H unix:///var/run/docker.sock start $(get_container_list) || true
   echo -e "done.\n"
 }
 
 stop_containers() {
-  echo "Stopping HAProxy and docker engines (ddc-lb, docker1, docker2, docker3); this may take up to 30 seconds..."
-  docker -H unix:///var/run/docker.sock stop -t 30 ddc-lb docker{1..3} || true
+  echo "Stopping project containers; this may take up to 30 seconds..."
+  #shellcheck disable=SC2046
+  docker -H unix:///var/run/docker.sock stop -t 30 $(get_container_list) || true
   echo -e "done.\n"
 }
 
 pause_containers() {
-  echo "Pausing HAProxy and docker engines (ddc-lb, docker1, docker2, docker3)..."
-  docker -H unix:///var/run/docker.sock pause ddc-lb docker{1..3} || true
+  echo "Pausing project containers..."
+  #shellcheck disable=SC2046
+  docker -H unix:///var/run/docker.sock pause $(get_container_list) || true
   echo -e "done.\n"
 }
 
 unpause_containers() {
-  echo "Unpausing HAProxy and docker engines (ddc-lb, docker1, docker2, docker3)..."
-  docker -H unix:///var/run/docker.sock unpause ddc-lb docker{1..3} || true
+  echo "Unpausing project containers..."
+  #shellcheck disable=SC2046
+  docker -H unix:///var/run/docker.sock unpause $(get_container_list) || true
   echo -e "done.\n"
 }
 
 recycle_containers() {
   stop_containers
 
-  echo "Removing HAProxy and docker engines (ddc-lb, docker1, docker2, docker3)..."
-  docker -H unix:///var/run/docker.sock rm ddc-lb docker{1..3} || true
+  if [ "$(docker ps --filter label=project=dind_ddc --format '{{.Names}}' --filter name=ddc-lb)" = "ddc-lb" ]
+  then
+    RECREATE_LB=true
+  else
+    RECREATE_LB=false
+  fi
+
+  echo "Removing project containers..."
+  #shellcheck disable=SC2046
+  docker -H unix:///var/run/docker.sock rm $(get_container_list) || true
   echo -e "done.\n"
 
   echo "Removing 'dind' network..."
-  docker -H unix:///var/run/docker.sock network rm dind || true
+  #shellcheck disable=SC2046
+  docker -H unix:///var/run/docker.sock network rm $(get_network_list) || true
   echo -e "done.\n"
 
   launch_engines
-  launch_haproxy
+  if [ "${RECREATE_LB}" = "true" ]
+  then
+    launch_haproxy
+  fi
+}
+
+project_status() {
+  echo "Project containers:"
+  docker ps -a --filter label=project=dind_ddc
+
+  echo -e "\nProject volumes:"
+  docker volume ls --filter label=project=dind_ddc
+
+  echo -e "\nProject networks:"
+  docker network ls --filter label=project=dind_ddc
+
+  echo -e "\ndone.\n"
 }
 
 init_swarm() {
@@ -388,6 +440,7 @@ launch_haproxy() {
     -p 8181:8181 \
     -p 8443:8443 \
     --name ddc-lb \
+    --label project=dind_ddc \
     --net dind \
     --restart=unless-stopped \
     mbentley/docker-in-docker:haproxy
@@ -409,17 +462,21 @@ install_dtr() {
 }
 
 destroy_swarm() {
-  echo "Removing HAProxy and docker engines (ddc-lb, docker1, docker2, docker3)..."
-  docker -H unix:///var/run/docker.sock kill ddc-lb docker1 docker2 docker3 || true
-  docker -H unix:///var/run/docker.sock rm ddc-lb docker1 docker2 docker3 || true
+  echo "Removing project containers..."
+  #shellcheck disable=SC2046
+  docker -H unix:///var/run/docker.sock kill $(get_container_list) || true
+  #shellcheck disable=SC2046
+  docker -H unix:///var/run/docker.sock rm $(get_container_list) || true
   echo -e "done.\n"
 
   echo "Removing persistent data for docker engines (docker1, docker2, docker3)..."
-  docker -H unix:///var/run/docker.sock volume rm docker1 docker2 docker3 || true
+  #shellcheck disable=SC2046
+  docker -H unix:///var/run/docker.sock volume rm $(get_volume_list) || true
   echo -e "done.\n"
 
   echo "Removing 'dind' network..."
-  docker -H unix:///var/run/docker.sock network rm dind || true
+  #shellcheck disable=SC2046
+  docker -H unix:///var/run/docker.sock network rm $(get_network_list) || true
   echo -e "done.\n"
 
   remove_net_alias
@@ -458,7 +515,7 @@ main() {
       dtr_check_tar
       ${1}
       ;;
-    create_swarm|create_net_alias|remove_net_alias|destroy_swarm|ucp_create_tar|dtr_create_tar|output_info)
+    create_swarm|create_net_alias|remove_net_alias|destroy_swarm|ucp_create_tar|dtr_create_tar|env_info)
       ${1}
       ;;
     start|stop|pause|unpause|recycle)
@@ -473,15 +530,18 @@ main() {
         ${1} "${2}"
       fi
       ;;
+    status)
+      project_status
+      ;;
     *)
       echo "Basic usage: (see README.md for full command details)"
-      echo -e "  $0 {create_all|create_swarm|install_ucp|install_dtr|destroy_swarm|output_info}"
+      echo -e "  $0 {create_all|create_swarm|install_ucp|install_dtr|destroy_swarm|env_info|status}"
       echo -e "\nContainer commands:"
       echo -e "  $0 {start|stop|pause|unpause|recycle}"
       echo -e "\nAdditional commands:"
       echo -e "  $0 {connect_engine|create_net_alias|remove_net_alias|ucp_create_tar|dtr_create_tar}"
       echo -e "\nCurrent set environment variables:"
-      output_info
+      env_info
       ;;
   esac
 }

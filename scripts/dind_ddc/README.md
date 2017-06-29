@@ -25,7 +25,7 @@ Check out the [Prerequisites](#prerequisites) and then go down to [Example - sta
 ```
 $ ./dind_ddc
 Basic usage: (see README.md for full command details)
-  ./dind_ddc {create_all|create_swarm|install_ucp|install_dtr|destroy_swarm|output_info}
+  ./dind_ddc {create_all|create_swarm|install_ucp|install_dtr|destroy_swarm|env_info|status}
 
 Container commands:
   ./dind_ddc {start|stop|pause|unpause|recycle}
@@ -58,7 +58,7 @@ ALIAS_IP:       10.1.2.3
   * `install_ucp` - run through the UCP installation of 1 manager and 2 workers
   * `install_dtr` - install DTR on `docker2`
   * `destroy_swarm` - remove Swarm, the engines, and all persistent data
-  * `output_info` - display enviroment variable overrides currently set
+  * `env_info` - display enviroment variable overrides currently set
 
 ### Container commands details
   * `start` - start ddc-lb, docker1, docker2, and docker3 daemon containers
@@ -97,7 +97,7 @@ ALIAS_IP:       10.1.2.3
   * `ALIAS_IP` - IP address to set as an alias to your network interface; used to keep static IP when changing networks
   * `NET_IF` - customize the network interface name used for creating the ALIAS_IP
 
-*Note*: To see the default values, run `./dind_ddc output_info`
+*Note*: To see the default values, run `./dind_ddc env_info`
 
 ### Example - starting DDC
 ```
