@@ -376,15 +376,13 @@ recycle_containers() {
 
 project_status() {
   echo "Project containers:"
-  docker ps -a --filter label=project=dind_ddc
+  docker ps -a --filter label=project=dind_ddc --format 'table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Names}}\t{{.Labels}}'
 
   echo -e "\nProject volumes:"
   docker volume ls --filter label=project=dind_ddc
 
   echo -e "\nProject networks:"
   docker network ls --filter label=project=dind_ddc
-
-  echo -e "\ndone.\n"
 }
 
 get_current_num_engines() {
