@@ -31,6 +31,20 @@ initialize() {
   else
      NET_IF="${NET_IF:-eth0}"
   fi
+
+  # check for valid number of managers
+  if ((MANAGERS<1))
+  then
+    echo "Error: The number of MANAGERS (${MANAGERS}) must be greater than 0"
+    exit 1
+  fi
+
+  # check for valid number of workers
+  if ((WORKERS<1))
+  then
+    echo "Warning: The number of WORKERS (${MANAGERS}) is less than 1; you will not be able to install DTR"
+    sleep 5
+  fi
 }
 
 env_info() {
@@ -251,7 +265,7 @@ launch_engines() {
         --label project=dind_ddc \
         --privileged \
         --net dind \
-        --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+1)) \
+        --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+51)) \
         --restart "${DIND_RESTART}" \
         -v /lib/modules:/lib/modules:ro \
         -v docker${ENGINE_NUM}:/var/lib/docker \
@@ -306,7 +320,7 @@ unpause_containers() {
 recycle_containers() {
   stop_containers
 
-  if [ "$(docker ps --filter label=project=dind_ddc --format '{{.Names}}' --filter name=ddc-lb)" = "ddc-lb" ]
+  if [ "$(docker ps -a --filter label=project=dind_ddc --format '{{.Names}}' --filter name=ddc-lb)" = "ddc-lb" ]
   then
     RECREATE_LB=true
   else
@@ -435,6 +449,9 @@ install_ucp() {
 }
 
 launch_haproxy() {
+  # get subnet prefix
+  DIND_SUBNET_PREFIX="$(docker -H unix:///var/run/docker.sock network inspect --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' dind | awk -F '/' '{print $1}' | awk -F '.' '{print $1"."$2"."$3"."}')"
+
   echo -e "\nLaunching HAProxy (ddc-lb)..."
   docker -H unix:///var/run/docker.sock run -d \
     -p 80:80 \
@@ -445,6 +462,7 @@ launch_haproxy() {
     --name ddc-lb \
     --label project=dind_ddc \
     --net dind \
+    --ip "${DIND_SUBNET_PREFIX}"$((MANAGERS+WORKERS+52)) \
     --restart=unless-stopped \
     -e MANAGERS="${MANAGERS}" \
     -e WORKERS="${WORKERS}" \
