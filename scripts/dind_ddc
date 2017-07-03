@@ -205,16 +205,16 @@ remove_net_alias() {
         echo -e "done.\n"
       else
         # skip creation; already exists
-        echo "IP alias (${ALIAS_IP}) does not exists; skipping removal"
+        echo "IP alias (${ALIAS_IP}) does not exists; skipping removal..."
         echo -e "done.\n"
       fi
     else
       # skip because custom address provided
-      echo "Skipping removal of network IP alias; custom address provided"
+      echo "Skipping removal of network IP alias; custom address provided..."
       echo -e "done.\n"
     fi
   else
-    echo "Skipping removal of network IP alias; you're not on a Mac"
+    echo "Skipping removal of network IP alias; you're not on a Mac..."
     echo -e "done.\n"
   fi
 }
@@ -326,30 +326,54 @@ get_network_list() {
 }
 
 start_containers() {
-  echo "Starting project containers..."
-  #shellcheck disable=SC2046
-  docker -H unix:///var/run/docker.sock start $(get_container_list) || true
+  CONTAINERS="$(get_container_list)"
+  if [ -z "${CONTAINERS}" ]
+  then
+    echo "No project containers found; skipping..."
+  else
+    echo "Starting project containers..."
+    #shellcheck disable=SC2046
+    docker -H unix:///var/run/docker.sock start $(get_container_list) || true
+  fi
   echo -e "done.\n"
 }
 
 stop_containers() {
-  echo "Stopping project containers; this may take up to 30 seconds..."
-  #shellcheck disable=SC2046
-  docker -H unix:///var/run/docker.sock stop -t 30 $(get_container_list) || true
+  CONTAINERS="$(get_container_list)"
+  if [ -z "${CONTAINERS}" ]
+  then
+    echo "No project containers found; skipping..."
+  else
+    echo "Stopping project containers; this may take up to 30 seconds..."
+    #shellcheck disable=SC2086
+    docker -H unix:///var/run/docker.sock stop -t 30 ${CONTAINERS}
+  fi
   echo -e "done.\n"
 }
 
 pause_containers() {
-  echo "Pausing project containers..."
-  #shellcheck disable=SC2046
-  docker -H unix:///var/run/docker.sock pause $(get_container_list) || true
+  CONTAINERS="$(get_container_list)"
+  if [ -z "${CONTAINERS}" ]
+  then
+    echo "No project containers found; skipping..."
+  else
+    echo "Pausing project containers..."
+    #shellcheck disable=SC2046
+    docker -H unix:///var/run/docker.sock pause $(get_container_list) || true
+  fi
   echo -e "done.\n"
 }
 
 unpause_containers() {
-  echo "Unpausing project containers..."
-  #shellcheck disable=SC2046
-  docker -H unix:///var/run/docker.sock unpause $(get_container_list) || true
+  CONTAINERS="$(get_container_list)"
+  if [ -z "${CONTAINERS}" ]
+  then
+    echo "No project containers found; skipping..."
+  else
+    echo "Unpausing project containers..."
+    #shellcheck disable=SC2046
+    docker -H unix:///var/run/docker.sock unpause $(get_container_list) || true
+  fi
   echo -e "done.\n"
 }
 
@@ -367,14 +391,26 @@ recycle_containers() {
 
   stop_containers
 
+  CONTAINERS="$(get_container_list)"
+  if [ -z "${CONTAINERS}" ]
+  then
+    echo "No project containers to remove; skipping..."
+  else
   echo "Removing project containers..."
-  #shellcheck disable=SC2046
-  docker -H unix:///var/run/docker.sock rm $(get_container_list) || true
+    #shellcheck disable=SC2086
+    docker -H unix:///var/run/docker.sock rm ${CONTAINERS}
+  fi
   echo -e "done.\n"
 
+  NETWORKS="$(get_network_list)"
+  if [ -z "${NETWORKS}" ]
+  then
+    echo "No project networks to remove; skipping..."
+  else
   echo "Removing '${PROJECT}_dind' network..."
-  #shellcheck disable=SC2046
-  docker -H unix:///var/run/docker.sock network rm $(get_network_list) || true
+    #shellcheck disable=SC2086
+    docker -H unix:///var/run/docker.sock network rm ${NETWORKS}
+  fi
   echo -e "done.\n"
 
   launch_engines
@@ -550,21 +586,39 @@ install_dtr() {
 }
 
 destroy_swarm() {
-  echo "Removing project containers..."
-  #shellcheck disable=SC2046
-  docker -H unix:///var/run/docker.sock kill $(get_container_list) || true
-  #shellcheck disable=SC2046
-  docker -H unix:///var/run/docker.sock rm $(get_container_list) || true
+  CONTAINERS="$(get_container_list)"
+  if [ -z "${CONTAINERS}" ]
+  then
+    echo "No project containers to remove; skipping..."
+  else
+    echo "Removing project containers..."
+    #shellcheck disable=SC2086
+    docker -H unix:///var/run/docker.sock kill ${CONTAINERS}
+    #shellcheck disable=SC2086
+    docker -H unix:///var/run/docker.sock rm ${CONTAINERS}
+  fi
   echo -e "done.\n"
 
-  echo "Removing persistent data for docker engines..."
-  #shellcheck disable=SC2046
-  docker -H unix:///var/run/docker.sock volume rm $(get_volume_list) || true
+  VOLUMES="$(get_volume_list)"
+  if [ -z "${VOLUMES}" ]
+  then
+    echo "No project volumes to remove; skipping..."
+  else
+    echo "Removing persistent data for docker engines..."
+    #shellcheck disable=SC2086
+    docker -H unix:///var/run/docker.sock volume rm ${VOLUMES}
+  fi
   echo -e "done.\n"
 
-  echo "Removing '${PROJECT}_dind' network..."
-  #shellcheck disable=SC2046
-  docker -H unix:///var/run/docker.sock network rm $(get_network_list) || true
+  NETWORKS="$(get_network_list)"
+  if [ -z "${NETWORKS}" ]
+  then
+    echo "No project networks to remove; skipping..."
+  else
+    echo "Removing '${PROJECT}_dind' network..."
+    #shellcheck disable=SC2086
+    docker -H unix:///var/run/docker.sock network rm ${NETWORKS}
+  fi
   echo -e "done.\n"
 
   remove_net_alias
