@@ -8,7 +8,8 @@ Stop! Look at [scripts](./scripts) for tools to automatically create a Swarm mod
   * `ce`, `ce-stable`, `latest` [Dockerfile.ce](./Dockerfile.ce)
   * `ce-test` [Dockerfile.ce-test](./Dockerfile.ce-test)
   * `ce-edge` [Dockerfile.ce-edge](./Dockerfile.ce-edge)
-  * `ee`, `ee-17.03` [Dockerfile.ee](./Dockerfile.ee)
+  * `ee` [Dockerfile.ee](./Dockerfile.ee)
+  * `ee-17.03` [Dockerfile.ee-17.03](./Dockerfile.ee-17.03)
 
 ## Build image (optional)
 The images are published to Docker Hub so you do not need to build them unless you want to:
