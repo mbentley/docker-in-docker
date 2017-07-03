@@ -22,9 +22,22 @@ initialize() {
   DTR_OPTIONS="${DTR_OPTIONS:-}"
   DDC_LICENSE="${DDC_LICENSE:-${HOME}/Downloads/docker_subscription.lic}"
   DIND_SUBNET="${DIND_SUBNET:-172.250.0.0/16}"
-  DIND_DNS="${DIND_DNS:-8.8.8.8}"
   DIND_RESTART="${DIND_RESTART:-unless-stopped}"
   ALIAS_IP="${ALIAS_IP:-10.1.2.3}"
+
+  #  only run a container to get resolv.conf from the engine if DIND_DNS wasn't specified
+  if [ -z "${DIND_DNS}" ]
+  then
+    DIND_DNS="$(docker -H unix:///var/run/docker.sock run --rm busybox cat /etc/resolv.conf | grep -m 1 ^nameserver | awk '{print $2}')"
+
+    # lazy check for ip like string
+    if ! [[ ${DIND_DNS} =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]
+    then
+      # if all else fails, set the DNS server to google's primary
+      echo "Warning: unable to determine DNS server used by host docker engine; using Google"
+      DIND_DNS="8.8.8.8"
+    fi
+  fi
 
   # check to see what OS and set network interface
   if [ "$(uname -s)" = "Darwin" ]
