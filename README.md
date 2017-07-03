@@ -32,16 +32,23 @@ The images are published to Docker Hub so you do not need to build them unless y
     -t mbentley/docker-in-docker:ce-edge \
     -f Dockerfile.ce-edge .
   ```
-* Docker EE
+* Docker EE (stable)
+  ```
+  docker build \
+    --build-arg DOCKER_EE_URL="<DOCKER-EE-URL>" \
+    -t mbentley/docker-in-docker:ee \
+    -f Dockerfile.ee .
+
+  docker push mbentley/docker-in-docker:ee
+  ```
+* Docker EE (stable-17.03)
   ```
   docker build \
     --build-arg DOCKER_EE_URL="<DOCKER-EE-URL>" \
     -t mbentley/docker-in-docker:ee-17.03 \
-    -t mbentley/docker-in-docker:ee \
-    -f Dockerfile.ee .
+    -f Dockerfile.ee-17.03 .
 
   docker push mbentley/docker-in-docker:ee-17.03
-  docker push mbentley/docker-in-docker:ee
   ```
 
   *Note*: your `<DOCKER-EE-URL>` value can be found from https://store.docker.com/?overlay=subscriptions
