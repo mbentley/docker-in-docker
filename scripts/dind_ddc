@@ -18,6 +18,7 @@ initialize() {
   DTR_REPO="${DTR_REPO:-docker/dtr}"
   DTR_VERSION="${DTR_VERSION:-2.2.5}"
   DTR_IMAGES="${DTR_IMAGES:-${HOME}/ddc/dtr-"${DTR_VERSION}".tar.gz}"
+  DTR_OPTIONS="${DTR_OPTIONS:-}"
   DDC_LICENSE="${DDC_LICENSE:-${HOME}/Downloads/docker_subscription.lic}"
   DIND_SUBNET="${DIND_SUBNET:-172.250.0.0/16}"
   DIND_DNS="${DIND_DNS:-8.8.8.8}"
@@ -60,6 +61,7 @@ env_info() {
   echo -e "DTR_VERSION:\t${DTR_VERSION}"
   echo -e "DTR_IMAGES:\t${DTR_IMAGES}"
   echo -e "DDC_LICENSE:\t${DDC_LICENSE}"
+  echo -e "DTR_OPTIONS:\t${DTR_OPTIONS}"
   echo -e "DIND_SUBNET:\t${DIND_SUBNET}"
   echo -e "DIND_DNS:\t${DIND_DNS}"
   echo -e "DIND_RESTART:\t${DIND_RESTART}"
@@ -528,7 +530,8 @@ install_dtr() {
   echo -e "done.\n"
 
   echo "Installing DTR on docker${DTR_NODE}..."
-  docker -H tcp://127.0.0.1:100${DTR_NODE} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install --ucp-url https://"${ALIAS_IP}:4443" --ucp-username admin --ucp-password docker123 --ucp-node docker${DTR_NODE} --ucp-ca "$(curl -ks https://"${ALIAS_IP}":4443/ca)" --dtr-external-url "${ALIAS_IP}"
+  #shellcheck disable=SC2086
+  docker -H tcp://127.0.0.1:100${DTR_NODE} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install ${DTR_OPTIONS} --ucp-url https://"${ALIAS_IP}:4443" --ucp-username admin --ucp-password docker123 --ucp-node docker${DTR_NODE} --ucp-ca "$(curl -ks https://"${ALIAS_IP}":4443/ca)" --dtr-external-url "${ALIAS_IP}"
 
   echo -e "\nDTR should now be available at https://${ALIAS_IP}/"
   echo -e "  Username: admin\tPassword: docker123"
