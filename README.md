@@ -5,11 +5,12 @@ docker-in-docker
 Stop! Look at [scripts](./scripts) for tools to automatically create a Swarm mode cluster, a UCP cluster, or a DDC (both UCP & DTR) cluster.  If you want to manually stand up an engine or Swarm mode cluster, read on.
 
 ## Image Tags
-  * `ce`, `ce-stable`, `latest` [Dockerfile.ce](./Dockerfile.ce)
-  * `ce-test` [Dockerfile.ce-test](./Dockerfile.ce-test)
-  * `ce-edge` [Dockerfile.ce-edge](./Dockerfile.ce-edge)
-  * `ee` [Dockerfile.ee](./Dockerfile.ee)
-  * `ee-17.03` [Dockerfile.ee-17.03](./Dockerfile.ee-17.03)
+  * `ce`, `ce-stable`, `latest` ([Dockerfile.ce](./Dockerfile.ce))
+  * `ce-test` ([Dockerfile.ce-test](./Dockerfile.ce-test))
+  * `ce-edge` ([Dockerfile.ce-edge](./Dockerfile.ce-edge))
+  * `ee` ([Dockerfile.ee](./Dockerfile.ee))
+  * `ee-17.03` ([Dockerfile.ee-17.03](./Dockerfile.ee-17.03))
+  * `haproxy` ([Dockerfile.haproxy](./scripts/haproxy/Dockerfile.haproxy)) - used by  `dind_ddc`
 
 ## Build image (optional)
 The images are published to Docker Hub so you do not need to build them unless you want to:
