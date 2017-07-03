@@ -7,6 +7,7 @@ unset DOCKER_HOST
 
 initialize() {
   # set default values; allow for override
+  PROJECT="${PROJECT:-dind-ddc}"
   DIND_TAG="${DIND_TAG:-ee-17.03}"
   ENGINE_OPTS="${ENGINE_OPTS:-}"
   MANAGERS="${MANAGERS:-1}"
@@ -49,6 +50,7 @@ initialize() {
 }
 
 env_info() {
+  echo -e "PROJECT:\t${PROJECT}"
   echo -e "DIND_TAG:\t${DIND_TAG}"
   echo -e "ENGINE_OPTS:\t${ENGINE_OPTS}"
   echo -e "MANAGERS:\t${MANAGERS}"
@@ -235,12 +237,12 @@ launch_engines() {
   check_subnet
   echo -e "done.\n"
 
-  echo "Creating 'dind' network with the subnet ${DIND_SUBNET}..."
-  docker -H unix:///var/run/docker.sock network create --driver bridge --label project=dind_ddc --subnet="${DIND_SUBNET}" dind
+  echo "Creating '${PROJECT}_dind' network with the subnet ${DIND_SUBNET}..."
+  docker -H unix:///var/run/docker.sock network create --driver bridge --label project="${PROJECT}" --subnet="${DIND_SUBNET}" "${PROJECT}"_dind
   echo -e "done.\n"
 
   # get subnet prefix
-  DIND_SUBNET_PREFIX="$(docker -H unix:///var/run/docker.sock network inspect --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' dind | awk -F '/' '{print $1}' | awk -F '.' '{print $1"."$2"."$3"."}')"
+  DIND_SUBNET_PREFIX="$(docker -H unix:///var/run/docker.sock network inspect --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' "${PROJECT}"_dind | awk -F '/' '{print $1}' | awk -F '.' '{print $1"."$2"."$3"."}')"
 
   NUM_NODES=$((MANAGERS+WORKERS))
 
@@ -248,9 +250,9 @@ launch_engines() {
   for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
   do
     docker -H unix:///var/run/docker.sock volume create \
-      --label project=dind_ddc \
+      --label project="${PROJECT}" \
       --driver local \
-      docker${ENGINE_NUM}
+      "${PROJECT}"_docker${ENGINE_NUM}
   done
   echo -e "done.\n"
 
@@ -262,16 +264,16 @@ launch_engines() {
     {
       docker -H unix:///var/run/docker.sock run -d \
         -p 127.0.0.1:100${ENGINE_NUM}:12375 \
-        --name docker${ENGINE_NUM} \
-        --hostname docker${ENGINE_NUM} \
-        --label project=dind_ddc \
+        --name "${PROJECT}"_docker${ENGINE_NUM} \
+        --hostname "${PROJECT}"_docker${ENGINE_NUM} \
+        --label project=${PROJECT} \
         --label role=manager \
         --privileged \
-        --net dind \
+        --net "${PROJECT}"_dind \
         --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+51)) \
         --restart "${DIND_RESTART}" \
         -v /lib/modules:/lib/modules:ro \
-        -v docker${ENGINE_NUM}:/var/lib/docker \
+        -v "${PROJECT}"_docker${ENGINE_NUM}:/var/lib/docker \
         --tmpfs /run \
         mbentley/docker-in-docker:"${DIND_TAG}" \
         dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 --dns "${DIND_DNS}" ${ENGINE_OPTS}
@@ -287,16 +289,16 @@ launch_engines() {
     {
       docker -H unix:///var/run/docker.sock run -d \
         -p 127.0.0.1:100${ENGINE_NUM}:12375 \
-        --name docker${ENGINE_NUM} \
-        --hostname docker${ENGINE_NUM} \
-        --label project=dind_ddc \
+        --name "${PROJECT}"_docker${ENGINE_NUM} \
+        --hostname "${PROJECT}"_docker${ENGINE_NUM} \
+        --label project=${PROJECT} \
         --label role=worker \
         --privileged \
-        --net dind \
+        --net "${PROJECT}"_dind \
         --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+51)) \
         --restart "${DIND_RESTART}" \
         -v /lib/modules:/lib/modules:ro \
-        -v docker${ENGINE_NUM}:/var/lib/docker \
+        -v "${PROJECT}"_docker${ENGINE_NUM}:/var/lib/docker \
         --tmpfs /run \
         mbentley/docker-in-docker:"${DIND_TAG}" \
         dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 --dns "${DIND_DNS}" ${ENGINE_OPTS}
@@ -306,15 +308,15 @@ launch_engines() {
 }
 
 get_container_list() {
-  docker ps -a --filter label=project=dind_ddc --format '{{.Names}}'
+  docker ps -a --filter label=project="${PROJECT}" --format '{{.Names}}'
 }
 
 get_volume_list() {
-  docker volume ls --filter label=project=dind_ddc --format '{{.Name}}'
+  docker volume ls --filter label=project="${PROJECT}" --format '{{.Name}}'
 }
 
 get_network_list() {
-  docker network ls --filter label=project=dind_ddc --format '{{.Name}}'
+  docker network ls --filter label=project="${PROJECT}" --format '{{.Name}}'
 }
 
 start_containers() {
@@ -350,7 +352,7 @@ recycle_containers() {
   get_current_num_engines
 
   # check to see if the ddc-lb exists
-  if [ "$(docker ps -a --filter label=project=dind_ddc --format '{{.Names}}' --filter name=ddc-lb)" = "ddc-lb" ]
+  if [ "$(docker ps -a --filter label=project="${PROJECT}" --format '{{.Names}}' --filter name=ddc-lb)" == "${PROJECT}_ddc-lb" ]
   then
     RECREATE_LB=true
   else
@@ -364,10 +366,10 @@ recycle_containers() {
   docker -H unix:///var/run/docker.sock rm $(get_container_list) || true
   echo -e "done.\n"
 
-  echo "Removing 'dind' network..."
+  echo "Removing '${PROJECT}_dind' network..."
   #shellcheck disable=SC2046
   docker -H unix:///var/run/docker.sock network rm $(get_network_list) || true
-  echo -e "done."
+  echo -e "done.\n"
 
   launch_engines
   if [ "${RECREATE_LB}" = "true" ]
@@ -377,24 +379,24 @@ recycle_containers() {
 }
 
 project_status() {
-  echo "Project containers:"
-  docker ps -a --filter label=project=dind_ddc --format 'table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Names}}\t{{.Labels}}'
+  echo "Project containers for ${PROJECT}:"
+  docker ps -a --filter label=project="${PROJECT}" --format 'table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Names}}\t{{.Labels}}'
 
-  echo -e "\nProject volumes:"
-  docker volume ls --filter label=project=dind_ddc
+  echo -e "\nProject volumes for ${PROJECT}:"
+  docker volume ls --filter label=project="${PROJECT}"
 
-  echo -e "\nProject networks:"
-  docker network ls --filter label=project=dind_ddc
+  echo -e "\nProject networks for ${PROJECT}:"
+  docker network ls --filter label=project="${PROJECT}"
 }
 
 get_current_num_engines() {
   # count the number of existing containers
-  MANAGERS="$(docker ps -a --filter label=project=dind_ddc --filter label=role=manager --filter name=docker --format '{{.Names}}' | wc -l | tr -d ' ')"
-  WORKERS="$(docker ps -a --filter label=project=dind_ddc --filter label=role=worker --filter name=docker --format '{{.Names}}' | wc -l | tr -d ' ')"
+  MANAGERS="$(docker ps -a --filter label=project="${PROJECT}" --filter label=role=manager --filter name=docker --format '{{.Names}}' | wc -l | tr -d ' ')"
+  WORKERS="$(docker ps -a --filter label=project="${PROJECT}" --filter label=role=worker --filter name=docker --format '{{.Names}}' | wc -l | tr -d ' ')"
 }
 
 init_swarm() {
-  echo "Initializing Swarm on docker1..."
+  echo "Initializing Swarm on ${PROJECT}_docker1..."
   docker -H tcp://127.0.0.1:1001 swarm init
   echo -e "done.\n"
 
@@ -404,9 +406,9 @@ init_swarm() {
   # get swarm worker join token
   WORKER_TOKEN=$(docker -H tcp://127.0.0.1:1001 swarm join-token worker -q)
 
-  MANAGER_JOIN_COMMAND="swarm join --token ${MANAGER_TOKEN} $(docker -H unix:///var/run/docker.sock container inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker1):2377"
+  MANAGER_JOIN_COMMAND="swarm join --token ${MANAGER_TOKEN} $(docker -H unix:///var/run/docker.sock container inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${PROJECT}"_docker1):2377"
 
-  WORKER_JOIN_COMMAND="swarm join --token ${WORKER_TOKEN} $(docker -H unix:///var/run/docker.sock container inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker1):2377"
+  WORKER_JOIN_COMMAND="swarm join --token ${WORKER_TOKEN} $(docker -H unix:///var/run/docker.sock container inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${PROJECT}"_docker1):2377"
 
   # join managers
   for ((ENGINE_NUM=2; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
@@ -430,7 +432,7 @@ init_swarm() {
   echo -e "Swarm mode cluster ready:"
   docker -H tcp://127.0.0.1:1001 node ls
   #shellcheck disable=SC2016
-  echo -e "\nTo connect to the engine/Swarm, use:\neval "'"$(./dind_swarm connect_engine docker1)"'
+  echo -e "\nTo connect to the engine/Swarm, use:\neval "'"$('"$0"' connect_engine '"${PROJECT}"'_docker1)"'
   echo -e "done.\n"
 }
 
@@ -447,12 +449,12 @@ install_ucp() {
   get_current_num_engines
 
   create_net_alias
-  DOCKER1_IP="$(docker -H unix:///var/run/docker.sock container inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker1)"
+  DOCKER1_IP="$(docker -H unix:///var/run/docker.sock container inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${PROJECT}"_docker1)"
 
   # load images on managers
   for ((ENGINE_NUM=1; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
   do
-    echo "Loading UCP images for managers on docker${ENGINE_NUM}..."
+    echo "Loading UCP images for managers on ${PROJECT}_docker${ENGINE_NUM}..."
     #shellcheck disable=SC2086
     docker -H tcp://127.0.0.1:100${ENGINE_NUM} load -i "${UCP_IMAGES}"
     echo -e "done.\n"
@@ -461,18 +463,20 @@ install_ucp() {
   # load images on workers
   for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
   do
-    echo "Loading UCP images for workers on docker${ENGINE_NUM}..."
+    echo "Loading UCP images for workers on ${PROJECT}_docker${ENGINE_NUM}..."
     #shellcheck disable=SC2086
     docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-agent:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${ENGINE_NUM} load || true
     docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-hrm:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${ENGINE_NUM} load || true
     echo -e "done.\n"
   done
 
-  echo "Installing UCP on docker1..."
+  # launch haproxy before installing UCP so that we make sure it goes healthy before turning on HRM
+  launch_haproxy
+
+  echo "Installing UCP on ${PROJECT}_docker1..."
   #shellcheck disable=SC2086
   docker -H tcp://127.0.0.1:1001 run -it --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock "${UCP_REPO}":"${UCP_VERSION}" install ${UCP_OPTIONS} --admin-username admin --admin-password docker123 --host-address "${DOCKER1_IP}" --controller-port 4443 --san "${DOCKER1_IP}" --san "${ALIAS_IP}" --san "$(hostname)" --san "$(hostname -f)" --license "$(cat ${DDC_LICENSE})"
-
-  launch_haproxy
+  echo -e "done.\n"
 
   # add the ALIAS_IP to the SANs engine labels of the managers
   for ((ENGINE_NUM=2; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
@@ -499,22 +503,23 @@ install_ucp() {
 
 launch_haproxy() {
   # get subnet prefix
-  DIND_SUBNET_PREFIX="$(docker -H unix:///var/run/docker.sock network inspect --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' dind | awk -F '/' '{print $1}' | awk -F '.' '{print $1"."$2"."$3"."}')"
+  DIND_SUBNET_PREFIX="$(docker -H unix:///var/run/docker.sock network inspect --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' "${PROJECT}"_dind | awk -F '/' '{print $1}' | awk -F '.' '{print $1"."$2"."$3"."}')"
 
-  echo -e "\nLaunching HAProxy (ddc-lb)..."
+  echo "Launching HAProxy (${PROJECT}_ddc-lb)..."
   docker -H unix:///var/run/docker.sock run -d \
     -p 80:80 \
     -p 443:443 \
     -p 4443:4443 \
     -p 8181:8181 \
     -p 8443:8443 \
-    --name ddc-lb \
-    --label project=dind_ddc \
-    --net dind \
+    --name "${PROJECT}"_ddc-lb \
+    --label project="${PROJECT}" \
+    --net "${PROJECT}"_dind \
     --ip "${DIND_SUBNET_PREFIX}"$((MANAGERS+WORKERS+52)) \
     --restart=unless-stopped \
     -e MANAGERS="${MANAGERS}" \
     -e WORKERS="${WORKERS}" \
+    -e PROJECT="${PROJECT}" \
     mbentley/docker-in-docker:haproxy
   echo "The HAProxy stats page should now be available at http://${ALIAS_IP}:8181/haproxy?stats"
   echo -e "done.\n"
@@ -525,13 +530,13 @@ install_dtr() {
   get_current_num_engines
 
   DTR_NODE=$((MANAGERS+1))
-  echo "Loading DTR images on docker${DTR_NODE}..."
+  echo "Loading DTR images on ${PROJECT}_docker${DTR_NODE}..."
   docker -H tcp://127.0.0.1:100${DTR_NODE} load -i "${DTR_IMAGES}"
   echo -e "done.\n"
 
-  echo "Installing DTR on docker${DTR_NODE}..."
+  echo "Installing DTR on ${PROJECT}_docker${DTR_NODE}..."
   #shellcheck disable=SC2086
-  docker -H tcp://127.0.0.1:100${DTR_NODE} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install ${DTR_OPTIONS} --ucp-url https://"${ALIAS_IP}:4443" --ucp-username admin --ucp-password docker123 --ucp-node docker${DTR_NODE} --ucp-ca "$(curl -ks https://"${ALIAS_IP}":4443/ca)" --dtr-external-url "${ALIAS_IP}"
+  docker -H tcp://127.0.0.1:100${DTR_NODE} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install ${DTR_OPTIONS} --ucp-url https://"${ALIAS_IP}:4443" --ucp-username admin --ucp-password docker123 --ucp-node "${PROJECT}"_docker${DTR_NODE} --ucp-ca "$(curl -ks https://"${ALIAS_IP}":4443/ca)" --dtr-external-url "${ALIAS_IP}"
 
   echo -e "\nDTR should now be available at https://${ALIAS_IP}/"
   echo -e "  Username: admin\tPassword: docker123"
@@ -546,12 +551,12 @@ destroy_swarm() {
   docker -H unix:///var/run/docker.sock rm $(get_container_list) || true
   echo -e "done.\n"
 
-  echo "Removing persistent data for docker engines (docker1, docker2, docker3)..."
+  echo "Removing persistent data for docker engines..."
   #shellcheck disable=SC2046
   docker -H unix:///var/run/docker.sock volume rm $(get_volume_list) || true
   echo -e "done.\n"
 
-  echo "Removing 'dind' network..."
+  echo "Removing '${PROJECT}_dind' network..."
   #shellcheck disable=SC2046
   docker -H unix:///var/run/docker.sock network rm $(get_network_list) || true
   echo -e "done.\n"
@@ -564,7 +569,7 @@ check_subnet() {
   do
     if [ "$(docker -H unix:///var/run/docker.sock network inspect --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' "${i}")" = "${DIND_SUBNET}" ]
     then
-      echo "ERROR: the subnet specified (${DIND_SUBNET}) for the 'dind' network conflicts with the existing network '$(docker -H unix:///var/run/docker.sock network inspect --format '{{.Name}}' "${i}")'"
+      echo "ERROR: the subnet specified (${DIND_SUBNET}) for the '${PROJECT}_dind' network conflicts with the existing network '$(docker -H unix:///var/run/docker.sock network inspect --format '{{.Name}}' "${i}")'"
       echo "Use DIND_SUBNET to specify a different subnet when launching a new environment"
       exit 1
     fi
@@ -602,7 +607,7 @@ main() {
       if [ -z "${2}" ]
       then
         echo "Error: Missing engine name"
-        echo "Usage: $0 connect_engine docker1"
+        echo "Usage: $0 connect_engine ${PROJECT}_docker1"
       else
         ${1} "${2}"
       fi

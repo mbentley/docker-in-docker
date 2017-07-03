@@ -34,6 +34,7 @@ Additional commands:
   ./dind_ddc {connect_engine|create_net_alias|remove_net_alias|ucp_create_tar|dtr_create_tar}
 
 Current set environment variables:
+PROJECT:        dind-ddc
 DIND_TAG:       ee-17.03
 ENGINE_OPTS:
 MANAGERS:       1
@@ -77,6 +78,7 @@ ALIAS_IP:       10.1.2.3
   * `dtr_create_tar` - create a tarball of the DTR images
 
 ### Environment Variable Overrides
+  * `PROJECT` - prefix for all resources; allows you to run multiple environments (although it is still one at a time)
   * `DIND_TAG` - docker image tag used to run docker
     * see https://hub.docker.com/r/mbentley/docker-in-docker/tags/ for the tags
   * `MANAGERS` - number of Swarm managers
