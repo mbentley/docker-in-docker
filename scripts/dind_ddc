@@ -276,7 +276,10 @@ launch_engines() {
         -v "${PROJECT}"_docker${ENGINE_NUM}:/var/lib/docker \
         --tmpfs /run \
         mbentley/docker-in-docker:"${DIND_TAG}" \
-        dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 --dns "${DIND_DNS}" ${ENGINE_OPTS}
+        dockerd -s overlay2 \
+          -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 \
+          --log-driver json-file --log-opt max-size=50m --log-opt max-file=3 \
+          --dns "${DIND_DNS}" ${ENGINE_OPTS}
      }
   done
   echo -e "done.\n"
@@ -301,7 +304,10 @@ launch_engines() {
         -v "${PROJECT}"_docker${ENGINE_NUM}:/var/lib/docker \
         --tmpfs /run \
         mbentley/docker-in-docker:"${DIND_TAG}" \
-        dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 --dns "${DIND_DNS}" ${ENGINE_OPTS}
+        dockerd -s overlay2 \
+          -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 \
+          --log-driver json-file --log-opt max-size=50m --log-opt max-file=3 \
+          --dns "${DIND_DNS}" ${ENGINE_OPTS}
      }
   done
   echo -e "done.\n"
