@@ -57,9 +57,11 @@ defaults
         mode    tcp
         option  tcplog
         option  dontlognull
-        timeout connect 5000
-        timeout client 50000
-        timeout server 50000
+        timeout connect 5s
+        timeout client 50s
+        timeout client-fin 50s
+        timeout server 50s
+        timeout tunnel 1h
 
 ### frontends
 frontend ucp_4443
