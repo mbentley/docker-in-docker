@@ -4,23 +4,34 @@ docker-in-docker
 ## Docker EE (Engine, UCP and DTR)
 Stop! Look at [scripts](./scripts) for tools to automatically create a Swarm mode cluster, a UCP cluster, or a DDC (both UCP & DTR) cluster.  If you want to manually stand up an engine or Swarm mode cluster, read on.
 
+## Image Tags
+  * `ce`, `ce-stable`, `latest` [Dockerfile.ce](./Dockerfile.ce)
+  * `ce-test` [Dockerfile.ce-test](./Dockerfile.ce-test)
+  * `ce-edge` [Dockerfile.ce-edge](./Dockerfile.ce-edge)
+  * `ee`, `ee-17.03` [Dockerfile.ee](./Dockerfile.ee)
+
 ## Build image (optional)
 The images are published to Docker Hub so you do not need to build them unless you want to:
 
-* Docker CE 17.03
+* Docker CE (stable)
   ```
   docker build \
     -t mbentley/docker-in-docker:ce-17.03 \
     -t mbentley/docker-in-docker:ce \
     -f Dockerfile.ce .
   ```
-* Docker CE 17.06 RC
+* Docker CE (test)
   ```
   docker build \
     -t mbentley/docker-in-docker:ce-test \
     -f Dockerfile.ce-test .
   ```
-
+* Docker CE (edge)
+  ```
+  docker build \
+    -t mbentley/docker-in-docker:ce-edge \
+    -f Dockerfile.ce-edge .
+  ```
 * Docker EE
   ```
   docker build \
