@@ -182,6 +182,19 @@ DIND_ENV=~/dind_ddc-tech-preview ./dind_ddc create_all
 
 Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [create offline tarballs](#create-targz-archives) of the images.  The below examples utilize exporting environment variables.  See `DIND_ENV` in [Environment Variable Overrides](#environment-variable-overrides) if you'd like to utilize a file with environment variables instead.
 
+* UCP standalone
+  ```
+  ./dind_ddc create_swarm
+  ./dind_ddc install_ucp
+  ```
+
+* UCP in HA (3 managers, 3 workers) with DTR on the first worker
+  ```
+  export MANAGERS=3 \
+    WORKERS=3
+  ./dind_ddc create_all
+  ```
+
 * UCP and DTR - UCP (dev/TP) and DTR (dev/TP)
   ```
   export UCP_REPO="dockerorcadev/ucp" \
