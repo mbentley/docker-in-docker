@@ -4,7 +4,7 @@ scripts
 ## `dind_ddc`
 
 ## tl;dr
-Check out the [Prerequisites](#prerequisites) and then go down to [Example - starting DDC](#example---starting-ddc) for released versions or [Pre-production DDC](#pre-production-ddc) for how to launch an environment with pre-production images.
+Check out the [Prerequisites](#prerequisites) and then go down to [Launching Docker EE with default configuration](#launching-docker-ee-with-default-configuration) for released versions or [Pre-production DDC](#pre-production-ddc) for how to launch an environment with pre-production images.
 
 ## Prerequisites
   * Docker for Mac installed
@@ -34,6 +34,7 @@ Additional commands:
   ./dind_ddc {connect_engine|create_net_alias|remove_net_alias|ucp_create_tar|dtr_create_tar}
 
 Current set environment variables:
+DIND_ENV:
 PROJECT:        dind-ddc
 DIND_TAG:       ee-17.03
 ENGINE_OPTS:
@@ -78,6 +79,7 @@ ALIAS_IP:       10.1.2.3
   * `dtr_create_tar` - create a tarball of the DTR images
 
 ### Environment Variable Overrides
+  * `DIND_ENV` - environment variable file to source for the below environment variable overrides
   * `PROJECT` - prefix for all resources; allows you to run multiple environments (although it is still one at a time)
   * `DIND_TAG` - docker image tag used to run docker
     * see https://hub.docker.com/r/mbentley/docker-in-docker/tags/ for the tags
@@ -105,53 +107,39 @@ ALIAS_IP:       10.1.2.3
 
 *Note*: To see the default values, run `./dind_ddc env_info`
 
-### Example - starting DDC
+## Examples
+
+### Launching Docker EE with default configuration
 ```
 ./dind_ddc create_all
 ```
 
 [![asciicast](https://asciinema.org/a/125041.png)](https://asciinema.org/a/125041)
 
-### HRM Example Usage
+### Launching Docker EE w/tech preview
+This will launch Docker EE with a set of tech preview images using an environment variable file.  See [Pre-production DDC](#pre-production-ddc) to instructions on how to create tarballs of the tech preview images.
+Contents of `~/dind_ddc-tech-preview`:
+```
+PROJECT="tp"
+DIND_SUBNET="172.246.0.0/16"
+UCP_REPO="dockerorcadev/ucp"
+UCP_VERSION="2.2.0-tp7"
+UCP_OPTIONS="--image-version dev:"
+DTR_REPO="dockerhubenterprise/dtr"
+DTR_VERSION="2.3.0-tp6"
+DIND_TAG="ce"
+```
 
-Enable HRM in the UCP UI, specify ports 8181 and 8443 for HTTP and HTTPS, respectively.  Create a service and test it.  You can also add a hosts file entry so you can bring up the site in a browser but you will still need to specify the port for now.
+Commands to launch Docker EE w/tech preview build:
+```
+. ~/dind_ddc-tech-preview
+./dind_ddc create_all
+```
+
+or with a one-liner:
 
 ```
-# create the service
-$ docker -H tcp://localhost:1001 \
-  service create \
-  --name nginx \
-  --network ucp-hrm \
-  --label "com.docker.ucp.mesh.http.80=external_route=http://nginx.test,internal_port=80" \
-  nginx:latest
-
-# test with curl
-$ curl -H "Host: nginx.test" http://10.1.2.3:8181
-<!DOCTYPE html>
-<html>
-<head>
-<title>Welcome to nginx!</title>
-<style>
-    body {
-        width: 35em;
-        margin: 0 auto;
-        font-family: Tahoma, Verdana, Arial, sans-serif;
-    }
-</style>
-</head>
-<body>
-<h1>Welcome to nginx!</h1>
-<p>If you see this page, the nginx web server is successfully installed and
-working. Further configuration is required.</p>
-
-<p>For online documentation and support please refer to
-<a href="http://nginx.org/">nginx.org</a>.<br/>
-Commercial support is available at
-<a href="http://nginx.com/">nginx.com</a>.</p>
-
-<p><em>Thank you for using nginx.</em></p>
-</body>
-</html>
+DIND_ENV=~/dind_ddc-tech-preview ./dind_ddc create_all
 ```
 
 ### Pre-production DDC
@@ -192,7 +180,7 @@ Commercial support is available at
 
 ### Launching UCP and DTR in various configurations
 
-Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [create offline tarballs](#create-targz-archives) of the images.
+Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [create offline tarballs](#create-targz-archives) of the images.  The below examples utilize exporting environment variables.  See `DIND_ENV` in [Environment Variable Overrides](#environment-variable-overrides) if you'd like to utilize a file with environment variables instead.
 
 * UCP and DTR - UCP (dev/TP) and DTR (dev/TP)
   ```
@@ -236,3 +224,46 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
 
   ./dind_ddc install_ucp
   ```
+
+### HRM Example Usage
+
+Create a service and test it.  You can also add a hosts file entry so you can bring up the site in a browser but you will still need to specify the port for now; either 8181 or 8443 for HTTP/HTTPS.
+
+```
+# create the service
+$ docker -H tcp://localhost:1001 \
+  service create \
+  --name nginx \
+  --network ucp-hrm \
+  --label "com.docker.ucp.mesh.http.80=external_route=http://nginx.test,internal_port=80" \
+  nginx:latest
+
+# test with curl
+$ curl -H "Host: nginx.test" http://10.1.2.3:8181
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+```
+

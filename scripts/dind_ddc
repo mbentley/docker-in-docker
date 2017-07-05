@@ -6,6 +6,21 @@ set -e
 unset DOCKER_HOST
 
 initialize() {
+  # source an external env var file if DIND_ENV set
+  DIND_ENV="${DIND_ENV:-}"
+  if ! [ -z "${DIND_ENV}" ]
+  then
+    if [ -f "${DIND_ENV}" ]
+    then
+      echo "Loading environment variables from '${DIND_ENV}'"
+      #shellcheck disable=SC1090
+      source "${DIND_ENV}"
+    else
+      echo "Warning: DIND_ENV file not found; unable to load environment variables"
+      sleep 3
+    fi
+  fi
+
   # set default values; allow for override
   PROJECT="${PROJECT:-dind-ddc}"
   DIND_TAG="${DIND_TAG:-ee-17.03}"
@@ -63,6 +78,7 @@ initialize() {
 }
 
 env_info() {
+  echo -e "DIND_ENV:\t${DIND_ENV}"
   echo -e "PROJECT:\t${PROJECT}"
   echo -e "DIND_TAG:\t${DIND_TAG}"
   echo -e "ENGINE_OPTS:\t${ENGINE_OPTS}"
