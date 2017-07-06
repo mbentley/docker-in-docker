@@ -68,12 +68,12 @@ The images are published to Docker Hub so you do not need to build them unless y
     docker run -d \
       --name docker \
       --privileged \
-      -p 127.0.0.1:1000:12375 \
+      -p 127.0.0.1:1000:2375 \
       -v /lib/modules:/lib/modules:ro \
       -v docker:/var/lib/docker \
       --tmpfs /run \
       mbentley/docker-in-docker \
-      dockerd -s overlay2 -H unix:///var/run/docker.sock
+      dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375
     ```
 
 2. Communicate with that engine
@@ -101,12 +101,12 @@ The images are published to Docker Hub so you do not need to build them unless y
       docker run -d \
         --name docker${ENGINE_NUM} \
         --privileged \
-        -p 127.0.0.1:100${ENGINE_NUM}:12375 \
+        -p 127.0.0.1:100${ENGINE_NUM}:2375 \
         -v /lib/modules:/lib/modules:ro \
         -v docker${ENGINE_NUM}:/var/lib/docker \
         --tmpfs /run \
         mbentley/docker-in-docker \
-        dockerd -s overlay2 -H unix:///var/run/docker.sock
+        dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375
     done
     ```
 
