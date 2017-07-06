@@ -2,9 +2,23 @@ scripts
 =======
 
 ## `dind_ddc`
+* [Quickstart (tl;dr)](#quickstart-tldr)
+* [Prerequisites](#prerequisites)
+* [dind_ddc Usage](#dind_ddc-usage)
+  * [Basic usage details](#basic-usage-details)
+  * [Container commands details](#container-commands-details)
+  * [Additional commands details](#additional-commands-details)
+  * [Environment Variable Overrides](#environment-variable-overrides)
+* [Examples](#examples)
+  * [Launching Docker EE with default configuration](#launching-docker-ee-with-default-configuration)
+  * [Using an environment file for persistent settings](#using-an-environment-file-for-persistent-settings)
+  * [Pre-production DDC](#pre-production-ddc)
+    * [Create .tar.gz archives](#create-targz-archives)
+  * [Launching UCP and DTR in various configurations](#launching-ucp-and-dtr-in-various-configurations)
+  * [HRM Example Usage](#hrm-example-usage)
 
-## tl;dr
-Check out the [Prerequisites](#prerequisites) and then go down to [Launching Docker EE with default configuration](#launching-docker-ee-with-default-configuration) for released versions or [Pre-production DDC](#pre-production-ddc) for how to launch an environment with pre-production images.
+## Quickstart (tl;dr)
+Check out the [Prerequisites](#prerequisites) and then go down to [Launching Docker EE with default configuration](#launching-docker-ee-with-default-configuration) for released versions or [Environment Variable Overrides](#environment-variable-overrides) for custom settings you can pass as well as [Using an environment file for persistent settings](#using-an-environment-file-for-persistent-settings) to make the management of your custom settings more manageable.  See [Pre-production DDC](#pre-production-ddc) for details of how to launch an environment with pre-production images.
 
 ## Prerequisites
   * Docker for Mac installed
@@ -15,7 +29,7 @@ Check out the [Prerequisites](#prerequisites) and then go down to [Launching Doc
   * Have a DDC license file in `~/Downloads/docker_subscription.lic`
     * Alternatively, use the `DDC_LICENSE` env var to override the full path to the license
   * Must have the following ports available on your host:
-    * `1001`, `1002`, `1003` - TCP connection to Docker engines
+    * `100n` - TCP connection to Docker engines where n is 1-n number of engines you're running
     * `80`, `443`- DTR (HTTP and HTTPS)
     * `4443` - UCP (HTTPS)
     * `8181`, `8443` - UCP HRM (HTTP and HTTPS)
@@ -117,31 +131,39 @@ ALIAS_IP:       10.1.2.3
 
 [![asciicast](https://asciinema.org/a/125041.png)](https://asciinema.org/a/125041)
 
-### Launching Docker EE w/tech preview
-This will launch Docker EE with a set of tech preview images using an environment variable file.  See [Pre-production DDC](#pre-production-ddc) to instructions on how to create tarballs of the tech preview images.
-Contents of `~/dind_ddc-tech-preview`:
-```
-export PROJECT="tp"
-export DIND_SUBNET="172.246.0.0/16"
-export UCP_REPO="dockerorcadev/ucp"
-export UCP_VERSION="2.2.0-tp7"
-export UCP_OPTIONS="--image-version dev:"
-export DTR_REPO="dockerhubenterprise/dtr"
-export DTR_VERSION="2.3.0-tp6"
-export DIND_TAG="ce"
-```
+### Using an environment file for persistent settings
+With the many configuration options comes the difficulty in keeping track of the environment variables you've set.  To make this easier, use an environment variable file. This section covers how to do so with an example of launching Docker EE using tech preview images. There are also may other scenarios that you can launch enviroments for with `dind_ddc`.  See [Launching UCP and DTR in various configurations](#launching-ucp-and-dtr-in-various-configurations) for examples.
 
-Commands to launch Docker EE w/tech preview build:
-```
-. ~/dind_ddc-tech-preview
-./dind_ddc create_all
-```
+1. Create an environment file with the custom variables you would like to use while launching your environment.  Example contents of `~/dind_ddc-tech-preview`:
+    ```
+    export PROJECT="tp"
+    export DIND_SUBNET="172.246.0.0/16"
+    export UCP_REPO="dockerorcadev/ucp"
+    export UCP_VERSION="2.2.0-tp7"
+    export UCP_OPTIONS="--image-version dev:"
+    export DTR_REPO="dockerhubenterprise/dtr"
+    export DTR_VERSION="2.3.0-tp6"
+    export DIND_TAG="ce"
+    ```
 
-or with a one-liner:
+2. There are multiple ways to launch Docker EE while sourcing an env file for your custom settings:
 
-```
-DIND_ENV=~/dind_ddc-tech-preview ./dind_ddc create_all
-```
+    * Directly source the env file:
+    ```
+    . ~/dind_ddc-tech-preview
+    ./dind_ddc create_all
+    ```
+
+    * Export `DIND_ENV` to tell the `dind_ddc` script where to find the env file:
+    ```
+    export DIND_ENV=~/dind_ddc-tech-preview
+    ./dind_ddc create_all
+    ```
+
+    * One-liner to pass the env file location to the `dind_ddc` script:
+    ```
+    DIND_ENV=~/dind_ddc-tech-preview ./dind_ddc create_all
+    ```
 
 ### Pre-production DDC
 
