@@ -615,6 +615,22 @@ install_dtr() {
 }
 
 destroy_swarm() {
+  echo "Warning: This will destroy any containers and data associated with the project ${PROJECT}"
+  read -r -p "Would you like to continue? [y/N] " RESPONSE
+  case "$RESPONSE" in
+    [yY][eE][sS]|[yY])
+      # continue
+      ;;
+    [nN][oO]|[nN])
+      echo "Aborting..."
+      exit 1
+      ;;
+    *)
+      echo "Invalid input; aborting..."
+      exit 1
+      ;;
+  esac
+
   CONTAINERS="$(get_container_list)"
   if [ -z "${CONTAINERS}" ]
   then

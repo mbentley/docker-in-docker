@@ -82,9 +82,9 @@ ALIAS_IP:       10.1.2.3
   * `DIND_ENV` - environment variable file to source for the below environment variable overrides
   * `PROJECT` - prefix for all resources; allows you to run multiple environments (although it is still one at a time)
   * `DIND_TAG` - docker image tag used to run docker
-    * see https://hub.docker.com/r/mbentley/docker-in-docker/tags/ for the tags
-  * `MANAGERS` - number of Swarm managers
-  * `WORKERS` - number of Swarm workers
+    * see the [docker-in-docker README](../README.md) for the available tags
+  * `MANAGERS` - number of Swarm managers (also used to set number of UCP managers)
+  * `WORKERS` - number of Swarm workers (also used to set number of UCP workers)
   * `ENGINE_OPTS` - custom engine options to append to the defaults
   * `UCP_REPO` - image to use for UCP (without the tag)
   * `UCP_VERSION` - change the UCP version installed
