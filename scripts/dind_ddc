@@ -10,9 +10,10 @@ initialize() {
   DIND_ENV="${DIND_ENV:-}"
   if ! [ -z "${DIND_ENV}" ]
   then
+    # make sure DIND_ENV is a file
     if [ -f "${DIND_ENV}" ]
     then
-      echo "Loading environment variables from '${DIND_ENV}'"
+      echo -e "Using environment variables from '${DIND_ENV}'\n"
       #shellcheck disable=SC1090
       source "${DIND_ENV}"
     else
@@ -248,6 +249,12 @@ remove_net_alias() {
   fi
 }
 
+recreate_net_alias() {
+  echo "Re-creating net alias (if applicable)..."
+  remove_net_alias
+  create_net_alias
+}
+
 create_all() {
   create_net_alias
   create_swarm
@@ -450,13 +457,13 @@ recycle_containers() {
 }
 
 project_status() {
-  echo "Project containers for ${PROJECT}:"
+  echo "Containers for project '${PROJECT}':"
   docker ps -a --filter label=project="${PROJECT}" --format 'table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Names}}\t{{.Labels}}'
 
-  echo -e "\nProject volumes for ${PROJECT}:"
+  echo -e "\nVolumes for project '${PROJECT}':"
   docker volume ls --filter label=project="${PROJECT}"
 
-  echo -e "\nProject networks for ${PROJECT}:"
+  echo -e "\nNetworks for project '${PROJECT}':"
   docker network ls --filter label=project="${PROJECT}"
 }
 
@@ -511,7 +518,7 @@ connect_engine() {
   ENGINE_NUM="$(echo "${1}" | grep -o '[0-9]\+')"
   echo "# to connect to a given engine, use:"
   #shellcheck disable=SC2016
-  echo '# eval "$(./dind_swarm connect_engine '"${1}"')"'
+  echo '# eval "$('"$0"' connect_engine '"${1}"')"'
   echo "export DOCKER_HOST=tcp://127.0.0.1:100${ENGINE_NUM}"
 }
 
@@ -684,28 +691,36 @@ check_subnet() {
 }
 
 main() {
-  initialize
-
   case ${1} in
     create_all)
+      initialize
       ddc_check_license
       ucp_check_tar
       dtr_check_tar
       ${1}
       ;;
     install_ucp)
+      initialize
       ddc_check_license
       ucp_check_tar
       ${1}
       ;;
     install_dtr)
+      initialize
       dtr_check_tar
       ${1}
       ;;
-    create_swarm|create_net_alias|remove_net_alias|destroy_swarm|ucp_create_tar|dtr_create_tar|env_info)
+    create_swarm|create_net_alias|remove_net_alias|recreate_net_alias|destroy_swarm|ucp_create_tar|dtr_create_tar|env_info)
+      initialize
       ${1}
       ;;
-    start|stop|pause|unpause|recycle)
+    start|unpause)
+      initialize
+      recreate_net_alias
+      "${1}"_containers
+      ;;
+    stop|pause|recycle)
+      initialize
       "${1}"_containers
       ;;
     connect_engine)
@@ -718,15 +733,17 @@ main() {
       fi
       ;;
     status)
+      initialize
       project_status
       ;;
     *)
+      initialize
       echo "Basic usage: (see README.md for full command details)"
       echo -e "  $0 {create_all|create_swarm|install_ucp|install_dtr|destroy_swarm|env_info|status}"
       echo -e "\nContainer commands:"
       echo -e "  $0 {start|stop|pause|unpause|recycle}"
       echo -e "\nAdditional commands:"
-      echo -e "  $0 {connect_engine|create_net_alias|remove_net_alias|ucp_create_tar|dtr_create_tar}"
+      echo -e "  $0 {connect_engine|create_net_alias|remove_net_alias|recreate_net_alias|ucp_create_tar|dtr_create_tar}"
       echo -e "\nCurrent set environment variables:"
       env_info
       ;;

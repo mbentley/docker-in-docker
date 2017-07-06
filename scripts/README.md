@@ -31,7 +31,7 @@ Container commands:
   ./dind_ddc {start|stop|pause|unpause|recycle}
 
 Additional commands:
-  ./dind_ddc {connect_engine|create_net_alias|remove_net_alias|ucp_create_tar|dtr_create_tar}
+  ./dind_ddc {connect_engine|create_net_alias|remove_net_alias|recreate_net_alias|ucp_create_tar|dtr_create_tar}
 
 Current set environment variables:
 DIND_ENV:
@@ -75,6 +75,7 @@ ALIAS_IP:       10.1.2.3
   * `connect_engine` - helper script used to set `DOCKER_HOST` to communicate to a specific engine
   * `create_net_alias` - create a network alias used for keeping a persistent IP no matter when you are (only used for D4M)
   * `remove_net_alias` - remove network alias
+  * `recreate_net_alias` - removes and then creates network alias
   * `ucp_create_tar` - create a tarball of the UCP images
   * `dtr_create_tar` - create a tarball of the DTR images
 
