@@ -120,14 +120,14 @@ ALIAS_IP:       10.1.2.3
 This will launch Docker EE with a set of tech preview images using an environment variable file.  See [Pre-production DDC](#pre-production-ddc) to instructions on how to create tarballs of the tech preview images.
 Contents of `~/dind_ddc-tech-preview`:
 ```
-PROJECT="tp"
-DIND_SUBNET="172.246.0.0/16"
-UCP_REPO="dockerorcadev/ucp"
-UCP_VERSION="2.2.0-tp7"
-UCP_OPTIONS="--image-version dev:"
-DTR_REPO="dockerhubenterprise/dtr"
-DTR_VERSION="2.3.0-tp6"
-DIND_TAG="ce"
+export PROJECT="tp"
+export DIND_SUBNET="172.246.0.0/16"
+export UCP_REPO="dockerorcadev/ucp"
+export UCP_VERSION="2.2.0-tp7"
+export UCP_OPTIONS="--image-version dev:"
+export DTR_REPO="dockerhubenterprise/dtr"
+export DTR_VERSION="2.3.0-tp6"
+export DIND_TAG="ce"
 ```
 
 Commands to launch Docker EE w/tech preview build:
