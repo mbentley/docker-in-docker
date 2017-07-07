@@ -255,6 +255,17 @@ recreate_net_alias() {
   create_net_alias
 }
 
+check_other_projects() {
+  if [ "$(docker ps -a -f label=project -q | wc -l | tr -d ' ')" -ne "0" ]
+  then
+    # return true (other projects exist)
+    echo "1"
+  else
+    # return false (no other projects exist)
+    echo "0"
+  fi
+}
+
 create_all() {
   create_net_alias
   create_swarm
@@ -510,7 +521,7 @@ init_swarm() {
   echo -e "Swarm mode cluster ready:"
   docker -H tcp://127.0.0.1:1001 node ls
   #shellcheck disable=SC2016
-  echo -e "\nTo connect to the engine/Swarm, use:\neval "'"$('"$0"' connect_engine '"${PROJECT}"'_docker1)"'
+  echo -e "\nTo connect to the engine/Swarm, use:\neval "'"$('"$0"' connect_engine 1)"'
   echo -e "done.\n"
 }
 
@@ -673,7 +684,13 @@ destroy_swarm() {
   fi
   echo -e "done.\n"
 
-  remove_net_alias
+  # check to see if other project still exist
+  if [ "$(check_other_projects)" -eq "0" ]
+  then
+    remove_net_alias
+  else
+    echo -e "Skipping removal of network alias; other projects still exist\ndone."
+  fi
 }
 
 check_subnet() {
