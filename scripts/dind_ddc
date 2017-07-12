@@ -393,7 +393,7 @@ stop_containers() {
   else
     echo "Stopping project containers; this may take up to 30 seconds..."
     #shellcheck disable=SC2086
-    docker -H unix:///var/run/docker.sock stop -t 30 ${CONTAINERS}
+    docker -H unix:///var/run/docker.sock stop -t 30 ${CONTAINERS} || true
   fi
   echo -e "done.\n"
 }
@@ -405,8 +405,8 @@ pause_containers() {
     echo "No project containers found; skipping..."
   else
     echo "Pausing project containers..."
-    #shellcheck disable=SC2046
-    docker -H unix:///var/run/docker.sock pause $(get_container_list) || true
+    #shellcheck disable=SC2086
+    docker -H unix:///var/run/docker.sock pause ${CONTAINERS} || true
   fi
   echo -e "done.\n"
 }
@@ -418,8 +418,8 @@ unpause_containers() {
     echo "No project containers found; skipping..."
   else
     echo "Unpausing project containers..."
-    #shellcheck disable=SC2046
-    docker -H unix:///var/run/docker.sock unpause $(get_container_list) || true
+    #shellcheck disable=SC2086
+    docker -H unix:///var/run/docker.sock unpause ${CONTAINERS} || true
   fi
   echo -e "done.\n"
 }
@@ -650,13 +650,22 @@ destroy_swarm() {
   esac
 
   CONTAINERS="$(get_container_list)"
+
+  if [ -z "${CONTAINERS}" ]
+  then
+    echo -e "\nNo project containers to kill; skipping..."
+  else
+    echo -e "\nKilling project containers..."
+    #shellcheck disable=SC2086
+    docker -H unix:///var/run/docker.sock kill ${CONTAINERS} || true
+  fi
+  echo -e "done.\n"
+
   if [ -z "${CONTAINERS}" ]
   then
     echo "No project containers to remove; skipping..."
   else
     echo "Removing project containers..."
-    #shellcheck disable=SC2086
-    docker -H unix:///var/run/docker.sock kill ${CONTAINERS}
     #shellcheck disable=SC2086
     docker -H unix:///var/run/docker.sock rm ${CONTAINERS}
   fi
