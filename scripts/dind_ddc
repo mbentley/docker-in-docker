@@ -148,8 +148,8 @@ ucp_create_tar() {
     #shellcheck disable=SC2086 disable=SC2046
     {
       docker -H unix:///var/run/docker.sock run --rm "${UCP_REPO}":"${UCP_VERSION}" images --list ${UCP_OPTIONS} | xargs -L 1 docker -H unix:///var/run/docker.sock pull
-      docker -H unix:///var/run/docker.sock save -o "${UCP_IMAGES}" $(docker -H unix:///var/run/docker.sock run --rm "${UCP_REPO}":"${UCP_VERSION}" images --list --image-version dev:) "${UCP_REPO}":"${UCP_VERSION}"
-      docker -H unix:///var/run/docker.sock rmi $(docker -H unix:///var/run/docker.sock run --rm "${UCP_REPO}":"${UCP_VERSION}" images --list --image-version dev:) "${UCP_REPO}":"${UCP_VERSION}"
+      docker -H unix:///var/run/docker.sock save -o "${UCP_IMAGES}" $(docker -H unix:///var/run/docker.sock run --rm "${UCP_REPO}":"${UCP_VERSION}" images --list ${UCP_OPTIONS}) "${UCP_REPO}":"${UCP_VERSION}"
+      docker -H unix:///var/run/docker.sock rmi $(docker -H unix:///var/run/docker.sock run --rm "${UCP_REPO}":"${UCP_VERSION}" images --list ${UCP_OPTIONS}) "${UCP_REPO}":"${UCP_VERSION}"
     }
     echo -e "done.\n"
   else
