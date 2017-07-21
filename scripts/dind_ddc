@@ -77,6 +77,16 @@ initialize() {
     echo "Warning: The number of WORKERS (${MANAGERS}) is less than 1; you will not be able to install DTR"
     sleep 5
   fi
+
+}
+
+validate_dtr_replicas() {
+  # check for valid number of DTR replicas
+  if ((DTR_REPLICAS<1))
+  then
+    echo "Error: The number of DTR_REPLICAS (${DTR_REPLICAS}) is less than 1; you will not be able to install DTR"
+    exit 1
+  fi
 }
 
 env_info() {
@@ -269,6 +279,7 @@ check_other_projects() {
 }
 
 create_all() {
+  validate_dtr_replicas
   create_net_alias
   create_swarm
   install_ucp
@@ -624,6 +635,9 @@ launch_haproxy() {
 }
 
 install_dtr() {
+  # validate the value for # of dtr replicas
+  validate_dtr_replicas
+
   # count the number of existing containers
   get_current_num_engines
 
