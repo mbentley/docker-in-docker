@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# set some defaults just in case the values aren't passed
+PROJECT="${PROJECT:-dind-ddc}"
+MANAGERS="${MANAGERS:-1}"
+WORKERS="${WORKERS:-2}"
+DTR_REPLICAS="${DTR_REPLICAS:-1}"
+
 ucp_upstreams_4443() {
   # make upstream include all managers
   for ((ENGINE_NUM=1; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
