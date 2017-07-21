@@ -62,6 +62,7 @@ DTR_REPO:       docker/dtr
 DTR_VERSION:    2.2.5
 DTR_IMAGES:     /Users/mbentley/ddc/dtr-2.2.5.tar.gz
 DTR_OPTIONS:
+DTR_REPLICAS:   1
 DDC_LICENSE:    /Users/mbentley/Downloads/docker_subscription.lic
 DIND_SUBNET:    172.250.0.0/16
 DIND_DNS:       8.8.8.8
@@ -113,6 +114,7 @@ ALIAS_IP:       10.1.2.3
   * `DTR_IMAGES` - path to the `.tar.gz` of the DTR images
     * see https://docs.docker.com/datacenter/dtr/2.2/guides/admin/install/install-offline/#versions-available for the tar.gz
   * `DTR_OPTIONS` - additional DTR install options
+  * `DTR_REPLICAS` - number of DTR replicas to install
   * `DDC_LICENSE` - path to your DDC license
   * `DIND_SUBNET` - subnet used for the bridge network created
   * `DIND_DNS` - DNS server to use for the docker daemons running in docker
