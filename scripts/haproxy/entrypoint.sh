@@ -9,25 +9,19 @@ ucp_upstreams_4443() {
 }
 
 dtr_upstreams_80() {
-  ## make upstream include all workers
-  #for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
-  #do
-  #  echo "        server ${PROJECT}_docker${ENGINE_NUM}:80 ${PROJECT}_docker${ENGINE_NUM}:80 check weight 100"
-  #done
-
-  # for now just use the first worker
-  echo "        server ${PROJECT}_docker$((MANAGERS+1)):80 ${PROJECT}_docker$((MANAGERS+1)):80 check weight 100"
+  ## make upstream include all replicas
+  for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+DTR_REPLICAS)); ENGINE_NUM++))
+  do
+    echo "        server ${PROJECT}_docker${ENGINE_NUM}:80 ${PROJECT}_docker${ENGINE_NUM}:80 check weight 100"
+  done
 }
 
 dtr_upstreams_443() {
-  ## make upstream include all workers
-  #for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
-  #do
-  #  echo "        server ${PROJECT}_docker${ENGINE_NUM}:443 ${PROJECT}_docker${ENGINE_NUM}:443 weight 100 check check-ssl verify none"
-  #done
-
-  # for now just use the first worker
-  echo "        server ${PROJECT}_docker$((MANAGERS+1)):443 ${PROJECT}_docker$((MANAGERS+1)):443 weight 100 check check-ssl verify none"
+  ## make upstream include all replicas
+  for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+DTR_REPLICAS)); ENGINE_NUM++))
+  do
+    echo "        server ${PROJECT}_docker${ENGINE_NUM}:443 ${PROJECT}_docker${ENGINE_NUM}:443 weight 100 check check-ssl verify none"
+  done
 }
 
 hrm_upstreams_8181() {
