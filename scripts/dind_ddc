@@ -301,6 +301,11 @@ launch_engines() {
       --driver local \
       "${PROJECT}"_docker${ENGINE_NUM}
   done
+
+  docker -H unix:///var/run/docker.sock volume create \
+    --label project="${PROJECT}" \
+    --driver local \
+    "${PROJECT}"_shared
   echo -e "done.\n"
 
   echo "Launching ${MANAGERS} docker engines for Swarm managers..."
@@ -321,6 +326,7 @@ launch_engines() {
         --restart "${DIND_RESTART}" \
         -v /lib/modules:/lib/modules:ro \
         -v "${PROJECT}"_docker${ENGINE_NUM}:/var/lib/docker \
+        -v "${PROJECT}"_shared:/data \
         --tmpfs /run \
         mbentley/docker-in-docker:"${DIND_TAG}" \
         dockerd -s overlay2 \
@@ -349,6 +355,7 @@ launch_engines() {
         --restart "${DIND_RESTART}" \
         -v /lib/modules:/lib/modules:ro \
         -v "${PROJECT}"_docker${ENGINE_NUM}:/var/lib/docker \
+        -v "${PROJECT}"_shared:/data \
         --tmpfs /run \
         mbentley/docker-in-docker:"${DIND_TAG}" \
         dockerd -s overlay2 \
@@ -625,7 +632,7 @@ install_dtr() {
 
   echo "Installing DTR on ${PROJECT}_docker${DTR_NODE}..."
   #shellcheck disable=SC2086
-  docker -H tcp://127.0.0.1:100${DTR_NODE} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install ${DTR_OPTIONS} --ucp-url https://"${ALIAS_IP}:4443" --ucp-username admin --ucp-password docker123 --ucp-node "${PROJECT}"_docker${DTR_NODE} --ucp-ca "$(curl -ks https://"${ALIAS_IP}":4443/ca)" --dtr-external-url "${ALIAS_IP}"
+  docker -H tcp://127.0.0.1:100${DTR_NODE} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install ${DTR_OPTIONS} --ucp-url https://"${ALIAS_IP}:4443" --ucp-username admin --ucp-password docker123 --ucp-node "${PROJECT}"_docker${DTR_NODE} --ucp-ca "$(curl -ks https://"${ALIAS_IP}":4443/ca)" --dtr-external-url "${ALIAS_IP}" --dtr-storage-volume /data
 
   echo -e "\nDTR should now be available at https://${ALIAS_IP}/"
   echo -e "  Username: admin\tPassword: docker123"
