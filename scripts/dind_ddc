@@ -635,6 +635,7 @@ launch_haproxy() {
     -e MANAGERS="${MANAGERS}" \
     -e WORKERS="${WORKERS}" \
     -e PROJECT="${PROJECT}" \
+    -e DTR_REPLICAS="${DTR_REPLICAS}" \
     mbentley/docker-in-docker:haproxy
   echo "The HAProxy stats page should now be available at http://${ALIAS_IP}:8181/haproxy?stats"
   echo -e "done.\n"
