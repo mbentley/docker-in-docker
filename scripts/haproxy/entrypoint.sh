@@ -97,7 +97,7 @@ $(ucp_upstreams_4443)
 
 backend dtr_upstream_servers_80
         mode tcp
-        option httpchk GET /health HTTP/1.0\r\nHost:\ foo.bar
+        option httpchk GET /health HTTP/1.1\r\nHost:\ foo.bar
 $(dtr_upstreams_80)
 
 backend dtr_upstream_servers_443
