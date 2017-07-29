@@ -11,5 +11,6 @@ RUN apt-get update &&\
 
 COPY entrypoint-legacy.sh /entrypoint.sh
 
+VOLUME ["/var/lib/docker"]
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["docker","daemon","-s","aufs","-H","unix:///var/run/docker.sock","-H","0.0.0.0:12375"]
