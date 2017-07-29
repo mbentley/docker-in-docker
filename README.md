@@ -63,6 +63,17 @@ The images are published to Docker Hub so you do not need to build them unless y
   docker push mbentley/docker-in-docker:ee-test
   ```
 
+* Docker CS Engine 1.10
+  ```
+  docker build \
+    -t mbentley/docker-in-docker:cs-1.10 \
+    -f Dockerfile.cs-1.10 .
+
+  docker push mbentley/docker-in-docker:cs-1.10
+  ```
+
+
+
   *Note*: your `<DOCKER-EE-URL>` value can be found from https://store.docker.com/?overlay=subscriptions
 
 ## Prerequisites
