@@ -14,7 +14,9 @@ Stop! Look at [scripts](./scripts) for tools to automatically create a Swarm mod
   * `haproxy` ([Dockerfile.haproxy](./scripts/haproxy/Dockerfile.haproxy)) - used by  `dind_ddc`
 
 ## Build image (optional)
-The images are published to Docker Hub so you do not need to build them unless you want to:
+The images are published to Docker Hub so you do not need to build them unless you want to,
+
+*Note*: your `<DOCKER-EE-URL>` value can be found from https://store.docker.com/?overlay=subscriptions
 
 * Docker CE (stable)
   ```
@@ -72,9 +74,14 @@ The images are published to Docker Hub so you do not need to build them unless y
   docker push mbentley/docker-in-docker:cs-1.10
   ```
 
+* Docker CS Engine 1.9
+  ```
+  docker build \
+    -t mbentley/docker-in-docker:cs-1.9 \
+    -f Dockerfile.cs-1.9 .
 
-
-  *Note*: your `<DOCKER-EE-URL>` value can be found from https://store.docker.com/?overlay=subscriptions
+  docker push mbentley/docker-in-docker:cs-1.9
+  ```
 
 ## Prerequisites
   * Docker for Mac installed
