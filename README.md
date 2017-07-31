@@ -11,6 +11,9 @@ Stop! Look at [scripts](./scripts) for tools to automatically create a Swarm mod
   * `ee` ([Dockerfile.ee](./Dockerfile.ee))
   * `ee-17.03` ([Dockerfile.ee-17.03](./Dockerfile.ee-17.03))
   * `ee-test` ([Dockerfile.ee-test](./Dockerfile.ee-test))
+  * `cs-1.12` [Dockerfile.cs-1.12](./Dockerfile.cs-1.12))
+  * `cs-1.10` [Dockerfile.cs-1.10](./Dockerfile.cs-1.10))
+  * `cs-1.9` [Dockerfile.cs-1.9](./Dockerfile.cs-1.9))
   * `haproxy` ([Dockerfile.haproxy](./scripts/haproxy/Dockerfile.haproxy)) - used by  `dind_ddc`
 
 ## Build image (optional)
