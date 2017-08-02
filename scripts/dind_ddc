@@ -597,7 +597,7 @@ install_ucp() {
   for ((ENGINE_NUM=2; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
   do
     echo "Adding UCP node label for SANs..."
-    docker -H tcp://127.0.0.1:1001 node update --label-add "com.docker.ucp.SANs=$(docker -H tcp://127.0.0.1:1001 node inspect --format '{{(index .Spec.Labels "com.docker.ucp.SANs")}}' docker${ENGINE_NUM}),${ALIAS_IP}" docker${ENGINE_NUM}
+    docker -H tcp://127.0.0.1:1001 node update --label-add "com.docker.ucp.SANs=$(docker -H tcp://127.0.0.1:1001 node inspect --format '{{(index .Spec.Labels "com.docker.ucp.SANs")}}' "${PROJECT}"_docker${ENGINE_NUM}),${ALIAS_IP}" "${PROJECT}"_docker${ENGINE_NUM}
     echo -e "done.\n"
   done
 
@@ -666,7 +666,7 @@ install_dtr() {
     echo "Loading DTR images on ${PROJECT}_docker${ENGINE_NUM}..."
     docker -H tcp://127.0.0.1:100${ENGINE_NUM} load -i "${DTR_IMAGES}"
     echo -e "done.\n"
-0
+
     echo "Joining ${PROJECT}_docker${ENGINE_NUM} as a DTR replica..."
     #shellcheck disable=SC2086
     docker -H tcp://127.0.0.1:100${ENGINE_NUM} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" join ${DTR_OPTIONS} --ucp-url https://"${ALIAS_IP}:4443" --ucp-username admin --ucp-password docker123 --ucp-node "${PROJECT}"_docker${ENGINE_NUM} --ucp-ca "$(curl -ks https://"${ALIAS_IP}":4443/ca)" --existing-replica-id 0000000000e$((MANAGERS+1)) --replica-id 0000000000e${ENGINE_NUM}
