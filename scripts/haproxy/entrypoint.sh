@@ -62,6 +62,7 @@ defaults
         timeout client-fin 50s
         timeout server 50s
         timeout tunnel 1h
+        default-server inter 15s fastinter 5s downinter 5s rise 2 fall 2
 
 ### frontends
 frontend ucp_4443
