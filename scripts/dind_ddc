@@ -2,8 +2,8 @@
 
 set -e
 
-# unset DOCKER_HOST to ensure we are not talking to a machine we shouldn't be
-unset DOCKER_HOST
+# unset DOCKER_HOST, DOCKER_TLS_VERIFY, and DOCKER_CERT_PATH to ensure we are not talking to a machine we shouldn't be
+unset DOCKER_HOST DOCKER_TLS_VERIFY DOCKER_CERT_PATH
 
 initialize() {
   # source an external env var file if DIND_ENV set
