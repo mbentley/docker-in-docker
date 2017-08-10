@@ -303,9 +303,8 @@ launch_engines() {
   check_subnet
   echo -e "done.\n"
 
-  echo "Creating '${PROJECT}_dind' network with the subnet ${DIND_SUBNET}..."
-  docker -H unix:///var/run/docker.sock network create --driver bridge --label project="${PROJECT}" --subnet="${DIND_SUBNET}" "${PROJECT}"_dind
-  echo -e "done.\n"
+  # create network, if necessary
+  create_network
 
   # get subnet prefix
   DIND_SUBNET_PREFIX="$(docker -H unix:///var/run/docker.sock network inspect --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' "${PROJECT}"_dind | awk -F '/' '{print $1}' | awk -F '.' '{print $1"."$2"."$3"."}')"
@@ -399,6 +398,9 @@ get_network_list() {
 }
 
 start_containers() {
+  # create network, if necessary
+  create_network
+
   CONTAINERS="$(get_container_list)"
   if [ -z "${CONTAINERS}" ]
   then
@@ -760,6 +762,18 @@ check_subnet() {
   done
 
   echo "Subnet (${DIND_SUBNET}) is available."
+}
+
+create_network() {
+  NETWORKS="$(get_network_list)"
+  if [ -z "${NETWORKS}" ]
+  then
+    echo "Creating '${PROJECT}_dind' network with the subnet ${DIND_SUBNET}..."
+    docker -H unix:///var/run/docker.sock network create --driver bridge --label project="${PROJECT}" --subnet="${DIND_SUBNET}" "${PROJECT}"_dind
+    echo -e "done.\n"
+  else
+    echo -e "Network '${PROJECT}_dind' already exists; skipping creation...\ndone.\n"
+  fi
 }
 
 main() {
