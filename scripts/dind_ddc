@@ -253,7 +253,7 @@ remove_net_alias() {
         echo -e "done.\n"
       else
         # skip creation; already exists
-        echo "IP alias (${ALIAS_IP}) does not exists; skipping removal..."
+        echo "IP alias (${ALIAS_IP}) does not exist; skipping removal..."
         echo -e "done.\n"
       fi
     else
@@ -268,9 +268,17 @@ remove_net_alias() {
 }
 
 recreate_net_alias() {
-  echo "Re-creating net alias (if applicable)..."
-  remove_net_alias
-  create_net_alias
+  echo "Checking to see if network alias is functional..."
+  HAPROXY_STATUS="$(curl -m 5 -s -o /dev/null -w "%{http_code}" "http://${ALIAS_IP}:8181/" || true)"
+  if [ "${HAPROXY_STATUS}" = "503" ]
+  then
+    echo -e "Connection test successful; skipping network alias re-creation...\ndone.\n"
+  else
+    echo "Connection test to HAProxy failed; re-creating network alias..."
+    remove_net_alias
+    create_net_alias
+#    echo -e "done.\n"
+  fi
 }
 
 check_other_projects() {
@@ -802,8 +810,8 @@ main() {
       ;;
     start|unpause)
       initialize
-      recreate_net_alias
       "${1}"_containers
+      recreate_net_alias
       ;;
     stop|pause|recycle)
       initialize
