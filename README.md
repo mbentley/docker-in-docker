@@ -9,6 +9,7 @@ Stop! Look at [scripts](./scripts) for tools to automatically create a Swarm mod
   * `ce-test` ([Dockerfile.ce-test](./Dockerfile.ce-test))
   * `ce-edge` ([Dockerfile.ce-edge](./Dockerfile.ce-edge))
   * `ee` ([Dockerfile.ee](./Dockerfile.ee))
+  * `ee-17.06` ([Dockerfile.ee-17.06](./Dockerfile.ee-17.03))
   * `ee-17.03` ([Dockerfile.ee-17.03](./Dockerfile.ee-17.03))
   * `ee-test` ([Dockerfile.ee-test](./Dockerfile.ee-test))
   * `cs-1.12` [Dockerfile.cs-1.12](./Dockerfile.cs-1.12))
@@ -57,6 +58,15 @@ The images are published to Docker Hub so you do not need to build them unless y
     -f Dockerfile.ee-17.03 .
 
   docker push mbentley/docker-in-docker:ee-17.03
+  ```
+* Docker EE (stable-17.06)
+  ```
+  docker build \
+    --build-arg DOCKER_EE_URL="<DOCKER-EE-URL>" \
+    -t mbentley/docker-in-docker:ee-17.06 \
+    -f Dockerfile.ee-17.06 .
+
+  docker push mbentley/docker-in-docker:ee-17.06
   ```
 * Docker EE (test)
   ```
