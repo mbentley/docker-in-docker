@@ -212,7 +212,7 @@ create_net_alias() {
       then
         # create it
         echo "Creating IP alias (requires sudo)..."
-        sudo ifconfig "${NET_IF}" alias "${ALIAS_IP}" 255.255.255.0
+        sudo ifconfig "${NET_IF}" alias "${ALIAS_IP}" netmask 255.255.255.0
         echo -e "done.\n"
       else
         # skip creation; already exists
