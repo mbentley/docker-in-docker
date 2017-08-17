@@ -38,7 +38,7 @@ initialize() {
   DTR_OPTIONS="${DTR_OPTIONS:-}"
   DTR_REPLICAS="${DTR_REPLICAS:-1}"
   DDC_LICENSE="${DDC_LICENSE:-${HOME}/Downloads/docker_subscription.lic}"
-  DIND_SUBNET="${DIND_SUBNET:-172.250.0.0/16}"
+  DIND_SUBNET="${DIND_SUBNET:-172.250.0.0/24}"
   DIND_RESTART="${DIND_RESTART:-unless-stopped}"
   ALIAS_IP="${ALIAS_IP:-10.1.2.3}"
 

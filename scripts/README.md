@@ -20,9 +20,18 @@ scripts
 ## Quickstart (tl;dr)
 Check out the [Prerequisites](#prerequisites) and then go down to [Launching Docker EE with default configuration](#launching-docker-ee-with-default-configuration) for released versions or [Environment Variable Overrides](#environment-variable-overrides) for custom settings you can pass as well as [Using an environment file for persistent settings](#using-an-environment-file-for-persistent-settings) to make the management of your custom settings more manageable.  See [Pre-production DDC](#pre-production-ddc) for details of how to launch an environment with pre-production images.
 
+Get started with 3 commands:
+```bash
+# you only need to create the tars once
+$ ./dind_ddc ucp_create_tar
+$ ./dind_ddc dtr_create_tar
+# this starts the environment
+$ ./dind_ddc create_all
+```
+
 ## Prerequisites
   * Docker for Mac installed
-    * I would suggest increasing the RAM in the Docker for Mac VM to 4 GB
+    * I would suggest increasing the RAM in the Docker for Mac VM to 4 GB but it will run on 2 GB as long as you do not put heavy workloads on it
   * Have the tarball of the UCP and DTR images in `~/ddc`, keeping the default names from [UCP offline tarballs](https://docs.docker.com/datacenter/ucp/2.1/guides/admin/install/install-offline/) and [DTR offline tarballs](https://docs.docker.com/datacenter/dtr/2.2/guides/admin/install/install-offline/)
     * Alternatively, use the `UCP_IMAGES` and `DTR_IMAGES` env vars to override the full path to the tarballs
     * For pre-release images, see [Pre-production DDC](#pre-production-ddc)
@@ -50,21 +59,21 @@ Additional commands:
 Current set environment variables:
 DIND_ENV:
 PROJECT:        dind-ddc
-DIND_TAG:       ee-17.03
+DIND_TAG:       ee-17.06
 ENGINE_OPTS:
 MANAGERS:       1
 WORKERS:        2
 UCP_REPO:       docker/ucp
-UCP_VERSION:    2.1.4
+UCP_VERSION:    2.2.0
 UCP_IMAGES:     /Users/mbentley/ddc/ucp_images_2.1.4.tar.gz
 UCP_OPTIONS:
 DTR_REPO:       docker/dtr
-DTR_VERSION:    2.2.5
+DTR_VERSION:    2.3.0
 DTR_IMAGES:     /Users/mbentley/ddc/dtr-2.2.5.tar.gz
 DTR_OPTIONS:
 DTR_REPLICAS:   1
 DDC_LICENSE:    /Users/mbentley/Downloads/docker_subscription.lic
-DIND_SUBNET:    172.250.0.0/16
+DIND_SUBNET:    172.250.0.0/24
 DIND_DNS:       8.8.8.8
 DIND_RESTART:   unless-stopped
 NET_IF:         en0
