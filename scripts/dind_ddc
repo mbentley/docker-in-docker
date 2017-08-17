@@ -204,24 +204,16 @@ create_net_alias() {
   # run this only on a mac
   if [ "$(uname -s)" = "Darwin" ]
   then
-    # check to see if the default ALIAS_IP is set
-    if [ "${ALIAS_IP}" = "10.1.2.3" ]
+    # check to see if the alias IP is already set
+    if ! ifconfig "${NET_IF}" | grep "${ALIAS_IP}" > /dev/null 2>&1
     then
-      # check to see if the alias IP is already set
-      if ! ifconfig "${NET_IF}" | grep "${ALIAS_IP}" > /dev/null 2>&1
-      then
-        # create it
-        echo "Creating IP alias (requires sudo)..."
-        sudo ifconfig "${NET_IF}" alias "${ALIAS_IP}" netmask 255.255.255.0
-        echo -e "done.\n"
-      else
-        # skip creation; already exists
-        echo "IP alias (${ALIAS_IP}) already exists"
-        echo -e "done.\n"
-      fi
+      # create it
+      echo "Creating IP alias (requires sudo)..."
+      sudo ifconfig "${NET_IF}" alias "${ALIAS_IP}" netmask 255.255.255.255
+      echo -e "done.\n"
     else
-      # skip because custom address provided
-      echo "Skipping creation of network IP alias; custom address provided"
+      # skip creation; already exists
+      echo "IP alias (${ALIAS_IP}) already exists"
       echo -e "done.\n"
     fi
   else
