@@ -343,6 +343,7 @@ launch_engines() {
         --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+51)) \
         --restart "${DIND_RESTART}" \
         -v /lib/modules:/lib/modules:ro \
+        -v "${PROJECT}"_docker${ENGINE_NUM}_etc:/etc/docker \
         -v "${PROJECT}"_docker${ENGINE_NUM}:/var/lib/docker \
         -v "${PROJECT}"_shared:/data \
         --tmpfs /run \
@@ -372,6 +373,7 @@ launch_engines() {
         --ip "${DIND_SUBNET_PREFIX}"$((ENGINE_NUM+51)) \
         --restart "${DIND_RESTART}" \
         -v /lib/modules:/lib/modules:ro \
+        -v "${PROJECT}"_docker${ENGINE_NUM}_etc:/etc/docker \
         -v "${PROJECT}"_docker${ENGINE_NUM}:/var/lib/docker \
         -v "${PROJECT}"_shared:/data \
         --tmpfs /run \
