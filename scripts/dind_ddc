@@ -318,6 +318,11 @@ launch_engines() {
       --label project="${PROJECT}" \
       --driver local \
       "${PROJECT}"_docker${ENGINE_NUM}
+
+    docker -H unix:///var/run/docker.sock volume create \
+      --label project="${PROJECT}" \
+      --driver local \
+      "${PROJECT}"_docker${ENGINE_NUM}_etc
   done
 
   docker -H unix:///var/run/docker.sock volume create \
@@ -605,7 +610,7 @@ install_ucp() {
   # check for jq and then setup HRM
   if hash jq 2>/dev/null
   then
-    echo "Waiting for UCP to be ready..."
+    echo -n "Waiting for UCP to be ready..."
     while [ "$(curl -sk -o /dev/null -w "%{http_code}" "https://${ALIAS_IP}:4443/_ping")" -ne "200" ]
     do
       echo -n "."
