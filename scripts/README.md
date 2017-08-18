@@ -145,35 +145,25 @@ ALIAS_IP:       10.1.2.3
 ### Using an environment file for persistent settings
 With the many configuration options comes the difficulty in keeping track of the environment variables you've set.  To make this easier, use an environment variable file. This section covers how to do so with an example of launching Docker EE using tech preview images. There are also may other scenarios that you can launch enviroments for with `dind_ddc`.  See [Launching UCP and DTR in various configurations](#launching-ucp-and-dtr-in-various-configurations) for examples.
 
-1. Create an environment file with the custom variables you would like to use while launching your environment.  Example contents of `~/dind_ddc-tech-preview`:
-    ```
-    export PROJECT="tp"
-    export DIND_SUBNET="172.246.0.0/16"
-    export UCP_REPO="dockerorcadev/ucp"
-    export UCP_VERSION="2.2.0-tp7"
-    export UCP_OPTIONS="--image-version dev:"
-    export DTR_REPO="dockerhubenterprise/dtr"
-    export DTR_VERSION="2.3.0-tp6"
-    export DIND_TAG="ce"
-    ```
+1. Create or modify one of the example environment files with the custom variables you would like to use while launching your environment. There are example environment files for [tech preview](./17.06-tp.env), [beta](./17.06-beta.env), [17.03](./17.03.env), and [17.06](./17.06.env) in this repository.
 
 2. There are multiple ways to launch Docker EE while sourcing an env file for your custom settings:
 
     * Directly source the env file:
     ```
-    . ~/dind_ddc-tech-preview
+    . ${PWD}/17.03.env
     ./dind_ddc create_all
     ```
 
     * Export `DIND_ENV` to tell the `dind_ddc` script where to find the env file:
     ```
-    export DIND_ENV=~/dind_ddc-tech-preview
+    export DIND_ENV="${PWD}/17.03.env"
     ./dind_ddc create_all
     ```
 
     * One-liner to pass the env file location to the `dind_ddc` script:
     ```
-    DIND_ENV=~/dind_ddc-tech-preview ./dind_ddc create_all
+    DIND_ENV=${PWD}/17.03.env ./dind_ddc create_all
     ```
 
 ### Pre-production DDC
