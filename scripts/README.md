@@ -269,11 +269,11 @@ Create a service and test it.  You can also add a hosts file entry so you can br
 ```
 # create the service
 $ docker -H tcp://localhost:1001 \
-  service create \
-  --name nginx \
-  --network ucp-hrm \
-  --label "com.docker.ucp.mesh.http.80=external_route=http://nginx.test,internal_port=80" \
-  nginx:latest
+    service create \
+    --name nginx \
+    --network ucp-hrm \
+    --label "com.docker.ucp.mesh.http.80=external_route=http://nginx.test,internal_port=80" \
+    nginx:alpine
 
 # test with curl
 $ curl -H "Host: nginx.test" http://10.1.2.3:8181
