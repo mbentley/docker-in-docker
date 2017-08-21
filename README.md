@@ -154,6 +154,7 @@ The images are published to Docker Hub so you do not need to build them unless y
         -p 127.0.0.1:100${ENGINE_NUM}:2375 \
         -v /lib/modules:/lib/modules:ro \
         -v docker${ENGINE_NUM}:/var/lib/docker \
+        -v docker${ENGINE_NUM}-etc:/etc/docker \
         --tmpfs /run \
         mbentley/docker-in-docker \
         dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375
