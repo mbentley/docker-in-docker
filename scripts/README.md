@@ -39,9 +39,9 @@ $ ./dind_ddc create_all
     * Alternatively, use the `DDC_LICENSE` env var to override the full path to the license
   * Must have the following ports available on your host:
     * `100n` - TCP connection to Docker engines where n is 1-n number of engines you're running
-    * `80`, `443`- DTR (HTTP and HTTPS)
+    * `8181`, `443`- DTR (HTTP and HTTPS)
     * `4443` - UCP (HTTPS)
-    * `8181`, `8443` - UCP HRM (HTTP and HTTPS)
+    * `80`, `8443` - UCP HRM (HTTP and HTTPS)
       * see [HRM Example Usage](#hrm-example-usage) for HRM usage
 
 ## `dind_ddc` Usage
@@ -264,7 +264,7 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
 
 ### HRM Example Usage
 
-Create a service and test it.  You can also add a hosts file entry so you can bring up the site in a browser but you will still need to specify the port for now; either 8181 or 8443 for HTTP/HTTPS.
+Create a service and test it.  You can also add a hosts file entry so you can bring up the site in a browser.  For HTTPS, you will still need to specify the port for now (8443).
 
 ```
 # create the service
@@ -276,7 +276,7 @@ $ docker -H tcp://localhost:1001 \
     nginx:alpine
 
 # test with curl
-$ curl -H "Host: nginx.test" http://10.1.2.3:8181
+$ curl -H "Host: nginx.test" http://10.1.2.3
 <!DOCTYPE html>
 <html>
 <head>

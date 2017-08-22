@@ -261,7 +261,7 @@ remove_net_alias() {
 
 recreate_net_alias() {
   echo "Checking to see if network alias is functional..."
-  HAPROXY_STATUS="$(curl -m 5 -s -o /dev/null -w "%{http_code}" "http://${ALIAS_IP}:8181/" || true)"
+  HAPROXY_STATUS="$(curl -m 5 -s -o /dev/null -w "%{http_code}" "http://${ALIAS_IP}/" || true)"
   if [ "${HAPROXY_STATUS}" = "503" ]
   then
     echo -e "Connection test successful; skipping network alias re-creation...\ndone.\n"
@@ -618,7 +618,7 @@ install_ucp() {
     done
     echo -e "done.\n\nEnabling HRM..."
     AUTH_TOKEN="$(curl -sk -d '{"username":"admin","password":"docker123"}' "https://${ALIAS_IP}:4443/auth/login" | jq -r .auth_token 2>/dev/null)"
-    curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"HTTPPort":8181,"HTTPSPort":8443}' "https://${ALIAS_IP}:4443/api/hrm"
+    curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"HTTPPort":80,"HTTPSPort":8443}' "https://${ALIAS_IP}:4443/api/hrm"
     echo -e "done.\n"
   else
     echo -e "Warning: 'jq' not found; you will need to enable HRM manually.\n"
@@ -667,7 +667,7 @@ install_dtr() {
 
   echo "Installing DTR on ${PROJECT}_docker${ENGINE_NUM}..."
   #shellcheck disable=SC2086
-  docker -H tcp://127.0.0.1:100${ENGINE_NUM} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install ${DTR_OPTIONS} --ucp-url https://"${ALIAS_IP}:4443" --ucp-username admin --ucp-password docker123 --ucp-node "${PROJECT}"_docker${ENGINE_NUM} --ucp-ca "$(curl -ks https://"${ALIAS_IP}":4443/ca)" --dtr-external-url "${ALIAS_IP}" --dtr-storage-volume /data --replica-id 0000000000e${ENGINE_NUM}
+  docker -H tcp://127.0.0.1:100${ENGINE_NUM} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install ${DTR_OPTIONS} --ucp-url https://"${ALIAS_IP}:4443" --ucp-username admin --ucp-password docker123 --ucp-node "${PROJECT}"_docker${ENGINE_NUM} --ucp-ca "$(curl -ks https://"${ALIAS_IP}":4443/ca)" --dtr-external-url "${ALIAS_IP}" --dtr-storage-volume /data --replica-id 0000000000e${ENGINE_NUM} --replica-http-port 8181
   echo -e "done.\n"
 
   # load images and join additional DTR replicas
@@ -696,7 +696,7 @@ install_summary_swarm() {
 
 install_summary_haproxy() {
   # HAProxy
-  echo -e "The HAProxy stats page should now be available at http://${ALIAS_IP}:8181/haproxy?stats"
+  echo -e "The HAProxy stats page should now be available at http://${ALIAS_IP}/haproxy?stats"
 }
 
 install_summary_ucp() {

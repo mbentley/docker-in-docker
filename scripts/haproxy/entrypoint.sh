@@ -14,11 +14,11 @@ ucp_upstreams_4443() {
   done
 }
 
-dtr_upstreams_80() {
+dtr_upstreams_8181() {
   ## make upstream include all replicas
   for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+DTR_REPLICAS)); ENGINE_NUM++))
   do
-    echo "        server ${PROJECT}_docker${ENGINE_NUM}:80 ${PROJECT}_docker${ENGINE_NUM}:80 check weight 100"
+    echo "        server ${PROJECT}_docker${ENGINE_NUM}:8181 ${PROJECT}_docker${ENGINE_NUM}:8181 check weight 100"
   done
 }
 
@@ -30,11 +30,11 @@ dtr_upstreams_443() {
   done
 }
 
-hrm_upstreams_8181() {
+hrm_upstreams_80() {
   # make upstream include all nodes
   for ((ENGINE_NUM=1; ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
   do
-    echo "        server ${PROJECT}_docker${ENGINE_NUM}:8181 ${PROJECT}_docker${ENGINE_NUM}:8181 check weight 100"
+    echo "        server ${PROJECT}_docker${ENGINE_NUM}:80 ${PROJECT}_docker${ENGINE_NUM}:80 check weight 100"
   done
 }
 
@@ -70,20 +70,20 @@ frontend ucp_4443
         bind 0.0.0.0:4443
         default_backend ucp_upstream_servers
 
-frontend dtr_80
+frontend dtr_8181
         mode tcp
-        bind 0.0.0.0:80
-        default_backend dtr_upstream_servers_80
+        bind 0.0.0.0:8181
+        default_backend dtr_upstream_servers_8181
 
 frontend dtr_443
         mode tcp
         bind 0.0.0.0:443
         default_backend dtr_upstream_servers_443
 
-frontend hrm_8181
+frontend hrm_80
         mode http
-        bind 0.0.0.0:8181
-        default_backend hrm_upstream_servers_8181
+        bind 0.0.0.0:80
+        default_backend hrm_upstream_servers_80
 
 frontend hrm_8443
         mode tcp
@@ -96,22 +96,22 @@ backend ucp_upstream_servers
         option httpchk GET /_ping HTTP/1.1\r\nHost:\ foo.bar
 $(ucp_upstreams_4443)
 
-backend dtr_upstream_servers_80
+backend dtr_upstream_servers_8181
         mode tcp
         option httpchk GET /health HTTP/1.1\r\nHost:\ foo.bar
-$(dtr_upstreams_80)
+$(dtr_upstreams_8181)
 
 backend dtr_upstream_servers_443
         mode tcp
         option httpchk GET /health HTTP/1.1\r\nHost:\ foo.bar
 $(dtr_upstreams_443)
 
-backend hrm_upstream_servers_8181
+backend hrm_upstream_servers_80
         mode http
         stats enable
         stats admin if TRUE
         stats refresh 5m
-$(hrm_upstreams_8181)
+$(hrm_upstreams_80)
 
 backend hrm_upstream_servers_8443
         mode tcp
