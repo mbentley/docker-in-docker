@@ -661,6 +661,7 @@ launch_jenkins() {
 
   echo "Creating Jenkins service on '${PROJECT}_docker1'..."
   docker -H tcp://127.0.0.1:1001 service create \
+    --detach \
     --replicas 1 \
     --constraint "node.hostname == ${PROJECT}_docker1" \
     --env DTR_URL="${ALIAS_IP}" \
