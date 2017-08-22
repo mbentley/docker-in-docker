@@ -655,6 +655,25 @@ launch_haproxy() {
   echo -e "done.\n"
 }
 
+launch_jenkins() {
+  # domain_name
+  # github_username
+
+  echo "Creating Jenkins service on '${PROJECT}_docker1'..."
+  docker -H tcp://127.0.0.1:1001 service create \
+    --replicas 1 \
+    --constraint "node.hostname == ${PROJECT}_docker1" \
+    --env DTR_URL="${ALIAS_IP}" \
+    --env DEMO_MASTER="$(docker -H unix:///var/run/docker.sock inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${PROJECT}"_docker1)" \
+    --env DOMAIN_NAME=demo.mac \
+    --env GITHUB_USERNAME=mbentley \
+    --mount type=volume,source=jenkins-data,destination=/var/lib/jenkins,readonly=false \
+    --network ucp-hrm \
+    --label com.docker.ucp.mesh.http.8080=internal_port=8080,external_route=http://jenkins.demo.mac \
+    --name jenkins \
+    dockersolutions/jenkins:latest
+}
+
 install_dtr() {
   echo -e "Preparing cluster for DTR installation...\n"
   # validate the value for # of dtr replicas
@@ -713,6 +732,12 @@ install_summary_dtr() {
   # DTR
   echo -e "DTR should now be available at https://${ALIAS_IP}/"
   echo -e "  Username: admin\tPassword: docker123"
+}
+
+launch_summary_jenkins() {
+  # Jenkins
+  echo -e "Jenkins should now be available at http://jenkins.demo.mac/ once HRM picks up the configuration"
+  echo -e "  Username: demo\tPassword: docker123"
 }
 
 destroy_swarm() {
@@ -846,6 +871,11 @@ main() {
       initialize
       ${1}
       ;;
+    launch_jenkins)
+      initialize
+      launch_jenkins
+      launch_summary_jenkins
+      ;;
     start|unpause)
       initialize
       "${1}"_containers
@@ -871,7 +901,7 @@ main() {
     *)
       initialize
       echo "Basic usage: (see README.md for full command details)"
-      echo -e "  $0 {create_all|create_swarm|install_ucp|install_dtr|destroy_swarm|env_info|status}"
+      echo -e "  $0 {create_all|create_swarm|install_ucp|install_dtr|launch_jenkins|destroy_swarm|env_info|status}"
       echo -e "\nContainer commands:"
       echo -e "  $0 {start|stop|pause|unpause|recycle}"
       echo -e "\nAdditional commands:"
