@@ -620,6 +620,10 @@ install_ucp() {
     AUTH_TOKEN="$(curl -sk -d '{"username":"admin","password":"docker123"}' "https://${ALIAS_IP}:4443/auth/login" | jq -r .auth_token 2>/dev/null)"
     curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"HTTPPort":80,"HTTPSPort":8443}' "https://${ALIAS_IP}:4443/api/hrm"
     echo -e "done.\n"
+
+    echo "Creating 'demo' user with password 'docker123'..."
+    curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"role":3,"username":"demo","password":"docker123","first_name":"Demo User","admin":true}' "https://${ALIAS_IP}:4443/api/accounts"
+    echo -e "done.\n"
   else
     echo -e "Warning: 'jq' not found; you will need to enable HRM manually.\n"
   fi
