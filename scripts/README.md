@@ -15,18 +15,23 @@ scripts
   * [Pre-production DDC](#pre-production-ddc)
     * [Create .tar.gz archives](#create-targz-archives)
   * [Launching UCP and DTR in various configurations](#launching-ucp-and-dtr-in-various-configurations)
+  * [Jenkins Demo](#jenkins-demo)
   * [HRM Example Usage](#hrm-example-usage)
 
 ## Quickstart (tl;dr)
 Check out the [Prerequisites](#prerequisites) and then go down to [Launching Docker EE with default configuration](#launching-docker-ee-with-default-configuration) for released versions or [Environment Variable Overrides](#environment-variable-overrides) for custom settings you can pass as well as [Using an environment file for persistent settings](#using-an-environment-file-for-persistent-settings) to make the management of your custom settings more manageable.  See [Pre-production DDC](#pre-production-ddc) for details of how to launch an environment with pre-production images.
 
-Get started with 3 commands:
+Get a demo environment with 4 commands:
 ```bash
 # you only need to create the tars once
 $ ./dind_ddc ucp_create_tar
 $ ./dind_ddc dtr_create_tar
+
 # this starts the environment
 $ ./dind_ddc create_all
+
+# start jenkins
+$ ./dind_ddc launch_jenkins
 ```
 
 ## Prerequisites
@@ -48,7 +53,7 @@ $ ./dind_ddc create_all
 ```
 $ ./dind_ddc
 Basic usage: (see README.md for full command details)
-  ./dind_ddc {create_all|create_swarm|install_ucp|install_dtr|destroy_swarm|env_info|status}
+  ./dind_ddc {create_all|create_swarm|install_ucp|install_dtr|launch_jenkins|destroy_swarm|env_info|status}
 
 Container commands:
   ./dind_ddc {start|stop|pause|unpause|recycle}
@@ -56,7 +61,9 @@ Container commands:
 Additional commands:
   ./dind_ddc {connect_engine|create_net_alias|remove_net_alias|recreate_net_alias|ucp_create_tar|dtr_create_tar}
 
-Current set environment variables:
+To view current set environment variables, run ./dind_ddc env_info
+
+$ ./dind_ddc env_info
 DIND_ENV:
 PROJECT:        dind-ddc
 DIND_TAG:       ee-17.06
@@ -65,19 +72,21 @@ MANAGERS:       1
 WORKERS:        2
 UCP_REPO:       docker/ucp
 UCP_VERSION:    2.2.0
-UCP_IMAGES:     /Users/mbentley/ddc/ucp_images_2.1.4.tar.gz
+UCP_IMAGES:     /Users/mbentley/ddc/ucp_images_2.2.0.tar.gz
 UCP_OPTIONS:
 DTR_REPO:       docker/dtr
 DTR_VERSION:    2.3.0
-DTR_IMAGES:     /Users/mbentley/ddc/dtr-2.2.5.tar.gz
+DTR_IMAGES:     /Users/mbentley/ddc/dtr-2.3.0.tar.gz
+DDC_LICENSE:    /Users/mbentley/Downloads/docker_subscription.lic
 DTR_OPTIONS:
 DTR_REPLICAS:   1
-DDC_LICENSE:    /Users/mbentley/Downloads/docker_subscription.lic
-DIND_SUBNET:    172.250.0.0/24
-DIND_DNS:       8.8.8.8
+DIND_SUBNET:    172.250.1.0/24
+DIND_DNS:       192.168.65.1
 DIND_RESTART:   unless-stopped
 NET_IF:         en0
 ALIAS_IP:       10.1.2.3
+DOMAIN_NAME:    demo.mac
+GH_USERNAME:    mbentley
 ```
 
 ### Basic usage details
@@ -85,6 +94,7 @@ ALIAS_IP:       10.1.2.3
   * `create_swarm` - create 3 node Swarm mode cluster; 1 manager and 2 workers
   * `install_ucp` - run through the UCP installation of 1 manager and 2 workers
   * `install_dtr` - install DTR on `docker2`
+  * `launch_jenkins` - launch Jenkins using [dockersolutions/jenkins](https://github.com/docker/solutions-jenkins)
   * `destroy_swarm` - remove Swarm, the engines, and all persistent data
   * `env_info` - display enviroment variable overrides currently set
 
@@ -130,6 +140,8 @@ ALIAS_IP:       10.1.2.3
   * `DIND_RESTART` - restart policy for the docker daemon containers
   * `ALIAS_IP` - IP address to set as an alias to your network interface; used to keep static IP when changing networks
   * `NET_IF` - customize the network interface name used for creating the ALIAS_IP
+  * `DOMAIN_NAME` - domain name to use for Jenkins behind HRM
+  * `GH_USERNAME` - GitHub username to pass to Jenkins for configuration
 
 *Note*: To see the default values, run `./dind_ddc env_info`
 
@@ -261,6 +273,32 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
 
   ./dind_ddc install_ucp
   ```
+
+### Jenkins Demo
+
+Launching Jenkins allows for utilizing a local demo environment.  To bootstrap and demo Jenkins, do the following:
+
+1. Launch Jenkins:
+    ```
+    $ ./dind_ddc launch_jenkins
+    ```
+
+2. Add a hosts entries in /etc/hosts to point to HRM:
+    ```
+    $ echo "10.1.2.3 jenkins.demo.mac docker-demo-dev.demo.mac docker-demo-test.demo.mac docker-demo-prd.demo.mac" sudo tee -a /etc/hosts
+    ```
+
+3. Login to Jenkins and initialize Jenkins:
+    * http://jenkins.demo.mac (u - demo; p - docker123)
+    * Execute the job `util > _initialize-demo-env`.  This will do the following:
+      * Download a client bundle
+      * Login to your DTR
+      * Initialize Docker Content Trust delegations for the docker-demo and official image repos in DTR
+      * Populate DTR with some official content
+
+4. Execute the job `docker-demo_build` to build and deploy the docker-demo application.
+
+5. Look at the demo application deployed at http://docker-demo-dev.demo.mac/db
 
 ### HRM Example Usage
 

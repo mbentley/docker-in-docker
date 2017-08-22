@@ -41,6 +41,8 @@ initialize() {
   DIND_SUBNET="${DIND_SUBNET:-172.250.1.0/24}"
   DIND_RESTART="${DIND_RESTART:-unless-stopped}"
   ALIAS_IP="${ALIAS_IP:-10.1.2.3}"
+  DOMAIN_NAME="${DOMAIN_NAME:-demo.mac}"
+  GH_USERNAME="${GH_USERNAME:-mbentley}"
 
   #  only run a container to get resolv.conf from the engine if DIND_DNS wasn't specified
   if [ -z "${DIND_DNS}" ]
@@ -117,6 +119,8 @@ env_info() {
   echo -e "DIND_RESTART:\t${DIND_RESTART}"
   echo -e "NET_IF:\t\t${NET_IF}"
   echo -e "ALIAS_IP:\t${ALIAS_IP}"
+  echo -e "DOMAIN_NAME:\t${DOMAIN_NAME}"
+  echo -e "GH_USERNAME:\t${GH_USERNAME}"
   exit 0
 }
 
@@ -656,9 +660,7 @@ launch_haproxy() {
 }
 
 launch_jenkins() {
-  # domain_name
-  # github_username
-
+  # launch Jenkins on the first manager for predictable storage
   echo "Creating Jenkins service on '${PROJECT}_docker1'..."
   docker -H tcp://127.0.0.1:1001 service create \
     --detach \
@@ -666,11 +668,11 @@ launch_jenkins() {
     --constraint "node.hostname == ${PROJECT}_docker1" \
     --env DTR_URL="${ALIAS_IP}" \
     --env DEMO_MASTER="$(docker -H unix:///var/run/docker.sock inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${PROJECT}"_docker1)" \
-    --env DOMAIN_NAME=demo.mac \
-    --env GITHUB_USERNAME=mbentley \
+    --env DOMAIN_NAME="${DOMAIN_NAME}" \
+    --env GITHUB_USERNAME="${GH_USERNAME}" \
     --mount type=volume,source=jenkins-data,destination=/var/lib/jenkins,readonly=false \
     --network ucp-hrm \
-    --label com.docker.ucp.mesh.http.8080=internal_port=8080,external_route=http://jenkins.demo.mac \
+    --label "com.docker.ucp.mesh.http.8080=internal_port=8080,external_route=http://jenkins.${DOMAIN_NAME}" \
     --name jenkins \
     dockersolutions/jenkins:latest
 }
@@ -907,8 +909,7 @@ main() {
       echo -e "  $0 {start|stop|pause|unpause|recycle}"
       echo -e "\nAdditional commands:"
       echo -e "  $0 {connect_engine|create_net_alias|remove_net_alias|recreate_net_alias|ucp_create_tar|dtr_create_tar}"
-      echo -e "\nCurrent set environment variables:"
-      env_info
+      echo -e "\nTo view current set environment variables, run $0 env_info"
       ;;
   esac
 }
