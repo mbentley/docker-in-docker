@@ -18,6 +18,8 @@ Stop! Look at [scripts](./scripts) for tools to automatically create a Swarm mod
   * `haproxy` ([Dockerfile.haproxy](./scripts/haproxy/Dockerfile.haproxy)) - used by  `dind_ddc`
 
 ## Build image (optional)
+<details><summary>Expand for more details</summary><p>
+
 The images are published to Docker Hub so you do not need to build them unless you want to,
 
 *Note*: your `<DOCKER-EE-URL>` value can be found from https://store.docker.com/?overlay=subscriptions
@@ -104,6 +106,7 @@ The images are published to Docker Hub so you do not need to build them unless y
 
   docker push mbentley/docker-in-docker:cs-1.9
   ```
+</p></details>
 
 ## Prerequisites
   * Docker for Mac installed
@@ -121,6 +124,7 @@ The images are published to Docker Hub so you do not need to build them unless y
       -p 127.0.0.1:1000:2375 \
       -v /lib/modules:/lib/modules:ro \
       -v docker:/var/lib/docker \
+      -v docker-etc:/etc/docker \
       --tmpfs /run \
       mbentley/docker-in-docker \
       dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375
