@@ -114,6 +114,8 @@ GH_USERNAME:    mbentley
   * `dtr_create_tar` - create a tarball of the DTR images
 
 ### Environment Variable Overrides
+If you wish to have your environment variables stored in a single file that can be referenced instead of manually settings them each time, see [Using an environment file for persistent settings](#using-an-environment-file-for-persistent-settings).
+
   * `DIND_ENV` - environment variable file to source for the below environment variable overrides
   * `PROJECT` - prefix for all resources; allows you to run multiple environments (although it is still one at a time)
   * `DIND_TAG` - docker image tag used to run docker
@@ -304,16 +306,18 @@ Launching Jenkins allows for utilizing a local demo environment.  To bootstrap a
 
 Create a service and test it.  You can also add a hosts file entry so you can bring up the site in a browser.  For HTTPS, you will still need to specify the port for now (8443).
 
+Create a basic service:
 ```
-# create the service
 $ docker -H tcp://localhost:1001 \
     service create \
     --name nginx \
     --network ucp-hrm \
     --label "com.docker.ucp.mesh.http.80=external_route=http://nginx.test,internal_port=80" \
     nginx:alpine
+```
 
-# test with curl
+Test with `curl`:
+```
 $ curl -H "Host: nginx.test" http://10.1.2.3
 <!DOCTYPE html>
 <html>
@@ -342,3 +346,7 @@ Commercial support is available at
 </html>
 ```
 
+Add a hosts file entry for use with a browser to access application at http://nginx.test:
+```
+$ echo "10.1.2.3 nginx.test" sudo tee -a /etc/hosts
+```

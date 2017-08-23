@@ -1,8 +1,16 @@
 docker-in-docker
 ================
 
+## Table of Contents
+* [Docker EE (Engine, UCP and DTR)](#docker-ee-engine-ucp-and-dtr)
+* [Image Tags](#image-tags)
+* [Build images (optional)](#build-images-optional)
+* [Prerequisites](#prerequisites)
+* [Single engine](#single-engine)
+* [Swarm mode cluster](#swarm-mode-cluster)
+
 ## Docker EE (Engine, UCP and DTR)
-Stop! Look at [scripts](./scripts) for tools to automatically create a Swarm mode cluster, a UCP cluster, or a DDC (both UCP & DTR) cluster.  If you want to manually stand up an engine or Swarm mode cluster, read on.
+Stop! Look at [scripts](./scripts) for tools to automatically create a Swarm mode cluster, a UCP cluster, or a DDC (both UCP & DTR) cluster. You can even start a preconfigured Jenkins to use for demos. If you want to manually stand up an engine or Swarm mode cluster, read on.
 
 ## Image Tags
   * `ce`, `ce-stable`, `latest` ([Dockerfile.ce](./Dockerfile.ce))
@@ -17,7 +25,7 @@ Stop! Look at [scripts](./scripts) for tools to automatically create a Swarm mod
   * `cs-1.9` [Dockerfile.cs-1.9](./Dockerfile.cs-1.9))
   * `haproxy` ([Dockerfile.haproxy](./scripts/haproxy/Dockerfile.haproxy)) - used by  `dind_ddc`
 
-## Build image (optional)
+## Build images (optional)
 <details><summary>Expand for more details</summary><p>
 
 The images are published to Docker Hub so you do not need to build them unless you want to,
@@ -147,7 +155,7 @@ The images are published to Docker Hub so you do not need to build them unless y
     docker volume rm docker
     ```
 
-## Swarm
+## Swarm mode cluster
 1. Create 3 engines
     ```
     for ENGINE_NUM in {1..3}
