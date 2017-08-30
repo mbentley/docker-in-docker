@@ -659,7 +659,7 @@ launch_haproxy() {
   echo -e "done.\n"
 }
 
-launch_jenkins() {
+launch_demo() {
   # launch Jenkins on the first manager for predictable storage
   echo "Creating Jenkins service on '${PROJECT}_docker1'..."
   docker -H tcp://127.0.0.1:1001 service create \
@@ -737,9 +737,9 @@ install_summary_dtr() {
   echo -e "  Username: admin\tPassword: docker123"
 }
 
-launch_summary_jenkins() {
+launch_summary_demo() {
   # Jenkins
-  echo -e "Jenkins should now be available at http://jenkins.demo.mac/ once HRM picks up the configuration"
+  echo -e "Jenkins should now be available at http://jenkins.${DOMAIN_NAME}/ once HRM picks up the configuration"
   echo -e "  Username: demo\tPassword: docker123"
 }
 
@@ -874,10 +874,10 @@ main() {
       initialize
       ${1}
       ;;
-    launch_jenkins)
+    launch_demo)
       initialize
-      launch_jenkins
-      launch_summary_jenkins
+      launch_demo
+      launch_summary_demo
       ;;
     start|unpause)
       initialize
@@ -904,7 +904,7 @@ main() {
     *)
       initialize
       echo "Basic usage: (see README.md for full command details)"
-      echo -e "  $0 {create_all|create_swarm|install_ucp|install_dtr|launch_jenkins|destroy_swarm|env_info|status}"
+      echo -e "  $0 {create_all|create_swarm|install_ucp|install_dtr|launch_demo|destroy_swarm|env_info|status}"
       echo -e "\nContainer commands:"
       echo -e "  $0 {start|stop|pause|unpause|recycle}"
       echo -e "\nAdditional commands:"
