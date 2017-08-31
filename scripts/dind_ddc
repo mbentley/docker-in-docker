@@ -42,7 +42,7 @@ initialize() {
   DIND_RESTART="${DIND_RESTART:-unless-stopped}"
   ALIAS_IP="${ALIAS_IP:-10.1.2.3}"
   DOMAIN_NAME="${DOMAIN_NAME:-demo.mac}"
-  GH_USERNAME="${GH_USERNAME:-mbentley}"
+  GH_USERNAME="${GH_USERNAME:-demo}"
 
   #  only run a container to get resolv.conf from the engine if DIND_DNS wasn't specified
   if [ -z "${DIND_DNS}" ]
@@ -755,7 +755,7 @@ install_summary_dtr() {
 launch_summary_demo() {
   # Jenkins
   echo -e "Jenkins should now be available at http://jenkins.${DOMAIN_NAME}/ once HRM picks up the configuration"
-  echo -e "  Username: demo\tPassword: docker123"
+  echo -e "  Username: demo\tPassword: docker123\n"
 
   # Gogs
   echo -e "Gogs should now be available at http://gogs.${DOMAIN_NAME}/ once HRM picks up the configuration"
