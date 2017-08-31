@@ -94,7 +94,7 @@ GH_USERNAME:    mbentley
   * `create_swarm` - create 3 node Swarm mode cluster; 1 manager and 2 workers
   * `install_ucp` - run through the UCP installation of 1 manager and 2 workers
   * `install_dtr` - install DTR on `docker2`
-  * `launch_jenkins` - launch Jenkins using [dockersolutions/jenkins](https://github.com/docker/solutions-jenkins)
+  * `launch_demo` - launch Jenkins using [dockersolutions/jenkins](https://github.com/docker/solutions-jenkins) and Gogs using [mbentley/solutions-gogs](https://github.com/mbentley/solutions-gogs)
   * `destroy_swarm` - remove Swarm, the engines, and all persistent data
   * `env_info` - display enviroment variable overrides currently set
 
@@ -278,16 +278,16 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
 
 ### Jenkins Demo
 
-Launching Jenkins allows for utilizing a local demo environment.  To bootstrap and demo Jenkins, do the following:
+Launching Jenkins and Gogs allows for utilizing a full local demo environment.  To bootstrap and demo Jenkins, do the following:
 
-1. Launch Jenkins:
+1. Launch Jenkins and Gogs:
     ```
-    $ ./dind_ddc launch_jenkins
+    $ ./dind_ddc launch_demo
     ```
 
 2. Add a hosts entries in /etc/hosts to point to HRM:
     ```
-    $ echo "10.1.2.3 jenkins.demo.mac docker-demo-dev.demo.mac docker-demo-test.demo.mac docker-demo-prd.demo.mac" sudo tee -a /etc/hosts
+    $ echo "10.1.2.3 jenkins.demo.mac gogs.demo.mac docker-demo-dev.demo.mac docker-demo-test.demo.mac docker-demo-prd.demo.mac" sudo tee -a /etc/hosts
     ```
 
 3. Login to Jenkins and initialize Jenkins:
@@ -298,9 +298,21 @@ Launching Jenkins allows for utilizing a local demo environment.  To bootstrap a
       * Initialize Docker Content Trust delegations for the docker-demo and official image repos in DTR
       * Populate DTR with some official content
 
-4. Execute the job `docker-demo_build` to build and deploy the docker-demo application.
+4. Populate Gogs with the demo data by cloning and pushing to Gogs:
 
-5. Look at the demo application deployed at http://docker-demo-dev.demo.mac/db
+    ```
+    $ git clone https://github.com/mbentley/docker-demo
+    $ cd docker-demo
+    $ git checkout demo
+    $ git pull origin demo
+    $ git remote add gogs http://gogs.demo.mac/demo/docker-demo.git
+    $ git push gogs master
+    $ git push gogs demo
+    ```
+
+5. Execute the job `docker-demo_build` to build and deploy the docker-demo application.
+
+6. Look at the demo application deployed at http://docker-demo-dev.demo.mac/db
 
 ### HRM Example Usage
 
