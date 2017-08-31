@@ -670,11 +670,26 @@ launch_demo() {
     --env DEMO_MASTER="$(docker -H unix:///var/run/docker.sock inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${PROJECT}"_docker1)" \
     --env DOMAIN_NAME="${DOMAIN_NAME}" \
     --env GITHUB_USERNAME="${GH_USERNAME}" \
+    --env GIT_SERVER="http://gogs.${DOMAIN_NAME}" \
     --mount type=volume,source=jenkins-data,destination=/var/lib/jenkins,readonly=false \
     --network ucp-hrm \
     --label "com.docker.ucp.mesh.http.8080=internal_port=8080,external_route=http://jenkins.${DOMAIN_NAME}" \
     --name jenkins \
     dockersolutions/jenkins:latest
+  echo -e "done.\n"
+
+  # launch Gogs on the first manager for predictable storage
+  echo "Creating Gogs service on '${PROJECT}_docker1'..."
+  docker -H tcp://127.0.0.1:1001 service create \
+    --detach \
+    --replicas 1 \
+    --constraint "node.hostname == ${PROJECT}_docker1" \
+    --mount type=volume,source=gogs-data,destination=/data,readonly=false \
+    --network ucp-hrm \
+    --label "com.docker.ucp.mesh.http.3000=internal_port=3000,external_route=http://gogs.${DOMAIN_NAME}" \
+    --name gogs \
+    mbentley/solutions-gogs:latest
+  echo -e "done.\n"
 }
 
 install_dtr() {
@@ -741,6 +756,12 @@ launch_summary_demo() {
   # Jenkins
   echo -e "Jenkins should now be available at http://jenkins.${DOMAIN_NAME}/ once HRM picks up the configuration"
   echo -e "  Username: demo\tPassword: docker123"
+
+  # Gogs
+  echo -e "Gogs should now be available at http://gogs.${DOMAIN_NAME}/ once HRM picks up the configuration"
+  echo -e "  Username: demo\tPassword: docker123\n"
+  echo -e "Add a git remote using:\n  git remote add gogs http://gogs.${DOMAIN_NAME}/demo/docker-demo.git\n"
+  echo -e "Then you will be able to push using:\n  git push gogs <branch>"
 }
 
 destroy_swarm() {
