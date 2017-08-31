@@ -755,7 +755,7 @@ install_summary_dtr() {
 launch_summary_demo() {
   # Jenkins
   echo -e "Jenkins should now be available at http://jenkins.${DOMAIN_NAME}/ once HRM picks up the configuration"
-  echo -e "  Username: demo\tPassword: docker123"
+  echo -e "  Username: demo\tPassword: docker123\n"
 
   # Gogs
   echo -e "Gogs should now be available at http://gogs.${DOMAIN_NAME}/ once HRM picks up the configuration"
