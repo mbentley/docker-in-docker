@@ -760,8 +760,8 @@ launch_summary_demo() {
   # Gogs
   echo -e "Gogs should now be available at http://gogs.${DOMAIN_NAME}/ once HRM picks up the configuration"
   echo -e "  Username: demo\tPassword: docker123\n"
-  echo -e "Add a git remote using:\n  git remote add gogs http://gogs.${DOMAIN_NAME}/demo/docker-demo.git\n"
-  echo -e "Then you will be able to push using:\n  git push gogs <branch>"
+  echo -e "  Add a git remote using:\n    git remote add gogs http://gogs.${DOMAIN_NAME}/demo/docker-demo.git\n"
+  echo -e "  Then you will be able to push using:\n    git push gogs <branch>"
 }
 
 destroy_swarm() {
