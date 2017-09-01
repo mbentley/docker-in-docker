@@ -629,7 +629,7 @@ install_ucp() {
     curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"role":3,"username":"demo","password":"docker123","first_name":"Demo User","admin":true}' "https://${ALIAS_IP}:4443/api/accounts"
     echo -e "done.\n"
   else
-    echo -e "Warning: 'jq' not found; you will need to enable HRM manually.\n"
+    echo -e "Warning: 'jq' not found; you will need to enable HRM and create a demo user manually.\n"
   fi
 
   echo -e "UCP installation complete.\n"
