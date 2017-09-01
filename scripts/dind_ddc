@@ -1036,13 +1036,16 @@ main() {
       fi
       ;;
     *:*)
-      echo "dind_ddc usage: (see 'help' for full command usage)"
-      echo -e "\nCommands:"
-      echo "  $0 launch {all|swarm|ee|ucp|dtr|demo|help}"
-      echo "  $0 env {start|stop|pause|unpause|recycle|destroy|status|info|help}"
-      echo "  $0 create_tar {all|ucp|dtr|help}"
-      echo "  $0 net_alias {create|remove|recreate|help}"
-      echo "  $0 connect_engine {n|help}"
+      echo "Usage: $0 {launch|env|create_tar|net_alias|connect_engine|help}"
+      if [ "${1}" = "help" ]
+      then
+        echo -e "\nCommands:"
+        echo "  $0 launch {all|swarm|ee|ucp|dtr|demo|help}"
+        echo "  $0 env {start|stop|pause|unpause|recycle|destroy|status|info|help}"
+        echo "  $0 create_tar {all|ucp|dtr|help}"
+        echo "  $0 net_alias {create|remove|recreate|help}"
+        echo "  $0 connect_engine {n|help}"
+      fi
       ;;
   esac
 }

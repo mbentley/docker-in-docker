@@ -5,7 +5,11 @@ scripts
 * [Quickstart (tl;dr)](#quickstart-tldr)
 * [Prerequisites](#prerequisites)
 * [dind_ddc Usage](#dind_ddc-usage)
-  * [dind_ddc Usage Details](#dind_ddc-usage-details)
+  * [`dind_ddc` launch](#dind_ddc-launch)
+  * [`dind_ddc` env](#dind_ddc-env)
+  * [`dind_ddc` create_tar](#dind_ddc-create_tar)
+  * [`dind_ddc` net_alias](#dind_ddc-net_alias)
+  * [`dind_ddc` connect_engine](#dind_ddc-connect_engine)
   * [Environment Variable Overrides](#environment-variable-overrides)
 * [Examples](#examples)
   * [Launching Docker EE with default configuration](#launching-docker-ee-with-default-configuration)
@@ -45,16 +49,18 @@ $ ./dind_ddc launch all
 
 ## `dind_ddc` Usage
 ```
-$ ./dind_ddc
-dind_ddc usage: (see 'help' for full command usage)
+$ ./dind_ddc help
+Usage: ./dind_ddc {launch|env|create_tar|net_alias|connect_engine|help}
+
+Commands:
   ./dind_ddc launch {all|swarm|ee|ucp|dtr|demo|help}
   ./dind_ddc env {start|stop|pause|unpause|recycle|destroy|status|info|help}
   ./dind_ddc create_tar {all|ucp|dtr|help}
   ./dind_ddc net_alias {create|remove|recreate|help}
-  ./dind_ddc connect_engine {<engine>|help}
+  ./dind_ddc connect_engine {n|help}
 ```
 
-### `dind_ddc` Usage Details
+### `dind_ddc launch`
 ```
 $ ./dind_ddc launch help
 Usage: ./dind_ddc launch {all|swarm|ee|ucp|dtr|demo|help}
@@ -66,7 +72,10 @@ Commands:
   ucp           launch UCP on pre-created Swarm
   dtr           launch DTR on the first worker in a pre-created Swarm
   demo          launch Jenkins and Gogs using dockersolutions/jenkins and mbentley/solutions-gogs
+```
 
+### `dind_ddc env`
+```
 $ ./dind_ddc env help
 Usage: ./dind_ddc env {start|stop|pause|unpause|recycle|destroy|status|info|help}
 
@@ -79,7 +88,10 @@ Commands:
   destroy       remove Swarm, the engines, and all persistent data
   status        display environment status
   info          display enviroment variable overrides currently set
+```
 
+### `dind_ddc create_tar`
+```
 $ ./dind_ddc create_tar help
 Usage: ./dind_ddc create_tar {all|ucp|dtr|help}
 
@@ -87,7 +99,10 @@ Commands:
   all   create tarball of the UCP and DTR images
   ucp   create tarball of the UCP images
   dtr   create tarball of the DTR images
+```
 
+### `dind_ddc net_alias`
+```
 $ ./dind_ddc net_alias help
 Usage: ./dind_ddc net_alias {create|remove|recreate|help}
 
@@ -95,7 +110,10 @@ Commands:
   create        create a network alias used for keeping a persistent IP no matter when you are (only for D4M)
   remove        remove network alias (only for D4M)
   recreate      re-create network alias (only for D4M)
+```
 
+### `dind_ddc connect_engine`
+```
 $ ./dind_ddc connect_engine help
 Usage: eval "$(./dind_ddc connect_engine n)"
 
