@@ -306,21 +306,9 @@ Launching Jenkins and Gogs allows for utilizing a full local demo environment.  
       * Initialize Docker Content Trust delegations for the docker-demo and official image repos in DTR
       * Populate DTR with some official content
 
-4. Populate Gogs with the demo data by cloning and pushing to Gogs:
+4. Execute the job `docker-demo_build` to build and deploy the docker-demo application.
 
-    ```
-    $ git clone https://github.com/mbentley/docker-demo
-    $ cd docker-demo
-    $ git checkout demo
-    $ git pull origin demo
-    $ git remote add gogs http://gogs.demo.mac/demo/docker-demo.git
-    $ git push gogs master
-    $ git push gogs demo
-    ```
-
-5. Execute the job `docker-demo_build` to build and deploy the docker-demo application.
-
-6. Look at the demo application deployed at http://docker-demo-dev.demo.mac/db
+5. Look at the demo application deployed at http://docker-demo-dev.demo.mac/db
 
 ### HRM Example Usage
 
