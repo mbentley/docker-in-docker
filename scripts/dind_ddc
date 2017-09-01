@@ -288,14 +288,6 @@ check_other_projects() {
   fi
 }
 
-create_all() {
-  validate_dtr_replicas
-  create_net_alias
-  create_swarm
-  install_ucp
-  install_dtr
-}
-
 create_swarm() {
   launch_engines
   init_swarm
@@ -867,11 +859,32 @@ main() {
       ddc_check_license
       ucp_check_tar
       dtr_check_tar
-      ${1}
+      validate_dtr_replicas
+      create_net_alias
+      create_swarm
+      install_ucp
+      install_dtr
+      launch_demo
       install_summary_swarm; echo
       install_summary_haproxy; echo
       install_summary_ucp; echo
-      install_summary_dtr
+      install_summary_dtr; echo
+      launch_summary_demo
+      ;;
+    install_ee)
+      initialize
+      ddc_check_license
+      ucp_check_tar
+      dtr_check_tar
+      validate_dtr_replicas
+      create_net_alias
+      create_swarm
+      install_ucp
+      install_dtr
+      install_summary_swarm; echo
+      install_summary_haproxy; echo
+      install_summary_ucp; echo
+      install_summary_dtr; echo
       ;;
     install_ucp)
       initialize
@@ -925,7 +938,7 @@ main() {
     *)
       initialize
       echo "Basic usage: (see README.md for full command details)"
-      echo -e "  $0 {create_all|create_swarm|install_ucp|install_dtr|launch_demo|destroy_swarm|env_info|status}"
+      echo -e "  $0 {create_all|create_swarm|install_ee|install_ucp|install_dtr|launch_demo|destroy_swarm|env_info|status}"
       echo -e "\nContainer commands:"
       echo -e "  $0 {start|stop|pause|unpause|recycle}"
       echo -e "\nAdditional commands:"
