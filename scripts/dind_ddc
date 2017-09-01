@@ -928,11 +928,11 @@ main() {
       start_containers
       recreate_net_alias
       ;;
-    env:stop)
+    env:stop|stop:*)
       initialize
       stop_containers
       ;;
-    env:pause)
+    env:pause|pause:*)
       initialize
       pause_containers
       ;;
@@ -941,7 +941,7 @@ main() {
       unpause_containers
       recreate_net_alias
       ;;
-    env:recycle)
+    env:recycle|recycle:*)
       initialize
       recycle_containers
       ;;
