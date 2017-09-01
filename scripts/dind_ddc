@@ -29,11 +29,11 @@ initialize() {
   MANAGERS="${MANAGERS:-1}"
   WORKERS="${WORKERS:-2}"
   UCP_REPO="${UCP_REPO:-docker/ucp}"
-  UCP_VERSION="${UCP_VERSION:-2.2.0}"
+  UCP_VERSION="${UCP_VERSION:-2.2.2}"
   UCP_IMAGES="${UCP_IMAGES:-${HOME}/ddc/ucp_images_"${UCP_VERSION}".tar.gz}"
   UCP_OPTIONS="${UCP_OPTIONS:-}"
   DTR_REPO="${DTR_REPO:-docker/dtr}"
-  DTR_VERSION="${DTR_VERSION:-2.3.0}"
+  DTR_VERSION="${DTR_VERSION:-2.3.2}"
   DTR_IMAGES="${DTR_IMAGES:-${HOME}/ddc/dtr-"${DTR_VERSION}".tar.gz}"
   DTR_OPTIONS="${DTR_OPTIONS:-}"
   DTR_REPLICAS="${DTR_REPLICAS:-1}"
@@ -286,14 +286,6 @@ check_other_projects() {
     # return false (no other projects exist)
     echo "0"
   fi
-}
-
-create_all() {
-  validate_dtr_replicas
-  create_net_alias
-  create_swarm
-  install_ucp
-  install_dtr
 }
 
 create_swarm() {
@@ -861,76 +853,199 @@ create_network() {
 }
 
 main() {
-  case ${1} in
-    create_all)
+  case ${1}:${2} in
+    launch:all|create_all:*)
       initialize
       ddc_check_license
       ucp_check_tar
       dtr_check_tar
-      ${1}
+      validate_dtr_replicas
+      create_net_alias
+      create_swarm
+      install_ucp
+      install_dtr
+      launch_demo
       install_summary_swarm; echo
       install_summary_haproxy; echo
       install_summary_ucp; echo
-      install_summary_dtr
+      install_summary_dtr; echo
+      launch_summary_demo
       ;;
-    install_ucp)
+    launch:ee|install_ee:*)
       initialize
       ddc_check_license
       ucp_check_tar
-      ${1}
-      install_summary_ucp
-      ;;
-    install_dtr)
-      initialize
       dtr_check_tar
-      ${1}
-      install_summary_dtr
+      validate_dtr_replicas
+      create_net_alias
+      create_swarm
+      install_ucp
+      install_dtr
+      install_summary_swarm; echo
+      install_summary_haproxy; echo
+      install_summary_ucp; echo
+      install_summary_dtr; echo
       ;;
-    create_swarm)
-      initialize
-      ${1}
-      install_summary_swarm
-      ;;
-    create_net_alias|remove_net_alias|recreate_net_alias|destroy_swarm|ucp_create_tar|dtr_create_tar|env_info)
-      initialize
-      ${1}
-      ;;
-    launch_demo)
+    launch:demo|launch_demo:*)
       initialize
       launch_demo
       launch_summary_demo
       ;;
-    start|unpause)
+    launch:ucp|install_ucp:*)
       initialize
-      "${1}"_containers
+      ddc_check_license
+      ucp_check_tar
+      install_ucp
+      install_summary_ucp
+      ;;
+    launch:dtr|install_dtr:*)
+      initialize
+      dtr_check_tar
+      install_dtr
+      install_summary_dtr
+      ;;
+    launch:swarm|create_swarm:*)
+      initialize
+      create_swarm
+      install_summary_swarm
+      ;;
+    launch:*|launch:help)
+      echo -e "Usage: $0 launch {all|swarm|ee|ucp|dtr|demo|help}"
+      if [ "${2}" = "help" ]
+      then
+        echo -e "\nCommands:"
+        echo -e "  all \t\tlaunch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, DTR, Jenkins, and Gogs"
+        echo -e "  ee \t\tlaunch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, and DTR"
+        echo -e "  swarm \tlaunch 3 node Swarm mode cluster; 1 manager and 2 workers"
+        echo -e "  ucp \t\tlaunch UCP on pre-created Swarm"
+        echo -e "  dtr \t\tlaunch DTR on the first worker in a pre-created Swarm"
+        echo -e "  demo \t\tlaunch Jenkins and Gogs using dockersolutions/jenkins and mbentley/solutions-gogs"
+      fi
+      exit 1
+      ;;
+    env:start|start:*)
+      initialize
+      start_containers
       recreate_net_alias
       ;;
-    stop|pause|recycle)
+    env:stop)
       initialize
-      "${1}"_containers
+      stop_containers
       ;;
-    connect_engine)
-      if [ -z "${2}" ]
-      then
-        echo "Error: Missing engine name"
-        echo "Usage: $0 connect_engine ${PROJECT}_docker1"
-      else
-        ${1} "${2}"
-      fi
+    env:pause)
+      initialize
+      pause_containers
       ;;
-    status)
+    env:unpause|unpause:*)
+      initialize
+      unpause_containers
+      recreate_net_alias
+      ;;
+    env:recycle)
+      initialize
+      recycle_containers
+      ;;
+    env:destroy|destroy:*|destroy_swarm:*)
+      initialize
+      destroy_swarm
+      ;;
+    env:status|status:*)
       initialize
       project_status
       ;;
-    *)
+    env:info|env_info:*)
       initialize
-      echo "Basic usage: (see README.md for full command details)"
-      echo -e "  $0 {create_all|create_swarm|install_ucp|install_dtr|launch_demo|destroy_swarm|env_info|status}"
-      echo -e "\nContainer commands:"
-      echo -e "  $0 {start|stop|pause|unpause|recycle}"
-      echo -e "\nAdditional commands:"
-      echo -e "  $0 {connect_engine|create_net_alias|remove_net_alias|recreate_net_alias|ucp_create_tar|dtr_create_tar}"
-      echo -e "\nTo view current set environment variables, run $0 env_info"
+      env_info
+      ;;
+    env:*)
+      echo -e "Usage: $0 env {start|stop|pause|unpause|recycle|destroy|status|info|help}"
+      if [ "${2}" = "help" ]
+      then
+        echo -e "\nCommands:"
+	echo -e "  start \tstart ddc-lb, docker1, docker2, and docker3 daemon containers"
+	echo -e "  stop \t\tstop ddc-lb, docker1, docker2, and docker3 daemon containers"
+	echo -e "  pause \tpause ddc-lb, docker1, docker2, and docker3 daemon containers"
+	echo -e "  unpause \tunpause ddc-lb, docker1, docker2, and docker3 daemon containers"
+	echo -e "  recycle \tstop, remove, and re-create the docker engines and 'dind' network, keeping persistent data"
+	echo -e "  destroy \tremove Swarm, the engines, and all persistent data"
+	echo -e "  status \tdisplay environment status"
+	echo -e "  info \t\tdisplay enviroment variable overrides currently set"
+      fi
+      exit 1
+      ;;
+    create_tar:all)
+      initialize
+      ucp_create_tar
+      dtr_create_tar
+      ;;
+    create_tar:ucp|ucp_create_tar:*)
+      initialize
+      ucp_create_tar
+      ;;
+    create_tar:dtr|dtr_create_tar:*)
+      initialize
+      dtr_create_tar
+      ;;
+    create_tar:*)
+      echo -e "Usage: $0 create_tar {all|ucp|dtr|help}"
+      if [ "${2}" = "help" ]
+      then
+        echo -e "\nCommands:"
+        echo -e "  all \tcreate tarball of the UCP and DTR images"
+        echo -e "  ucp \tcreate tarball of the UCP images"
+        echo -e "  dtr \tcreate tarball of the DTR images"
+      fi
+      exit 1
+      ;;
+    net_alias:create|create_net_alias:*)
+      initialize
+      create_net_alias
+      ;;
+    net_alias:remove|remove_net_alias:*)
+      initialize
+      remove_net_alias
+      ;;
+    net_alias:recreate|recreate_net_alias:*)
+      initialize
+      recreate_net_alias
+      ;;
+    net_alias:*)
+      echo -e "Usage: $0 net_alias {create|remove|recreate|help}"
+      if [ "${2}" = "help" ]
+      then
+        echo -e "\nCommands:"
+        echo -e "  create \tcreate a network alias used for keeping a persistent IP no matter when you are (only for D4M)"
+        echo -e "  remove \tremove network alias (only for D4M)"
+        echo -e "  recreate \tre-create network alias (only for D4M)"
+      fi
+      exit 1
+      ;;
+    connect_engine:*)
+      if [ -z "${2}" ] || [ "${2}" = "help" ]
+      then
+        #shellcheck disable=SC2016
+        echo 'Usage: eval "$('"$0"' connect_engine n)"'
+        if [ "${2}" = "help" ]
+        then
+          echo -e "\nCommands:"
+          echo -e "  n \twhere 'n' is the engine number to connect to; sets 'DOCKER*' environment variables"
+        fi
+        exit 1
+      else
+        connect_engine "${2}"
+      fi
+      ;;
+    *:*)
+      echo "Usage: $0 {launch|env|create_tar|net_alias|connect_engine|help}"
+      if [ "${1}" = "help" ]
+      then
+        echo -e "\nCommands:"
+        echo "  $0 launch {all|swarm|ee|ucp|dtr|demo|help}"
+        echo "  $0 env {start|stop|pause|unpause|recycle|destroy|status|info|help}"
+        echo "  $0 create_tar {all|ucp|dtr|help}"
+        echo "  $0 net_alias {create|remove|recreate|help}"
+        echo "  $0 connect_engine {n|help}"
+      fi
       ;;
   esac
 }
