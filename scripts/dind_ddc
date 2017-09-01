@@ -29,11 +29,11 @@ initialize() {
   MANAGERS="${MANAGERS:-1}"
   WORKERS="${WORKERS:-2}"
   UCP_REPO="${UCP_REPO:-docker/ucp}"
-  UCP_VERSION="${UCP_VERSION:-2.2.0}"
+  UCP_VERSION="${UCP_VERSION:-2.2.2}"
   UCP_IMAGES="${UCP_IMAGES:-${HOME}/ddc/ucp_images_"${UCP_VERSION}".tar.gz}"
   UCP_OPTIONS="${UCP_OPTIONS:-}"
   DTR_REPO="${DTR_REPO:-docker/dtr}"
-  DTR_VERSION="${DTR_VERSION:-2.3.0}"
+  DTR_VERSION="${DTR_VERSION:-2.3.2}"
   DTR_IMAGES="${DTR_IMAGES:-${HOME}/ddc/dtr-"${DTR_VERSION}".tar.gz}"
   DTR_OPTIONS="${DTR_OPTIONS:-}"
   DTR_REPLICAS="${DTR_REPLICAS:-1}"
@@ -853,8 +853,8 @@ create_network() {
 }
 
 main() {
-  case ${1} in
-    create_all)
+  case ${1}:${2} in
+    launch:all|create_all:*)
       initialize
       ddc_check_license
       ucp_check_tar
@@ -871,7 +871,7 @@ main() {
       install_summary_dtr; echo
       launch_summary_demo
       ;;
-    install_ee)
+    launch:ee|install_ee:*)
       initialize
       ddc_check_license
       ucp_check_tar
@@ -886,43 +886,72 @@ main() {
       install_summary_ucp; echo
       install_summary_dtr; echo
       ;;
-    install_ucp)
+    launch:demo|launch_demo:*)
+      initialize
+      launch_demo
+      launch_summary_demo
+      ;;
+    launch:ucp|install_ucp:*)
       initialize
       ddc_check_license
       ucp_check_tar
-      ${1}
+      install_ucp
       install_summary_ucp
       ;;
-    install_dtr)
+    launch:dtr|install_dtr:*)
       initialize
       dtr_check_tar
-      ${1}
+      install_dtr
       install_summary_dtr
       ;;
-    create_swarm)
+    launch:swarm|create_swarm:*)
       initialize
-      ${1}
+      create_swarm
       install_summary_swarm
       ;;
-    create_net_alias|remove_net_alias|recreate_net_alias|destroy_swarm|ucp_create_tar|dtr_create_tar|env_info)
+    net_alias:create|create_net_alias:*)
       initialize
-      ${1}
+      create_net_alias
       ;;
-    launch_demo)
+    net_alias:remove|remove_net_alias:*)
       initialize
-      launch_demo
-      launch_summary_demo
+      remove_net_alias
       ;;
-    start|unpause)
+    net_alias:recreate|recreate_net_alias:*)
+      initialize
+      recreate_net_alias
+      ;;
+    destroy:*|destroy_swarm:*)
+      initialize
+      destroy_swarm
+      ;;
+    create_tar:all)
+      initialize
+      ucp_create_tar
+      dtr_create_tar
+      ;;
+    create_tar:ucp|ucp_create_tar:*)
+      initialize
+      ucp_create_tar
+      ;;
+    create_tar:dtr|dtr_create_tar:*)
+      initialize
+      dtr_create_tar
+      ;;
+    envinfo:*|env_info:*)
+      initialize
+      env_info
+      ;;
+    start:*|unpause:*)
       initialize
       "${1}"_containers
       recreate_net_alias
       ;;
-    stop|pause|recycle)
+    stop:*|pause:*|recycle:*)
       initialize
       "${1}"_containers
       ;;
-    connect_engine)
+    connect_engine:*)
       if [ -z "${2}" ]
       then
         echo "Error: Missing engine name"
@@ -931,19 +960,17 @@ main() {
         ${1} "${2}"
       fi
       ;;
-    status)
+    status:*)
       initialize
       project_status
       ;;
-    *)
-      initialize
-      echo "Basic usage: (see README.md for full command details)"
-      echo -e "  $0 {create_all|create_swarm|install_ee|install_ucp|install_dtr|launch_demo|destroy_swarm|env_info|status}"
-      echo -e "\nContainer commands:"
-      echo -e "  $0 {start|stop|pause|unpause|recycle}"
-      echo -e "\nAdditional commands:"
-      echo -e "  $0 {connect_engine|create_net_alias|remove_net_alias|recreate_net_alias|ucp_create_tar|dtr_create_tar}"
-      echo -e "\nTo view current set environment variables, run $0 env_info"
+    *:*)
+      echo "dind_ddc usage: (see README.md for full command details)"
+      echo -e "  $0 launch {all|swarm|ee|ucp|dtr|demo}"
+      echo -e "  $0 {start|stop|pause|unpause|recycle|destroy|status|envinfo}"
+      echo -e "  $0 create_tar {all|ucp|dtr}"
+      echo -e "  $0 net_alias {create|remove|recreate}"
+      echo -e "  $0 connect_engine <number>"
       ;;
   esac
 }
