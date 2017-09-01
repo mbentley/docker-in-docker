@@ -46,36 +46,62 @@ $ ./dind_ddc launch all
 ## `dind_ddc` Usage
 ```
 $ ./dind_ddc
-dind_ddc usage: (see README.md for full command details)
-  ./dind_ddc launch {all|swarm|ee|ucp|dtr|demo}
-  ./dind_ddc {start|stop|pause|unpause|recycle|destroy|status|envinfo}
-  ./dind_ddc create_tar {all|ucp|dtr}
-  ./dind_ddc net_alias {create|remove|recreate}
-  ./dind_ddc connect_engine <number>
+dind_ddc usage: (see 'help' for full command usage)
+  ./dind_ddc launch {all|swarm|ee|ucp|dtr|demo|help}
+  ./dind_ddc env {start|stop|pause|unpause|recycle|destroy|status|info|help}
+  ./dind_ddc create_tar {all|ucp|dtr|help}
+  ./dind_ddc net_alias {create|remove|recreate|help}
+  ./dind_ddc connect_engine {<engine>|help}
 ```
 
 ### `dind_ddc` Usage Details
-  * `launch all` - launch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, DTR, Jenkins, and Gogs
-  * `launch ee` - launch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, and DTR
-  * `launch swarm` - launch 3 node Swarm mode cluster; 1 manager and 2 workers
-  * `launch ucp` - launch UCP on pre-created Swarm
-  * `launch dtr` - launch DTR on the first worker in a pre-created Swarm
-  * `launch demo` - launch Jenkins and Gogs using [dockersolutions/jenkins](https://github.com/docker/solutions-jenkins) and [mbentley/solutions-gogs](https://github.com/mbentley/solutions-gogs)
-  * `start` - start ddc-lb, docker1, docker2, and docker3 daemon containers
-  * `stop` - stop ddc-lb, docker1, docker2, and docker3 daemon containers
-  * `pause` - pause ddc-lb, docker1, docker2, and docker3 daemon containers
-  * `unpause` - unpause ddc-lb, docker1, docker2, and docker3 daemon containers
-  * `recycle` - stop, remove, and re-create the docker engines and `dind` network, keeping persistent data
-  * `destroy` - remove Swarm, the engines, and all persistent data
-  * `status` - display environment status
-  * `envinfo` - display enviroment variable overrides currently set
-  * `create_tar all` - create tarball of the UCP and DTR images
-  * `create_tar ucp` - create tarball of the UCP images
-  * `create_tar dtr` - create tarball of the DTR images
-  * `net_alias create` - create a network alias used for keeping a persistent IP no matter when you are (only for D4M)
-  * `net_alias remove` - remove network alias (only for D4M)
-  * `net_alias recreate` - re-create network alias (only for D4M)
-  * `connect_engine n` - where `n` is the engine number to connect to; sets `DOCKER*` environment variables
+```
+$ ./dind_ddc launch help
+Usage: ./dind_ddc launch {all|swarm|ee|ucp|dtr|demo|help}
+
+Commands:
+  all           launch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, DTR, Jenkins, and Gogs
+  ee            launch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, and DTR
+  swarm         launch 3 node Swarm mode cluster; 1 manager and 2 workers
+  ucp           launch UCP on pre-created Swarm
+  dtr           launch DTR on the first worker in a pre-created Swarm
+  demo          launch Jenkins and Gogs using dockersolutions/jenkins and mbentley/solutions-gogs
+
+$ ./dind_ddc env help
+Usage: ./dind_ddc env {start|stop|pause|unpause|recycle|destroy|status|info|help}
+
+Commands:
+  start         start ddc-lb, docker1, docker2, and docker3 daemon containers
+  stop          stop ddc-lb, docker1, docker2, and docker3 daemon containers
+  pause         pause ddc-lb, docker1, docker2, and docker3 daemon containers
+  unpause       unpause ddc-lb, docker1, docker2, and docker3 daemon containers
+  recycle       stop, remove, and re-create the docker engines and 'dind' network, keeping persistent data
+  destroy       remove Swarm, the engines, and all persistent data
+  status        display environment status
+  info          display enviroment variable overrides currently set
+
+$ ./dind_ddc create_tar help
+Usage: ./dind_ddc create_tar {all|ucp|dtr|help}
+
+Commands:
+  all   create tarball of the UCP and DTR images
+  ucp   create tarball of the UCP images
+  dtr   create tarball of the DTR images
+
+$ ./dind_ddc net_alias help
+Usage: ./dind_ddc net_alias {create|remove|recreate|help}
+
+Commands:
+  create        create a network alias used for keeping a persistent IP no matter when you are (only for D4M)
+  remove        remove network alias (only for D4M)
+  recreate      re-create network alias (only for D4M)
+
+$ ./dind_ddc connect_engine help
+Usage: eval "$(./dind_ddc connect_engine n)"
+
+Commands:
+  n     where 'n' is the engine number to connect to; sets 'DOCKER*' environment variables
+```
 
 ### Environment Variable Overrides
 If you wish to have your environment variables stored in a single file that can be referenced instead of manually settings them each time, see [Using an environment file for persistent settings](#using-an-environment-file-for-persistent-settings).
