@@ -565,7 +565,13 @@ install_ucp() {
   # count the number of existing containers
   get_current_num_engines
 
+  # create network alias
   create_net_alias
+
+  # make sure hosts file has correct entries written to it
+  write_hosts
+
+  # get IP of the first container
   DOCKER1_IP="$(docker -H unix:///var/run/docker.sock container inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${PROJECT}"_docker1)"
 
   # load images on managers
@@ -589,14 +595,14 @@ install_ucp() {
 
   echo "Installing UCP on ${PROJECT}_docker1..."
   #shellcheck disable=SC2086
-  docker -H tcp://127.0.0.1:1001 run -it --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock "${UCP_REPO}":"${UCP_VERSION}" install ${UCP_OPTIONS} --admin-username admin --admin-password docker123 --host-address "${DOCKER1_IP}" --controller-port 4443 --san "${DOCKER1_IP}" --san "${ALIAS_IP}" --san "$(hostname)" --san "$(hostname -f)" --license "$(cat ${DDC_LICENSE})"
+  docker -H tcp://127.0.0.1:1001 run -it --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock "${UCP_REPO}":"${UCP_VERSION}" install ${UCP_OPTIONS} --admin-username admin --admin-password docker123 --host-address "${DOCKER1_IP}" --controller-port 4443 --san ucp.${DOMAIN_NAME} --san "${DOCKER1_IP}" --san "${ALIAS_IP}" --san "$(hostname)" --san "$(hostname -f)" --license "$(cat ${DDC_LICENSE})"
   echo -e "done.\n"
 
   # add the ALIAS_IP to the SANs engine labels of the managers
   for ((ENGINE_NUM=2; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
   do
     echo "Adding UCP node label for SANs..."
-    docker -H tcp://127.0.0.1:1001 node update --label-add "com.docker.ucp.SANs=$(docker -H tcp://127.0.0.1:1001 node inspect --format '{{(index .Spec.Labels "com.docker.ucp.SANs")}}' "${PROJECT}"_docker${ENGINE_NUM}),${ALIAS_IP}" "${PROJECT}"_docker${ENGINE_NUM}
+    docker -H tcp://127.0.0.1:1001 node update --label-add "com.docker.ucp.SANs=$(docker -H tcp://127.0.0.1:1001 node inspect --format '{{(index .Spec.Labels "com.docker.ucp.SANs")}}' "${PROJECT}"_docker${ENGINE_NUM}),${ALIAS_IP},ucp.${DOMAIN_NAME}" "${PROJECT}"_docker${ENGINE_NUM}
     echo -e "done.\n"
   done
 
@@ -614,18 +620,15 @@ install_ucp() {
   fi
 
   echo -n "Waiting for UCP to be ready..."
-  while [ "$(curl -sk -o /dev/null -w "%{http_code}" "https://${ALIAS_IP}:4443/_ping")" -ne "200" ]
-  do
-    echo -n "."
-    sleep 1
-  done
+  #shellcheck disable=SC2016
+  docker run -i --rm -e DOMAIN_NAME="${DOMAIN_NAME}" --entrypoint sh mbentley/curl -c 'while [ "$(curl -sk -o /dev/null -w "%{http_code}" "https://ucp.${DOMAIN_NAME}/_ping")" -ne "200" ]; do   echo -n ".";   sleep 1; done'
   echo -e "done.\n\nEnabling HRM..."
-  AUTH_TOKEN="$(curl -sk -d '{"username":"admin","password":"docker123"}' "https://${ALIAS_IP}:4443/auth/login" | ${JQ} -r .auth_token 2>/dev/null)"
-  curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"HTTPPort":80,"HTTPSPort":8443}' "https://${ALIAS_IP}:4443/api/hrm"
+  AUTH_TOKEN="$(docker run -i --rm mbentley/curl -sk -d '{"username":"admin","password":"docker123"}' "https://ucp.${DOMAIN_NAME}/auth/login" | ${JQ} -r .auth_token 2>/dev/null)"
+  docker run -i --rm mbentley/curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"HTTPPort":80,"HTTPSPort":8443}' "https://ucp.${DOMAIN_NAME}/api/hrm"
   echo -e "done.\n"
 
   echo "Creating 'demo' user with password 'docker123'..."
-  curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"role":3,"username":"demo","password":"docker123","first_name":"Demo User","admin":true}' "https://${ALIAS_IP}:4443/api/accounts"
+  docker run -i --rm mbentley/curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"role":3,"username":"demo","password":"docker123","first_name":"Demo User","admin":true}' "https://ucp.${DOMAIN_NAME}/api/accounts"
   echo -e "done.\n"
 
   echo -e "UCP installation complete.\n"
@@ -639,9 +642,6 @@ launch_haproxy() {
   docker -H unix:///var/run/docker.sock run -d \
     -p 80:80 \
     -p 443:443 \
-    -p 4443:4443 \
-    -p 8181:8181 \
-    -p 8443:8443 \
     --name "${PROJECT}"_ddc-lb \
     --label project="${PROJECT}" \
     --net "${PROJECT}"_dind \
@@ -651,6 +651,7 @@ launch_haproxy() {
     -e WORKERS="${WORKERS}" \
     -e PROJECT="${PROJECT}" \
     -e DTR_REPLICAS="${DTR_REPLICAS}" \
+    -e DOMAIN_NAME="${DOMAIN_NAME}" \
     mbentley/docker-in-docker:haproxy
   echo -e "done.\n"
 }
@@ -662,7 +663,7 @@ launch_demo() {
     --detach \
     --replicas 1 \
     --constraint "node.hostname == ${PROJECT}_docker1" \
-    --env DTR_URL="${ALIAS_IP}" \
+    --env DTR_URL="dtr.${DOMAIN_NAME}" \
     --env DEMO_MASTER="$(docker -H unix:///var/run/docker.sock inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${PROJECT}"_docker1)" \
     --env DOMAIN_NAME="${DOMAIN_NAME}" \
     --env GITHUB_USERNAME="${GH_USERNAME}" \
@@ -687,27 +688,20 @@ launch_demo() {
     mbentley/solutions-gogs:latest
   echo -e "done.\n"
 
+  # make sure hosts file has correct entries written to it
   write_hosts
 }
 
 write_hosts() {
   # create entries in /etc/hosts file
   HOSTS_FILE="/etc/hosts"
-  if ! grep -q "${ALIAS_IP} jenkins.${DOMAIN_NAME} gogs.${DOMAIN_NAME} ### managed by dind_ddc" "${HOSTS_FILE}"
+  HOSTS_LINE="${ALIAS_IP} ucp.${DOMAIN_NAME} dtr.${DOMAIN_NAME} jenkins.${DOMAIN_NAME} gogs.${DOMAIN_NAME} docker-demo-dev.${DOMAIN_NAME} docker-demo-test.${DOMAIN_NAME} docker-demo-prd.${DOMAIN_NAME} ### managed by dind_ddc"
+  if ! grep -q "${HOSTS_LINE}" "${HOSTS_FILE}"
   then
-    echo "Adding entry to ${HOSTS_FILE} for jenkins.${DOMAIN_NAME} and gogs.${DOMAIN_NAME}..."
-    echo "${ALIAS_IP} jenkins.${DOMAIN_NAME} gogs.${DOMAIN_NAME} ### managed by dind_ddc" | sudo tee -a "${HOSTS_FILE}"
+    echo -e "Adding entry to ${HOSTS_FILE} for:\n  * ucp.${DOMAIN_NAME}\n  * dtr.${DOMAIN_NAME}\n  * jenkins.${DOMAIN_NAME}\n  * gogs.${DOMAIN_NAME}\n  * docker-demo-dev.${DOMAIN_NAME}\n  * docker-demo-test.${DOMAIN_NAME}\n  * docker-demo-prd.${DOMAIN_NAME}"
+    echo "${HOSTS_LINE}" | sudo tee -a "${HOSTS_FILE}" > /dev/null
   else
-    echo "Line for jenkins.${DOMAIN_NAME} and gogs.${DOMAIN_NAME} already exists; skipping..."
-  fi
-  echo -e "done.\n"
-
-  if ! grep -q "${ALIAS_IP} docker-demo-dev.${DOMAIN_NAME} docker-demo-test.${DOMAIN_NAME} docker-demo-prd.${DOMAIN_NAME} ### managed by dind_ddc" "${HOSTS_FILE}"
-  then
-    echo "Adding entry to ${HOSTS_FILE} for docker-demo-dev.${DOMAIN_NAME}, docker-demo-test.${DOMAIN_NAME}, and docker-demo-prd.${DOMAIN_NAME}..."
-    echo "${ALIAS_IP} docker-demo-dev.${DOMAIN_NAME} docker-demo-test.${DOMAIN_NAME} docker-demo-prd.${DOMAIN_NAME} ### managed by dind_ddc" | sudo tee -a "${HOSTS_FILE}"
-  else
-    echo "Line for docker-demo-dev.${DOMAIN_NAME}, docker-demo-test.${DOMAIN_NAME}, and docker-demo-prd.${DOMAIN_NAME} already exists; skipping..."
+    echo "Hosts file entry already exists; skipping..."
   fi
   echo -e "done.\n"
 }
@@ -723,22 +717,12 @@ remove_hosts() {
 
   # remove entry if it exists
   HOSTS_FILE="/etc/hosts"
-  if grep -q "${ALIAS_IP} jenkins.${DOMAIN_NAME} gogs.${DOMAIN_NAME} ### managed by dind_ddc" "${HOSTS_FILE}"
+  HOSTS_LINE="${ALIAS_IP} ucp.${DOMAIN_NAME} dtr.${DOMAIN_NAME} jenkins.${DOMAIN_NAME} gogs.${DOMAIN_NAME} docker-demo-dev.${DOMAIN_NAME} docker-demo-test.${DOMAIN_NAME} docker-demo-prd.${DOMAIN_NAME} ### managed by dind_ddc"
+  if grep -q "${HOSTS_LINE}" "${HOSTS_FILE}"
   then
-    echo "Removing entry from ${HOSTS_FILE} for jenkins.${DOMAIN_NAME} and gogs.${DOMAIN_NAME}..."
+    echo -e "Removing entry from ${HOSTS_FILE} for:\n  * ucp.${DOMAIN_NAME}\n  * dtr.${DOMAIN_NAME}\n  * jenkins.${DOMAIN_NAME}\n  * gogs.${DOMAIN_NAME}\n  * docker-demo-dev.${DOMAIN_NAME}\n  * docker-demo-test.${DOMAIN_NAME}\n  * docker-demo-prd.${DOMAIN_NAME}"
     #shellcheck disable=SC2086
-    sudo ${SED} "/${ALIAS_IP} jenkins.${DOMAIN_NAME} gogs.${DOMAIN_NAME} ### managed by dind_ddc/d" "${HOSTS_FILE}"
-  else
-    echo "Nothing to remove; skipping..."
-  fi
-  echo -e "done.\n"
-
-  # remove entry if it exists
-  if grep -q "${ALIAS_IP} docker-demo-dev.${DOMAIN_NAME} docker-demo-test.${DOMAIN_NAME} docker-demo-prd.${DOMAIN_NAME} ### managed by dind_ddc" "${HOSTS_FILE}"
-  then
-    echo "Removing entry from ${HOSTS_FILE} for docker-demo-dev.${DOMAIN_NAME} docker-demo-test.${DOMAIN_NAME} docker-demo-prd.${DOMAIN_NAME}..."
-    #shellcheck disable=SC2086
-    sudo ${SED} "/${ALIAS_IP} docker-demo-dev.${DOMAIN_NAME} docker-demo-test.${DOMAIN_NAME} docker-demo-prd.${DOMAIN_NAME} ### managed by dind_ddc/d" "${HOSTS_FILE}"
+    sudo ${SED} "/${HOSTS_LINE}/d" "${HOSTS_FILE}"
   else
     echo "Nothing to remove; skipping..."
   fi
@@ -752,6 +736,9 @@ install_dtr() {
   # count the number of existing containers
   get_current_num_engines
 
+  # make sure hosts file has correct entries written to it
+  write_hosts
+
   # load images and install dtr to first replica
   ENGINE_NUM=$((MANAGERS+1))
   echo "Loading DTR images on ${PROJECT}_docker${ENGINE_NUM}..."
@@ -760,7 +747,7 @@ install_dtr() {
 
   echo "Installing DTR on ${PROJECT}_docker${ENGINE_NUM}..."
   #shellcheck disable=SC2086
-  docker -H tcp://127.0.0.1:100${ENGINE_NUM} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install ${DTR_OPTIONS} --ucp-url https://"${ALIAS_IP}:4443" --ucp-username admin --ucp-password docker123 --ucp-node "${PROJECT}"_docker${ENGINE_NUM} --ucp-ca "$(curl -ks https://"${ALIAS_IP}":4443/ca)" --dtr-external-url "${ALIAS_IP}" --dtr-storage-volume /data --replica-id 0000000000e${ENGINE_NUM} --replica-http-port 8181
+  docker -H tcp://127.0.0.1:100${ENGINE_NUM} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install ${DTR_OPTIONS} --ucp-url https://ucp.${DOMAIN_NAME} --ucp-username admin --ucp-password docker123 --ucp-node "${PROJECT}"_docker${ENGINE_NUM} --ucp-ca "$(docker run -i --rm mbentley/curl -ks https://ucp.${DOMAIN_NAME}/ca)" --dtr-external-url "dtr.${DOMAIN_NAME}" --dtr-storage-volume /data --replica-id 0000000000e${ENGINE_NUM} --replica-http-port 8181
   echo -e "done.\n"
 
   # load images and join additional DTR replicas
@@ -772,7 +759,7 @@ install_dtr() {
 
     echo "Joining ${PROJECT}_docker${ENGINE_NUM} as a DTR replica..."
     #shellcheck disable=SC2086
-    docker -H tcp://127.0.0.1:100${ENGINE_NUM} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" join ${DTR_OPTIONS} --ucp-url https://"${ALIAS_IP}:4443" --ucp-username admin --ucp-password docker123 --ucp-node "${PROJECT}"_docker${ENGINE_NUM} --ucp-ca "$(curl -ks https://"${ALIAS_IP}":4443/ca)" --existing-replica-id 0000000000e$((MANAGERS+1)) --replica-id 0000000000e${ENGINE_NUM}
+    docker -H tcp://127.0.0.1:100${ENGINE_NUM} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" join ${DTR_OPTIONS} --ucp-url https://ucp.${DOMAIN_NAME} --ucp-username admin --ucp-password docker123 --ucp-node "${PROJECT}"_docker${ENGINE_NUM} --ucp-ca "$(docker run -i --rm mbentley/curl -ks https://ucp.${DOMAIN_NAME}/ca)" --existing-replica-id 0000000000e$((MANAGERS+1)) --replica-id 0000000000e${ENGINE_NUM}
     echo -e "done.\n"
   done
 
@@ -794,13 +781,13 @@ install_summary_haproxy() {
 
 install_summary_ucp() {
   # UCP
-  echo -e "UCP should now be available at https://${ALIAS_IP}:4443/"
+  echo -e "UCP should now be available at https://ucp.${DOMAIN_NAME}/"
   echo -e "  Username: admin\tPassword: docker123"
 }
 
 install_summary_dtr() {
   # DTR
-  echo -e "DTR should now be available at https://${ALIAS_IP}/"
+  echo -e "DTR should now be available at https://dtr.${DOMAIN_NAME}/"
   echo -e "  Username: admin\tPassword: docker123"
 }
 

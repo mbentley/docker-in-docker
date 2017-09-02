@@ -5,6 +5,7 @@ PROJECT="${PROJECT:-dind-ddc}"
 MANAGERS="${MANAGERS:-1}"
 WORKERS="${WORKERS:-2}"
 DTR_REPLICAS="${DTR_REPLICAS:-1}"
+DOMAIN_NAME="${DOMAIN_NAME:-demo.mac}"
 
 ucp_upstreams_4443() {
   # make upstream include all managers
@@ -65,45 +66,40 @@ defaults
         default-server inter 5s fastinter 2s downinter 3s rise 2 fall 2
 
 ### frontends
-frontend ucp_4443
-        mode tcp
-        bind 0.0.0.0:4443
-        default_backend ucp_upstream_servers
-
-frontend dtr_8181
-        mode tcp
-        bind 0.0.0.0:8181
-        default_backend dtr_upstream_servers_8181
-
-frontend dtr_443
-        mode tcp
-        bind 0.0.0.0:443
-        default_backend dtr_upstream_servers_443
-
-frontend hrm_80
+frontend http
         mode http
         bind 0.0.0.0:80
+        # redirect http to https
+        redirect scheme https code 302 if { hdr(Host) -i ucp.${DOMAIN_NAME} } !{ ssl_fc }
+        # figure out which backend to use
+        use_backend dtr_upstream_servers_8181 if { hdr(Host) -i dtr.${DOMAIN_NAME} }
         default_backend hrm_upstream_servers_80
 
-frontend hrm_8443
+frontend https
         mode tcp
-        bind 0.0.0.0:8443
+        bind 0.0.0.0:443
+        tcp-request inspect-delay 5s
+        tcp-request content accept if { req_ssl_hello_type 1 }
+        # figure out which backend to use
+        use_backend ucp_upstream_servers if { req.ssl_sni -i ucp.${DOMAIN_NAME} }
+        use_backend dtr_upstream_servers_443 if { req.ssl_sni -i dtr.${DOMAIN_NAME} }
         default_backend hrm_upstream_servers_8443
 
 ### backends
 backend ucp_upstream_servers
         mode tcp
-        option httpchk GET /_ping HTTP/1.1\r\nHost:\ foo.bar
+        option httpchk GET /_ping HTTP/1.1\r\nHost:\ ucp.${DOMAIN_NAME}
 $(ucp_upstreams_4443)
 
 backend dtr_upstream_servers_8181
-        mode tcp
-        option httpchk GET /health HTTP/1.1\r\nHost:\ foo.bar
+        #mode tcp
+        mode http
+        option httpchk GET /health HTTP/1.1\r\nHost:\ dtr.${DOMAIN_NAME}
 $(dtr_upstreams_8181)
 
 backend dtr_upstream_servers_443
         mode tcp
-        option httpchk GET /health HTTP/1.1\r\nHost:\ foo.bar
+        option httpchk GET /health HTTP/1.1\r\nHost:\ dtr.${DOMAIN_NAME}
 $(dtr_upstreams_443)
 
 backend hrm_upstream_servers_80
