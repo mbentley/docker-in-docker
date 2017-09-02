@@ -295,7 +295,7 @@ Launching Jenkins and Gogs allows for utilizing a full local demo environment.  
 
 2. Add a hosts entries in /etc/hosts to point to HRM:
     ```
-    $ echo "10.1.2.3 jenkins.demo.mac gogs.demo.mac docker-demo-dev.demo.mac docker-demo-test.demo.mac docker-demo-prd.demo.mac" sudo tee -a /etc/hosts
+    $ echo "10.1.2.3 jenkins.demo.mac gogs.demo.mac docker-demo-dev.demo.mac docker-demo-test.demo.mac docker-demo-prd.demo.mac" | sudo tee -a /etc/hosts
     ```
 
 3. Login to Jenkins and initialize Jenkins:

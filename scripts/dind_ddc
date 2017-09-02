@@ -686,8 +686,64 @@ launch_demo() {
     --name gogs \
     mbentley/solutions-gogs:latest
   echo -e "done.\n"
+
+  write_hosts
 }
 
+write_hosts() {
+  # create entries in /etc/hosts file
+  HOSTS_FILE="/etc/hosts"
+  if ! grep -q "${ALIAS_IP} jenkins.${DOMAIN_NAME} gogs.${DOMAIN_NAME} ### managed by dind_ddc" "${HOSTS_FILE}"
+  then
+    echo "Adding entry to ${HOSTS_FILE} for jenkins.${DOMAIN_NAME} and gogs.${DOMAIN_NAME}..."
+    echo "${ALIAS_IP} jenkins.${DOMAIN_NAME} gogs.${DOMAIN_NAME} ### managed by dind_ddc" | sudo tee -a "${HOSTS_FILE}"
+  else
+    echo "Line for jenkins.${DOMAIN_NAME} and gogs.${DOMAIN_NAME} already exists; skipping..."
+  fi
+  echo -e "done.\n"
+
+  if ! grep -q "${ALIAS_IP} docker-demo-dev.${DOMAIN_NAME} docker-demo-test.${DOMAIN_NAME} docker-demo-prd.${DOMAIN_NAME} ### managed by dind_ddc" "${HOSTS_FILE}"
+  then
+    echo "Adding entry to ${HOSTS_FILE} for docker-demo-dev.${DOMAIN_NAME}, docker-demo-test.${DOMAIN_NAME}, and docker-demo-prd.${DOMAIN_NAME}..."
+    echo "${ALIAS_IP} docker-demo-dev.${DOMAIN_NAME} docker-demo-test.${DOMAIN_NAME} docker-demo-prd.${DOMAIN_NAME} ### managed by dind_ddc" | sudo tee -a "${HOSTS_FILE}"
+  else
+    echo "Line for docker-demo-dev.${DOMAIN_NAME}, docker-demo-test.${DOMAIN_NAME}, and docker-demo-prd.${DOMAIN_NAME} already exists; skipping..."
+  fi
+  echo -e "done.\n"
+}
+
+remove_hosts() {
+  # check to see if on macOS and use sed appropriately
+  if [ "$(uname -s)" = "Darwin" ]
+  then
+    SED="sed -i ''"
+  else
+    SED="sed -i"
+  fi
+
+  # remove entry if it exists
+  HOSTS_FILE="/etc/hosts"
+  if grep -q "${ALIAS_IP} jenkins.${DOMAIN_NAME} gogs.${DOMAIN_NAME} ### managed by dind_ddc" "${HOSTS_FILE}"
+  then
+    echo "Removing entry from ${HOSTS_FILE} for jenkins.${DOMAIN_NAME} and gogs.${DOMAIN_NAME}..."
+    #shellcheck disable=SC2086
+    sudo ${SED} "/${ALIAS_IP} jenkins.${DOMAIN_NAME} gogs.${DOMAIN_NAME} ### managed by dind_ddc/d" "${HOSTS_FILE}"
+  else
+    echo "Nothing to remove; skipping..."
+  fi
+  echo -e "done.\n"
+
+  # remove entry if it exists
+  if grep -q "${ALIAS_IP} docker-demo-dev.${DOMAIN_NAME} docker-demo-test.${DOMAIN_NAME} docker-demo-prd.${DOMAIN_NAME} ### managed by dind_ddc" "${HOSTS_FILE}"
+  then
+    echo "Removing entry from ${HOSTS_FILE} for docker-demo-dev.${DOMAIN_NAME} docker-demo-test.${DOMAIN_NAME} docker-demo-prd.${DOMAIN_NAME}..."
+    #shellcheck disable=SC2086
+    sudo ${SED} "/${ALIAS_IP} docker-demo-dev.${DOMAIN_NAME} docker-demo-test.${DOMAIN_NAME} docker-demo-prd.${DOMAIN_NAME} ### managed by dind_ddc/d" "${HOSTS_FILE}"
+  else
+    echo "Nothing to remove; skipping..."
+  fi
+  echo -e "done.\n"
+}
 install_dtr() {
   echo -e "Preparing cluster for DTR installation...\n"
   # validate the value for # of dtr replicas
@@ -825,8 +881,9 @@ destroy_swarm() {
   if [ "$(check_other_projects)" -eq "0" ]
   then
     remove_net_alias
+    remove_hosts
   else
-    echo -e "Skipping removal of network alias; other projects still exist\ndone."
+    echo -e "Skipping removal of network alias and hosts file entries; other projects still exist\ndone."
   fi
 }
 
@@ -915,16 +972,13 @@ main() {
       ;;
     launch:*|launch:help)
       echo -e "Usage: $0 launch {all|swarm|ee|ucp|dtr|demo|help}"
-      if [ "${2}" = "help" ]
-      then
-        echo -e "\nCommands:"
-        echo -e "  all \t\tlaunch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, DTR, Jenkins, and Gogs"
-        echo -e "  ee \t\tlaunch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, and DTR"
-        echo -e "  swarm \tlaunch 3 node Swarm mode cluster; 1 manager and 2 workers"
-        echo -e "  ucp \t\tlaunch UCP on pre-created Swarm"
-        echo -e "  dtr \t\tlaunch DTR on the first worker in a pre-created Swarm"
-        echo -e "  demo \t\tlaunch Jenkins and Gogs using dockersolutions/jenkins and mbentley/solutions-gogs"
-      fi
+      echo -e "\nCommands:"
+      echo -e "  all\t\tlaunch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, DTR, Jenkins, and Gogs"
+      echo -e "  ee\t\tlaunch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, and DTR"
+      echo -e "  swarm\t\tlaunch 3 node Swarm mode cluster; 1 manager and 2 workers"
+      echo -e "  ucp\t\tlaunch UCP on pre-created Swarm"
+      echo -e "  dtr\t\tlaunch DTR on the first worker in a pre-created Swarm"
+      echo -e "  demo\t\tlaunch Jenkins and Gogs using dockersolutions/jenkins and mbentley/solutions-gogs"
       exit 1
       ;;
     env:start|start:*)
@@ -963,18 +1017,15 @@ main() {
       ;;
     env:*)
       echo -e "Usage: $0 env {start|stop|pause|unpause|recycle|destroy|status|info|help}"
-      if [ "${2}" = "help" ]
-      then
-        echo -e "\nCommands:"
-	echo -e "  start \tstart ddc-lb, docker1, docker2, and docker3 daemon containers"
-	echo -e "  stop \t\tstop ddc-lb, docker1, docker2, and docker3 daemon containers"
-	echo -e "  pause \tpause ddc-lb, docker1, docker2, and docker3 daemon containers"
-	echo -e "  unpause \tunpause ddc-lb, docker1, docker2, and docker3 daemon containers"
-	echo -e "  recycle \tstop, remove, and re-create the docker engines and 'dind' network, keeping persistent data"
-	echo -e "  destroy \tremove Swarm, the engines, and all persistent data"
-	echo -e "  status \tdisplay environment status"
-	echo -e "  info \t\tdisplay enviroment variable overrides currently set"
-      fi
+      echo -e "\nCommands:"
+      echo -e "  start\t\tstart ddc-lb, docker1, docker2, and docker3 daemon containers"
+      echo -e "  stop\t\tstop ddc-lb, docker1, docker2, and docker3 daemon containers"
+      echo -e "  pause\t\tpause ddc-lb, docker1, docker2, and docker3 daemon containers"
+      echo -e "  unpause\tunpause ddc-lb, docker1, docker2, and docker3 daemon containers"
+      echo -e "  recycle\tstop, remove, and re-create the docker engines and 'dind' network, keeping persistent data"
+      echo -e "  destroy\tremove Swarm, the engines, and all persistent data"
+      echo -e "  status\tdisplay environment status"
+      echo -e "  info\t\tdisplay enviroment variable overrides currently set"
       exit 1
       ;;
     create_tar:all)
@@ -992,13 +1043,10 @@ main() {
       ;;
     create_tar:*)
       echo -e "Usage: $0 create_tar {all|ucp|dtr|help}"
-      if [ "${2}" = "help" ]
-      then
-        echo -e "\nCommands:"
-        echo -e "  all \tcreate tarball of the UCP and DTR images"
-        echo -e "  ucp \tcreate tarball of the UCP images"
-        echo -e "  dtr \tcreate tarball of the DTR images"
-      fi
+      echo -e "\nCommands:"
+      echo -e "  all\tcreate tarball of the UCP and DTR images"
+      echo -e "  ucp\tcreate tarball of the UCP images"
+      echo -e "  dtr\tcreate tarball of the DTR images"
       exit 1
       ;;
     net_alias:create|create_net_alias:*)
@@ -1015,13 +1063,25 @@ main() {
       ;;
     net_alias:*)
       echo -e "Usage: $0 net_alias {create|remove|recreate|help}"
-      if [ "${2}" = "help" ]
-      then
-        echo -e "\nCommands:"
-        echo -e "  create \tcreate a network alias used for keeping a persistent IP no matter when you are (only for D4M)"
-        echo -e "  remove \tremove network alias (only for D4M)"
-        echo -e "  recreate \tre-create network alias (only for D4M)"
-      fi
+      echo -e "\nCommands:"
+      echo -e "  create\tcreate a network alias used for keeping a persistent IP no matter when you are (only for D4M)"
+      echo -e "  remove\tremove network alias (only for D4M)"
+      echo -e "  recreate\tre-create network alias (only for D4M)"
+      exit 1
+      ;;
+    hosts:write)
+      initialize
+      write_hosts
+      ;;
+    hosts:remove)
+      initialize
+      remove_hosts
+      ;;
+    hosts:*)
+      echo -e "Usage: $0 hosts {write|remove|help}"
+      echo -e "\nCommands:"
+      echo -e "  write\t\twrite entries to hosts file"
+      echo -e "  remove\tremove entries from hosts file"
       exit 1
       ;;
     connect_engine:*)
@@ -1032,7 +1092,7 @@ main() {
         if [ "${2}" = "help" ]
         then
           echo -e "\nCommands:"
-          echo -e "  n \twhere 'n' is the engine number to connect to; sets 'DOCKER*' environment variables"
+          echo -e "  n\twhere 'n' is the engine number to connect to; sets 'DOCKER*' environment variables"
         fi
         exit 1
       else
@@ -1041,15 +1101,13 @@ main() {
       ;;
     *:*)
       echo "Usage: $0 {launch|env|create_tar|net_alias|connect_engine|help}"
-      if [ "${1}" = "help" ]
-      then
-        echo -e "\nCommands:"
-        echo "  $0 launch {all|swarm|ee|ucp|dtr|demo|help}"
-        echo "  $0 env {start|stop|pause|unpause|recycle|destroy|status|info|help}"
-        echo "  $0 create_tar {all|ucp|dtr|help}"
-        echo "  $0 net_alias {create|remove|recreate|help}"
-        echo "  $0 connect_engine {n|help}"
-      fi
+      echo -e "\nCommands:"
+      echo "  $0 launch {all|swarm|ee|ucp|dtr|demo|help}"
+      echo "  $0 env {start|stop|pause|unpause|recycle|destroy|status|info|help}"
+      echo "  $0 create_tar {all|ucp|dtr|help}"
+      echo "  $0 net_alias {create|remove|recreate|help}"
+      echo "  $0 connect_engine {n|help}"
+      exit 1
       ;;
   esac
 }
