@@ -698,7 +698,7 @@ write_hosts() {
   HOSTS_LINE="${ALIAS_IP} ucp.${DOMAIN_NAME} dtr.${DOMAIN_NAME} jenkins.${DOMAIN_NAME} gogs.${DOMAIN_NAME} docker-demo-dev.${DOMAIN_NAME} docker-demo-test.${DOMAIN_NAME} docker-demo-prd.${DOMAIN_NAME} ### managed by dind_ddc"
   if ! grep -q "${HOSTS_LINE}" "${HOSTS_FILE}"
   then
-    echo -e "Adding entry to ${HOSTS_FILE} for:\n  * ucp.${DOMAIN_NAME}\n  * dtr.${DOMAIN_NAME}\n  * jenkins.${DOMAIN_NAME}\n  * gogs.${DOMAIN_NAME}\n  * docker-demo-dev.${DOMAIN_NAME}\n  * docker-demo-test.${DOMAIN_NAME}\n  * docker-demo-prd.${DOMAIN_NAME}"
+    echo -e "Adding entry to ${HOSTS_FILE} for the following DNS FQDNs (requires sudo):\n  * ucp.${DOMAIN_NAME}\n  * dtr.${DOMAIN_NAME}\n  * jenkins.${DOMAIN_NAME}\n  * gogs.${DOMAIN_NAME}\n  * docker-demo-dev.${DOMAIN_NAME}\n  * docker-demo-test.${DOMAIN_NAME}\n  * docker-demo-prd.${DOMAIN_NAME}"
     echo "${HOSTS_LINE}" | sudo tee -a "${HOSTS_FILE}" > /dev/null
   else
     echo "Hosts file entry already exists; skipping..."
@@ -720,7 +720,7 @@ remove_hosts() {
   HOSTS_LINE="${ALIAS_IP} ucp.${DOMAIN_NAME} dtr.${DOMAIN_NAME} jenkins.${DOMAIN_NAME} gogs.${DOMAIN_NAME} docker-demo-dev.${DOMAIN_NAME} docker-demo-test.${DOMAIN_NAME} docker-demo-prd.${DOMAIN_NAME} ### managed by dind_ddc"
   if grep -q "${HOSTS_LINE}" "${HOSTS_FILE}"
   then
-    echo -e "Removing entry from ${HOSTS_FILE} for:\n  * ucp.${DOMAIN_NAME}\n  * dtr.${DOMAIN_NAME}\n  * jenkins.${DOMAIN_NAME}\n  * gogs.${DOMAIN_NAME}\n  * docker-demo-dev.${DOMAIN_NAME}\n  * docker-demo-test.${DOMAIN_NAME}\n  * docker-demo-prd.${DOMAIN_NAME}"
+    echo -e "Removing entry from ${HOSTS_FILE} for the following FQDNs (requires sudo):\n  * ucp.${DOMAIN_NAME}\n  * dtr.${DOMAIN_NAME}\n  * jenkins.${DOMAIN_NAME}\n  * gogs.${DOMAIN_NAME}\n  * docker-demo-dev.${DOMAIN_NAME}\n  * docker-demo-test.${DOMAIN_NAME}\n  * docker-demo-prd.${DOMAIN_NAME}"
     #shellcheck disable=SC2086
     sudo ${SED} "/${HOSTS_LINE}/d" "${HOSTS_FILE}"
   else
