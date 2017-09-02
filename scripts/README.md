@@ -293,12 +293,7 @@ Launching Jenkins and Gogs allows for utilizing a full local demo environment.  
     $ ./dind_ddc launch_demo
     ```
 
-2. Add a hosts entries in /etc/hosts to point to HRM:
-    ```
-    $ echo "10.1.2.3 jenkins.demo.mac gogs.demo.mac docker-demo-dev.demo.mac docker-demo-test.demo.mac docker-demo-prd.demo.mac" | sudo tee -a /etc/hosts
-    ```
-
-3. Login to Jenkins and initialize Jenkins:
+2. Login to Jenkins and initialize Jenkins:
     * http://jenkins.demo.mac (u - demo; p - docker123)
     * Execute the job `util > _initialize-demo-env`.  This will do the following:
       * Download a client bundle
@@ -306,9 +301,9 @@ Launching Jenkins and Gogs allows for utilizing a full local demo environment.  
       * Initialize Docker Content Trust delegations for the docker-demo and official image repos in DTR
       * Populate DTR with some official content
 
-4. Execute the job `docker-demo_build` to build and deploy the docker-demo application.
+3. Execute the job `docker-demo_build` to build and deploy the docker-demo application.
 
-5. Look at the demo application deployed at http://docker-demo-dev.demo.mac/db
+4. Look at the demo application deployed at http://docker-demo-dev.demo.mac/db
 
 ### HRM Example Usage
 
@@ -356,5 +351,5 @@ Commercial support is available at
 
 Add a hosts file entry for use with a browser to access application at http://nginx.test:
 ```
-$ echo "10.1.2.3 nginx.test" sudo tee -a /etc/hosts
+$ echo "10.1.2.3 nginx.test" | sudo tee -a /etc/hosts
 ```
