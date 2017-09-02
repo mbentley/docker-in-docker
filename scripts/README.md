@@ -307,7 +307,7 @@ Launching Jenkins and Gogs allows for utilizing a full local demo environment.  
 
 ### HRM Example Usage
 
-Create a service and test it.  You can also add a hosts file entry so you can bring up the site in a browser.  For HTTPS, you will still need to specify the port for now (8443).
+Create a service and test it.  You can also add a hosts file entry so you can bring up the site in a browser.
 
 Create a basic service:
 ```
