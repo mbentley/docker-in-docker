@@ -628,7 +628,7 @@ install_ucp() {
   echo -e "done.\n"
 
   echo "Creating 'demo' user with password 'docker123'..."
-  docker run -i --rm mbentley/curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"role":3,"username":"demo","password":"docker123","first_name":"Demo User","admin":true}' "https://ucp.${DOMAIN_NAME}/api/accounts"
+  docker run -i --rm mbentley/curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"name":"demo","password":"docker123","fullName":"Demo User","isAdmin":true,"isActive":true}' "https://ucp.${DOMAIN_NAME}/accounts/"
   echo -e "done.\n"
 
   echo -e "UCP installation complete.\n"
