@@ -624,7 +624,7 @@ install_ucp() {
   docker run -i --rm -e DOMAIN_NAME="${DOMAIN_NAME}" --entrypoint sh mbentley/curl -c 'while [ "$(curl -sk -o /dev/null -w "%{http_code}" "https://ucp.${DOMAIN_NAME}/_ping")" -ne "200" ]; do   echo -n ".";   sleep 1; done'
   echo -e "done.\n\nEnabling HRM..."
   AUTH_TOKEN="$(docker run -i --rm mbentley/curl -sk -d '{"username":"admin","password":"docker123"}' "https://ucp.${DOMAIN_NAME}/auth/login" | ${JQ} -r .auth_token 2>/dev/null)"
-  docker run -i --rm mbentley/curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"HTTPPort":80,"HTTPSPort":8443}' "https://ucp.${DOMAIN_NAME}/api/hrm"
+  docker run -i --rm mbentley/curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"HTTPPort":8080,"HTTPSPort":8443}' "https://ucp.${DOMAIN_NAME}/api/hrm"
   echo -e "done.\n"
 
   echo "Creating 'demo' user with password 'docker123'..."
@@ -747,7 +747,7 @@ install_dtr() {
 
   echo "Installing DTR on ${PROJECT}_docker${ENGINE_NUM}..."
   #shellcheck disable=SC2086
-  docker -H tcp://127.0.0.1:100${ENGINE_NUM} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install ${DTR_OPTIONS} --ucp-url https://ucp.${DOMAIN_NAME} --ucp-username admin --ucp-password docker123 --ucp-node "${PROJECT}"_docker${ENGINE_NUM} --ucp-ca "$(docker run -i --rm mbentley/curl -ks https://ucp.${DOMAIN_NAME}/ca)" --dtr-external-url "dtr.${DOMAIN_NAME}" --dtr-storage-volume /data --replica-id 0000000000e${ENGINE_NUM} --replica-http-port 8181
+  docker -H tcp://127.0.0.1:100${ENGINE_NUM} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install ${DTR_OPTIONS} --ucp-url https://ucp.${DOMAIN_NAME} --ucp-username admin --ucp-password docker123 --ucp-node "${PROJECT}"_docker${ENGINE_NUM} --ucp-ca "$(docker run -i --rm mbentley/curl -ks https://ucp.${DOMAIN_NAME}/ca)" --dtr-external-url "dtr.${DOMAIN_NAME}" --dtr-storage-volume /data --replica-id 0000000000e${ENGINE_NUM}
   echo -e "done.\n"
 
   # load images and join additional DTR replicas

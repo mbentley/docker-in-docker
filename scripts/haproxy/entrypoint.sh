@@ -15,11 +15,11 @@ ucp_upstreams_4443() {
   done
 }
 
-dtr_upstreams_8181() {
+dtr_upstreams_80() {
   ## make upstream include all replicas
   for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+DTR_REPLICAS)); ENGINE_NUM++))
   do
-    echo "        server ${PROJECT}_docker${ENGINE_NUM}:8181 ${PROJECT}_docker${ENGINE_NUM}:8181 check weight 100"
+    echo "        server ${PROJECT}_docker${ENGINE_NUM}:80 ${PROJECT}_docker${ENGINE_NUM}:80 check weight 100"
   done
 }
 
@@ -31,11 +31,11 @@ dtr_upstreams_443() {
   done
 }
 
-hrm_upstreams_80() {
+hrm_upstreams_8080() {
   # make upstream include all nodes
   for ((ENGINE_NUM=1; ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
   do
-    echo "        server ${PROJECT}_docker${ENGINE_NUM}:80 ${PROJECT}_docker${ENGINE_NUM}:80 check weight 100"
+    echo "        server ${PROJECT}_docker${ENGINE_NUM}:8080 ${PROJECT}_docker${ENGINE_NUM}:8080 check weight 100"
   done
 }
 
@@ -72,8 +72,8 @@ frontend http
         # redirect http to https
         redirect scheme https code 302 if { hdr(Host) -i ucp.${DOMAIN_NAME} } !{ ssl_fc }
         # figure out which backend to use
-        use_backend dtr_upstream_servers_8181 if { hdr(Host) -i dtr.${DOMAIN_NAME} }
-        default_backend hrm_upstream_servers_80
+        use_backend dtr_upstream_servers_80 if { hdr(Host) -i dtr.${DOMAIN_NAME} }
+        default_backend hrm_upstream_servers_8080
 
 frontend https
         mode tcp
@@ -91,23 +91,23 @@ backend ucp_upstream_servers
         option httpchk GET /_ping HTTP/1.1\r\nHost:\ ucp.${DOMAIN_NAME}
 $(ucp_upstreams_4443)
 
-backend dtr_upstream_servers_8181
+backend dtr_upstream_servers_80
         #mode tcp
         mode http
         option httpchk GET /health HTTP/1.1\r\nHost:\ dtr.${DOMAIN_NAME}
-$(dtr_upstreams_8181)
+$(dtr_upstreams_80)
 
 backend dtr_upstream_servers_443
         mode tcp
         option httpchk GET /health HTTP/1.1\r\nHost:\ dtr.${DOMAIN_NAME}
 $(dtr_upstreams_443)
 
-backend hrm_upstream_servers_80
+backend hrm_upstream_servers_8080
         mode http
         stats enable
         stats admin if TRUE
         stats refresh 5m
-$(hrm_upstreams_80)
+$(hrm_upstreams_8080)
 
 backend hrm_upstream_servers_8443
         mode tcp
