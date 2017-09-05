@@ -12,13 +12,13 @@ scripts
   * [`dind_ddc` connect_engine](#dind_ddc-connect_engine)
   * [Environment Variable Overrides](#environment-variable-overrides)
 * [Examples](#examples)
+  * [Jenkins Demo](#jenkins-demo)
+  * [HRM Example Usage](#hrm-example-usage)
   * [Launching Docker EE with default configuration](#launching-docker-ee-with-default-configuration)
   * [Using an environment file for persistent settings](#using-an-environment-file-for-persistent-settings)
   * [Pre-production DDC](#pre-production-ddc)
     * [Create .tar.gz archives](#create-targz-archives)
   * [Launching UCP and DTR in various configurations](#launching-ucp-and-dtr-in-various-configurations)
-  * [Jenkins Demo](#jenkins-demo)
-  * [HRM Example Usage](#hrm-example-usage)
 
 ## Quickstart (tl;dr)
 Check out the [Prerequisites](#prerequisites) and then go down to [Launching Docker EE with default configuration](#launching-docker-ee-with-default-configuration) for released versions or [Environment Variable Overrides](#environment-variable-overrides) for custom settings you can pass as well as [Using an environment file for persistent settings](#using-an-environment-file-for-persistent-settings) to make the management of your custom settings more manageable.  See [Pre-production DDC](#pre-production-ddc) for details of how to launch an environment with pre-production images.
@@ -46,6 +46,15 @@ $ ./dind_ddc launch all
     * `4443` - UCP (HTTPS)
     * `80`, `8443` - UCP HRM (HTTP and HTTPS)
       * see [HRM Example Usage](#hrm-example-usage) for HRM usage
+  * Internet access to pull images (see list below)
+
+<details><summary>Expand for details on images that will be pulled if not present</summary><p>
+
+  * mbentley/docker-in-docker:haproxy
+  * mbentley/docker-in-docker:<tag>
+  * mbentley/curl:latest
+  * mbentley/jq:latest
+</p></details>
 
 ## `dind_ddc` Usage
 ```
@@ -59,6 +68,7 @@ Commands:
   ./dind_ddc net_alias {create|remove|recreate|help}
   ./dind_ddc connect_engine {n|help}
 ```
+</p></details>
 
 ### `dind_ddc launch`
 ```
@@ -67,8 +77,8 @@ Usage: ./dind_ddc launch {all|swarm|ee|ucp|dtr|demo|help}
 
 Commands:
   all           launch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, DTR, Jenkins, and Gogs
-  ee            launch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, and DTR
   swarm         launch 3 node Swarm mode cluster; 1 manager and 2 workers
+  ee            launch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, and DTR
   ucp           launch UCP on pre-created Swarm
   dtr           launch DTR on the first worker in a pre-created Swarm
   demo          launch Jenkins and Gogs using dockersolutions/jenkins and mbentley/solutions-gogs
@@ -128,9 +138,9 @@ If you wish to have your environment variables stored in a single file that can 
   * `PROJECT` - prefix for all resources; allows you to run multiple environments (although it is still one at a time)
   * `DIND_TAG` - docker image tag used to run docker
     * see the [docker-in-docker README](../README.md) for the available tags
+  * `ENGINE_OPTS` - custom engine options to append to the defaults
   * `MANAGERS` - number of Swarm managers (also used to set number of UCP managers)
   * `WORKERS` - number of Swarm workers (also used to set number of UCP workers)
-  * `ENGINE_OPTS` - custom engine options to append to the defaults
   * `UCP_REPO` - image to use for UCP (without the tag)
   * `UCP_VERSION` - change the UCP version installed
     * see https://hub.docker.com/r/docker/ucp/tags/ for the tags
@@ -148,149 +158,33 @@ If you wish to have your environment variables stored in a single file that can 
   * `DIND_SUBNET` - subnet used for the bridge network created
   * `DIND_DNS` - DNS server to use for the docker daemons running in docker
   * `DIND_RESTART` - restart policy for the docker daemon containers
-  * `ALIAS_IP` - IP address to set as an alias to your network interface; used to keep static IP when changing networks
   * `NET_IF` - customize the network interface name used for creating the ALIAS_IP
+  * `ALIAS_IP` - IP address to set as an alias to your network interface; used to keep static IP when changing networks
   * `DOMAIN_NAME` - domain name to use for Jenkins behind HRM
   * `GH_USERNAME` - GitHub username to pass to Jenkins for configuration
 
-*Note*: To see the default values, run `./dind_ddc env_info`
+*Note*: To see the default values, run `./dind_ddc env info`
 
 ## Examples
-
-### Launching Docker EE with default configuration
-```
-./dind_ddc create_all
-```
-
-[![asciicast](https://asciinema.org/a/125041.png)](https://asciinema.org/a/125041)
-
-### Using an environment file for persistent settings
-With the many configuration options comes the difficulty in keeping track of the environment variables you've set.  To make this easier, use an environment variable file. This section covers how to do so with an example of launching Docker EE using tech preview images. There are also may other scenarios that you can launch enviroments for with `dind_ddc`.  See [Launching UCP and DTR in various configurations](#launching-ucp-and-dtr-in-various-configurations) for examples.
-
-1. Create or modify one of the example environment files with the custom variables you would like to use while launching your environment. There are example environment files for [tech preview](./17.06-tp.env), [beta](./17.06-beta.env), [17.03](./17.03.env), and [17.06](./17.06.env) in this repository.
-
-2. There are multiple ways to launch Docker EE while sourcing an env file for your custom settings:
-
-    * Directly source the env file:
-    ```
-    . ${PWD}/17.03.env
-    ./dind_ddc create_all
-    ```
-
-    * Export `DIND_ENV` to tell the `dind_ddc` script where to find the env file:
-    ```
-    export DIND_ENV="${PWD}/17.03.env"
-    ./dind_ddc create_all
-    ```
-
-    * One-liner to pass the env file location to the `dind_ddc` script:
-    ```
-    DIND_ENV=${PWD}/17.03.env ./dind_ddc create_all
-    ```
-
-### Pre-production DDC
-
-#### Create .tar.gz archives
-
-* UCP
-
-  Automatic:
-  ```
-  export UCP_REPO="dockerorcadev/ucp" UCP_VERSION="2.2.0-tp6" UCP_OPTIONS="--image-version dev:"
-  ./dind_ddc ucp_create_tar
-  ```
-
-  Manual:
-  ```
-  TAG="2.2.0-tp6"
-  docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev: | xargs -L 1 docker pull
-  docker save -o ucp_images_"${TAG}".tar.gz $(docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev:) dockerorcadev/ucp:"${TAG}"
-  docker rmi $(docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev:) dockerorcadev/ucp:"${TAG}"
-  ```
-
-* DTR
-
-  Automatic:
-  ```
-  export DTR_REPO="dockerhubenterprise/dtr" DTR_VERSION="2.3.0-tp6"
-  ./dind_ddc dtr_create_tar
-  ```
-
-  Manual:
-  ```
-  TAG="2.3.0-tp6"
-  docker run --rm dockerhubenterprise/dtr:"${TAG}" images | xargs -L 1 docker pull
-  docker save -o dtr-"${TAG}".tar.gz $(docker run --rm dockerhubenterprise/dtr:"${TAG}" images)
-  docker rmi $(docker run --rm dockerhubenterprise/dtr:"${TAG}" images)
-  ```
-
-### Launching UCP and DTR in various configurations
-
-Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [create offline tarballs](#create-targz-archives) of the images.  The below examples utilize exporting environment variables.  See `DIND_ENV` in [Environment Variable Overrides](#environment-variable-overrides) if you'd like to utilize a file with environment variables instead.
-
-* UCP standalone
-  ```
-  ./dind_ddc create_swarm
-  ./dind_ddc install_ucp
-  ```
-
-* UCP in HA (3 managers, 3 workers) with DTR on the first worker
-  ```
-  export MANAGERS=3 \
-    WORKERS=3
-  ./dind_ddc create_all
-  ```
-
-* UCP and DTR - UCP (dev/TP) and DTR (dev/TP)
-  ```
-  export UCP_REPO="dockerorcadev/ucp" \
-    UCP_VERSION="2.2.0-tp6" \
-    UCP_OPTIONS="--image-version dev:" \
-    DTR_REPO="dockerhubenterprise/dtr" \
-    DTR_VERSION="2.3.0-tp5" \
-    DIND_TAG="ce-test"
-
-  ./dind_ddc create_all
-  ```
-
-* UCP and DTR - UCP (dev/TP) images and DTR (stable)
-  ```
-  export UCP_REPO="dockerorcadev/ucp" \
-    UCP_VERSION="2.2.0-tp6" \
-    UCP_OPTIONS="--image-version dev:" \
-    DIND_TAG="ce-test"
-
-  ./dind_ddc create_all
-  ```
-
-* UCP and DTR - UCP (stable) and DTR (dev/TP)
-  ```
-  export DTR_REPO="dockerhubenterprise/dtr" \
-    DTR_VERSION="2.3.0-tp5" \
-    DIND_TAG="ce-test"
-
-  ./dind_ddc create_all
-  ```
-
-* UCP (dev/TP) only; no DTR
-  ```
-  export UCP_REPO="dockerorcadev/ucp" \
-    UCP_VERSION="2.2.0-tp6" \
-    UCP_OPTIONS="--image-version dev:" \
-    DIND_TAG="ce-test"
-
-  ./dind_ddc create_swarm
-
-  ./dind_ddc install_ucp
-  ```
 
 ### Jenkins Demo
 
 Launching Jenkins and Gogs allows for utilizing a full local demo environment.  To bootstrap and demo Jenkins, do the following:
 
+**Note**: This does require internet access to launch for the first time and initialize the environment
+
+<details><summary>Expand for details on images that will be pulled on the first engine</summary><p>
+
+  * golang:1.8-alpine
+  * alpine:latest
+  * dockersolutions/jenkins:latest
+  * mbentley/solutions-gogs:latest
+  * official images to populate DTR
+</p></details>
+
 1. Launch Jenkins and Gogs:
     ```
-    $ ./dind_ddc launch_demo
+    $ ./dind_ddc launch demo
     ```
 
 2. Login to Jenkins and initialize Jenkins:
@@ -320,6 +214,9 @@ $ docker -H tcp://localhost:1001 \
 ```
 
 Test with `curl`:
+
+**Note**: `curl` on macOS works fine for HTTP, but for HTTPS with an insecure connection, `-k`, it does **not** work with SNI as it discards the SNI headers on the client side.  Use a docker image like `mbentley/curl` instead to get a Linux based `curl` instead of the BSD based that has strange behavior.
+
 ```
 $ curl -H "Host: nginx.test" http://10.1.2.3
 <!DOCTYPE html>
@@ -353,3 +250,130 @@ Add a hosts file entry for use with a browser to access application at http://ng
 ```
 $ echo "10.1.2.3 nginx.test" | sudo tee -a /etc/hosts
 ```
+
+### Launching Docker EE with default configuration
+```
+./dind_ddc launch all
+```
+
+[![asciicast](https://asciinema.org/a/125041.png)](https://asciinema.org/a/125041)
+
+### Using an environment file for persistent settings
+With the many configuration options comes the difficulty in keeping track of the environment variables you've set.  To make this easier, use an environment variable file. This section covers how to do so with an example of launching Docker EE using tech preview images. There are also may other scenarios that you can launch enviroments for with `dind_ddc`.  See [Launching UCP and DTR in various configurations](#launching-ucp-and-dtr-in-various-configurations) for examples.
+
+1. Create or modify one of the example environment files with the custom variables you would like to use while launching your environment. There are example environment files for [tech preview](./17.06-tp.env), [beta](./17.06-beta.env), [17.03](./17.03.env), and [17.06](./17.06.env) in this repository.
+
+2. There are multiple ways to launch Docker EE while sourcing an env file for your custom settings:
+
+    * Directly source the env file:
+    ```
+    . ${PWD}/17.03.env
+    ./dind_ddc launch all
+    ```
+
+    * Export `DIND_ENV` to tell the `dind_ddc` script where to find the env file:
+    ```
+    export DIND_ENV="${PWD}/17.03.env"
+    ./dind_ddc launch all
+    ```
+
+    * One-liner to pass the env file location to the `dind_ddc` script:
+    ```
+    DIND_ENV=${PWD}/17.03.env ./dind_ddc launch all
+    ```
+
+### Pre-production DDC
+
+#### Create .tar.gz archives
+
+* UCP
+
+  Automatic:
+  ```
+  export UCP_REPO="dockerorcadev/ucp" UCP_VERSION="2.2.0-tp6" UCP_OPTIONS="--image-version dev:"
+  ./dind_ddc create_tar ucp
+  ```
+
+  Manual:
+  ```
+  TAG="2.2.0-tp6"
+  docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev: | xargs -L 1 docker pull
+  docker save -o ucp_images_"${TAG}".tar.gz $(docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev:) dockerorcadev/ucp:"${TAG}"
+  docker rmi $(docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev:) dockerorcadev/ucp:"${TAG}"
+  ```
+
+* DTR
+
+  Automatic:
+  ```
+  export DTR_REPO="dockerhubenterprise/dtr" DTR_VERSION="2.3.0-tp6"
+  ./dind_ddc create_tar dtr
+  ```
+
+  Manual:
+  ```
+  TAG="2.3.0-tp6"
+  docker run --rm dockerhubenterprise/dtr:"${TAG}" images | xargs -L 1 docker pull
+  docker save -o dtr-"${TAG}".tar.gz $(docker run --rm dockerhubenterprise/dtr:"${TAG}" images)
+  docker rmi $(docker run --rm dockerhubenterprise/dtr:"${TAG}" images)
+  ```
+
+### Launching UCP and DTR in various configurations
+
+Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [create offline tarballs](#create-targz-archives) of the images.  The below examples utilize exporting environment variables.  See `DIND_ENV` in [Environment Variable Overrides](#environment-variable-overrides) if you'd like to utilize a file with environment variables instead.
+
+* UCP standalone
+  ```
+  ./dind_ddc launch swarm
+  ./dind_ddc launch ucp
+  ```
+
+* UCP in HA (3 managers, 3 workers) with DTR on the first worker
+  ```
+  export MANAGERS=3 \
+    WORKERS=3
+  ./dind_ddc launch all
+  ```
+
+* UCP and DTR - UCP (dev/TP) and DTR (dev/TP)
+  ```
+  export UCP_REPO="dockerorcadev/ucp" \
+    UCP_VERSION="2.2.0-tp6" \
+    UCP_OPTIONS="--image-version dev:" \
+    DTR_REPO="dockerhubenterprise/dtr" \
+    DTR_VERSION="2.3.0-tp5" \
+    DIND_TAG="ce-test"
+
+  ./dind_ddc launch all
+  ```
+
+* UCP and DTR - UCP (dev/TP) images and DTR (stable)
+  ```
+  export UCP_REPO="dockerorcadev/ucp" \
+    UCP_VERSION="2.2.0-tp6" \
+    UCP_OPTIONS="--image-version dev:" \
+    DIND_TAG="ce-test"
+
+  ./dind_ddc launch all
+  ```
+
+* UCP and DTR - UCP (stable) and DTR (dev/TP)
+  ```
+  export DTR_REPO="dockerhubenterprise/dtr" \
+    DTR_VERSION="2.3.0-tp5" \
+    DIND_TAG="ce-test"
+
+  ./dind_ddc launch all
+  ```
+
+* UCP (dev/TP) only; no DTR
+  ```
+  export UCP_REPO="dockerorcadev/ucp" \
+    UCP_VERSION="2.2.0-tp6" \
+    UCP_OPTIONS="--image-version dev:" \
+    DIND_TAG="ce-test"
+
+  ./dind_ddc launch swarm
+
+  ./dind_ddc launch ucp
+  ```
