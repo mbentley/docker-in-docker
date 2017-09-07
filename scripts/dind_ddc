@@ -53,7 +53,7 @@ initialize() {
     if ! [[ ${DIND_DNS} =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]
     then
       # if all else fails, set the DNS server to google's primary
-      echo "Warning: unable to determine DNS server used by host docker engine; using Google"
+      echo "Warning: unable to determine DNS server used by host Docker engine; using Google"
       DIND_DNS="8.8.8.8"
     fi
   fi
@@ -278,7 +278,7 @@ recreate_net_alias() {
 }
 
 check_other_projects() {
-  if [ "$(docker ps -a -f label=project -q | wc -l | tr -d ' ')" -ne "0" ]
+  if [ "$(docker -H unix:///var/run/docker.sock ps -a -f label=project -q | wc -l | tr -d ' ')" -ne "0" ]
   then
     # return true (other projects exist)
     echo "1"
@@ -307,7 +307,7 @@ launch_engines() {
 
   NUM_NODES=$((MANAGERS+WORKERS))
 
-  echo "Creating volumes for docker engines..."
+  echo "Creating volumes for Docker engines..."
   for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
   do
     docker -H unix:///var/run/docker.sock volume create \
@@ -327,7 +327,7 @@ launch_engines() {
     "${PROJECT}"_shared
   echo -e "done.\n"
 
-  echo "Launching ${MANAGERS} docker engines for Swarm managers..."
+  echo "Launching ${MANAGERS} Docker engines for Swarm managers..."
   # launch all managers
   for ((ENGINE_NUM=1; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
   do
@@ -357,7 +357,7 @@ launch_engines() {
   done
   echo -e "done.\n"
 
-  echo "Launching ${WORKERS} docker engines for Swarm workers..."
+  echo "Launching ${WORKERS} Docker engines for Swarm workers..."
   # launch all managers
   for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((NUM_NODES)); ENGINE_NUM++))
   do
@@ -389,15 +389,15 @@ launch_engines() {
 }
 
 get_container_list() {
-  docker ps -a --filter label=project="${PROJECT}" --format '{{.Names}}'
+  docker -H unix:///var/run/docker.sock ps -a --filter label=project="${PROJECT}" --format '{{.Names}}'
 }
 
 get_volume_list() {
-  docker volume ls --filter label=project="${PROJECT}" --format '{{.Name}}'
+  docker -H unix:///var/run/docker.sock volume ls --filter label=project="${PROJECT}" --format '{{.Name}}'
 }
 
 get_network_list() {
-  docker network ls --filter label=project="${PROJECT}" --format '{{.Name}}'
+  docker -H unix:///var/run/docker.sock network ls --filter label=project="${PROJECT}" --format '{{.Name}}'
 }
 
 start_containers() {
@@ -460,7 +460,7 @@ recycle_containers() {
   get_current_num_engines
 
   # check to see if the ddc-lb exists
-  if [ "$(docker ps -a --filter label=project="${PROJECT}" --format '{{.Names}}' --filter name=ddc-lb)" == "${PROJECT}_ddc-lb" ]
+  if [ "$(docker -H unix:///var/run/docker.sock ps -a --filter label=project="${PROJECT}" --format '{{.Names}}' --filter name="${PROJECT}"_ddc-lb)" == "${PROJECT}_ddc-lb" ]
   then
     RECREATE_LB=true
   else
@@ -499,20 +499,34 @@ recycle_containers() {
 }
 
 project_status() {
-  echo "Containers for project '${PROJECT}':"
-  docker ps -a --filter label=project="${PROJECT}" --format 'table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Names}}\t{{.Labels}}'
+  PROJECT_LIST="$(docker -H unix:///var/run/docker.sock ps -a --format '{{.Label "project"}}' | uniq | sort)"
+  echo -n "All projects found: "
+  for i in ${PROJECT_LIST}
+  do
+    echo -n "${i} "
+  done
+  echo -e "\n"
 
-  echo -e "\nVolumes for project '${PROJECT}':"
-  docker volume ls --filter label=project="${PROJECT}"
+  # if a project specified, use that
+  if [ ! -z "${1}" ]
+  then
+    PROJECT="${1}"
+  fi
 
-  echo -e "\nNetworks for project '${PROJECT}':"
-  docker network ls --filter label=project="${PROJECT}"
+  echo "Containers for current project '${PROJECT}':"
+  docker -H unix:///var/run/docker.sock ps -a --filter label=project="${PROJECT}" --format 'table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Names}}\t{{.Labels}}'
+
+  echo -e "\nVolumes for current project '${PROJECT}':"
+  docker -H unix:///var/run/docker.sock volume ls --filter label=project="${PROJECT}"
+
+  echo -e "\nNetworks for current project '${PROJECT}':"
+  docker -H unix:///var/run/docker.sock network ls --filter label=project="${PROJECT}"
 }
 
 get_current_num_engines() {
   # count the number of existing containers
-  MANAGERS="$(docker ps -a --filter label=project="${PROJECT}" --filter label=role=manager --filter name=docker --format '{{.Names}}' | wc -l | tr -d ' ')"
-  WORKERS="$(docker ps -a --filter label=project="${PROJECT}" --filter label=role=worker --filter name=docker --format '{{.Names}}' | wc -l | tr -d ' ')"
+  MANAGERS="$(docker -H unix:///var/run/docker.sock ps -a --filter label=project="${PROJECT}" --filter label=role=manager --filter name=docker --format '{{.Names}}' | wc -l | tr -d ' ')"
+  WORKERS="$(docker -H unix:///var/run/docker.sock ps -a --filter label=project="${PROJECT}" --filter label=role=worker --filter name=docker --format '{{.Names}}' | wc -l | tr -d ' ')"
 }
 
 init_swarm() {
@@ -615,20 +629,20 @@ install_ucp() {
     echo -e "'jq' found; using native binary\n"
     JQ="jq"
   else
-    echo -e "'jq' not found; using docker image mbentley/jq\n"
+    echo -e "'jq' not found; using Docker image mbentley/jq\n"
     JQ="docker -H unix:///var/run/docker.sock run -i --rm mbentley/jq"
   fi
 
   echo -n "Waiting for UCP to be ready..."
   #shellcheck disable=SC2016
-  docker run -i --rm -e DOMAIN_NAME="${DOMAIN_NAME}" --entrypoint sh mbentley/curl -c 'while [ "$(curl -sk -o /dev/null -w "%{http_code}" "https://ucp.${DOMAIN_NAME}/_ping")" -ne "200" ]; do   echo -n ".";   sleep 1; done'
+  docker -H unix:///var/run/docker.sock run -i --rm -e DOMAIN_NAME="${DOMAIN_NAME}" --entrypoint sh mbentley/curl -c 'while [ "$(curl -sk -o /dev/null -w "%{http_code}" "https://ucp.${DOMAIN_NAME}/_ping")" -ne "200" ]; do   echo -n ".";   sleep 1; done'
   echo -e "done.\n\nEnabling HRM..."
-  AUTH_TOKEN="$(docker run -i --rm mbentley/curl -sk -d '{"username":"admin","password":"docker123"}' "https://ucp.${DOMAIN_NAME}/auth/login" | ${JQ} -r .auth_token 2>/dev/null)"
-  docker run -i --rm mbentley/curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"HTTPPort":8080,"HTTPSPort":8443}' "https://ucp.${DOMAIN_NAME}/api/hrm"
+  AUTH_TOKEN="$(docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -sk -d '{"username":"admin","password":"docker123"}' "https://ucp.${DOMAIN_NAME}/auth/login" | ${JQ} -r .auth_token 2>/dev/null)"
+  docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"HTTPPort":8080,"HTTPSPort":8443}' "https://ucp.${DOMAIN_NAME}/api/hrm"
   echo -e "done.\n"
 
   echo "Creating 'demo' user with password 'docker123'..."
-  docker run -i --rm mbentley/curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"name":"demo","password":"docker123","fullName":"Demo User","isAdmin":true,"isActive":true}' "https://ucp.${DOMAIN_NAME}/accounts/"
+  docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"name":"demo","password":"docker123","fullName":"Demo User","isAdmin":true,"isActive":true}' "https://ucp.${DOMAIN_NAME}/accounts/"
   echo -e "done.\n"
 
   echo -e "UCP installation complete.\n"
@@ -847,7 +861,7 @@ destroy_swarm() {
   then
     echo "No project volumes to remove; skipping..."
   else
-    echo "Removing persistent data for docker engines..."
+    echo "Removing persistent data for Docker engines..."
     #shellcheck disable=SC2086
     docker -H unix:///var/run/docker.sock volume rm ${VOLUMES}
   fi
@@ -994,9 +1008,13 @@ main() {
       initialize
       destroy_swarm
       ;;
-    env:status|status:*)
+    env:status)
       initialize
-      project_status
+      project_status "${3}"
+      ;;
+    status:*)
+      initialize
+      project_status "${2}"
       ;;
     env:info|env_info:*)
       initialize
@@ -1009,7 +1027,7 @@ main() {
       echo -e "  stop\t\tstop ddc-lb, docker1, docker2, and docker3 daemon containers"
       echo -e "  pause\t\tpause ddc-lb, docker1, docker2, and docker3 daemon containers"
       echo -e "  unpause\tunpause ddc-lb, docker1, docker2, and docker3 daemon containers"
-      echo -e "  recycle\tstop, remove, and re-create the docker engines and 'dind' network, keeping persistent data"
+      echo -e "  recycle\tstop, remove, and re-create the Docker engines and 'dind' network, keeping persistent data"
       echo -e "  destroy\tremove Swarm, the engines, and all persistent data"
       echo -e "  status\tdisplay environment status"
       echo -e "  info\t\tdisplay enviroment variable overrides currently set"
