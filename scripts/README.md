@@ -79,9 +79,9 @@ Commands:
   all           launch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, DTR, Jenkins, and Gogs
   swarm         launch 3 node Swarm mode cluster; 1 manager and 2 workers
   ee            launch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, and DTR
-  ucp           launch UCP on pre-created Swarm
-  dtr           launch DTR on the first worker in a pre-created Swarm
-  demo          launch Jenkins and Gogs using dockersolutions/jenkins and mbentley/solutions-gogs
+  ucp           launch UCP (only use if a Swarm mode cluster is already launched)
+  dtr           launch DTR on the first worker (only use if UCP is already launched)
+  demo          launch Jenkins and Gogs (only use if you've launched UCP and DTR)
 ```
 
 ### `dind_ddc env`

@@ -977,9 +977,9 @@ main() {
       echo -e "  all\t\tlaunch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, DTR, Jenkins, and Gogs"
       echo -e "  swarm\t\tlaunch 3 node Swarm mode cluster; 1 manager and 2 workers"
       echo -e "  ee\t\tlaunch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, and DTR"
-      echo -e "  ucp\t\tlaunch UCP on pre-created Swarm"
-      echo -e "  dtr\t\tlaunch DTR on the first worker in a pre-created Swarm"
-      echo -e "  demo\t\tlaunch Jenkins and Gogs using dockersolutions/jenkins and mbentley/solutions-gogs"
+      echo -e "  ucp\t\tlaunch UCP (only use if a Swarm mode cluster is already launched)"
+      echo -e "  dtr\t\tlaunch DTR on the first worker (only use if UCP is already launched)"
+      echo -e "  demo\t\tlaunch Jenkins and Gogs (only use if you've launched UCP and DTR)"
       exit 1
       ;;
     env:start|start:*)
