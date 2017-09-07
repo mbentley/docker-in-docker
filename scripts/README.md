@@ -94,7 +94,7 @@ Commands:
   stop          stop ddc-lb, docker1, docker2, and docker3 daemon containers
   pause         pause ddc-lb, docker1, docker2, and docker3 daemon containers
   unpause       unpause ddc-lb, docker1, docker2, and docker3 daemon containers
-  recycle       stop, remove, and re-create the docker engines and 'dind' network, keeping persistent data
+  recycle       stop, remove, and re-create the Docker engines and 'dind' network, keeping persistent data
   destroy       remove Swarm, the engines, and all persistent data
   status        display environment status
   info          display enviroment variable overrides currently set
@@ -136,7 +136,7 @@ If you wish to have your environment variables stored in a single file that can 
 
   * `DIND_ENV` - environment variable file to source for the below environment variable overrides
   * `PROJECT` - prefix for all resources; allows you to run multiple environments (although it is still one at a time)
-  * `DIND_TAG` - docker image tag used to run docker
+  * `DIND_TAG` - Docker image tag used to run Docker
     * see the [docker-in-docker README](../README.md) for the available tags
   * `ENGINE_OPTS` - custom engine options to append to the defaults
   * `MANAGERS` - number of Swarm managers (also used to set number of UCP managers)
@@ -156,8 +156,8 @@ If you wish to have your environment variables stored in a single file that can 
   * `DTR_REPLICAS` - number of DTR replicas to install
   * `DDC_LICENSE` - path to your DDC license
   * `DIND_SUBNET` - subnet used for the bridge network created
-  * `DIND_DNS` - DNS server to use for the docker daemons running in docker
-  * `DIND_RESTART` - restart policy for the docker daemon containers
+  * `DIND_DNS` - DNS server to use for the Docker daemons running in docker
+  * `DIND_RESTART` - restart policy for the Docker daemon containers
   * `NET_IF` - customize the network interface name used for creating the ALIAS_IP
   * `ALIAS_IP` - IP address to set as an alias to your network interface; used to keep static IP when changing networks
   * `DOMAIN_NAME` - domain name to use for Jenkins behind HRM
@@ -215,7 +215,7 @@ $ docker -H tcp://localhost:1001 \
 
 Test with `curl`:
 
-**Note**: `curl` on macOS works fine for HTTP, but for HTTPS with an insecure connection, `-k`, it does **not** work with SNI as it discards the SNI headers on the client side.  Use a docker image like `mbentley/curl` instead to get a Linux based `curl` instead of the BSD based that has strange behavior.
+**Note**: `curl` on macOS works fine for HTTP, but for HTTPS with an insecure connection, `-k`, it does **not** work with SNI as it discards the SNI headers on the client side.  Use a Docker image like `mbentley/curl` instead to get a Linux based `curl` instead of the BSD based that has strange behavior.
 
 ```
 $ curl -H "Host: nginx.test" http://10.1.2.3
