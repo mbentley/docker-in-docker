@@ -500,10 +500,16 @@ recycle_containers() {
 
 project_status() {
   PROJECT_LIST="$(docker -H unix:///var/run/docker.sock ps -a --format '{{.Label "project"}}' | uniq | sort)"
-  echo -n "All projects found: "
+  PROJECT_LIST_RUNNING="$(docker -H unix:///var/run/docker.sock ps --format '{{.Label "project"}}' | uniq | sort)"
+  echo -n "All projects found (* = running): "
   for i in ${PROJECT_LIST}
   do
-    echo -n "${i} "
+    if [ "${PROJECT_LIST_RUNNING}" = "${i}" ]
+    then
+      echo -n "${i}* "
+    else
+      echo -n "${i} "
+    fi
   done
   echo -e "\n"
 
