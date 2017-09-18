@@ -4,7 +4,7 @@ MAINTAINER Matt Bentley <mbentley@mbentley.net>
 ARG DOCKER_EE_URL
 
 RUN apt-get update &&\
-  apt-get install -y apt-transport-https ca-certificates curl &&\
+  apt-get install -y apt-transport-https ca-certificates curl module-init-tools &&\
   curl -fsSL "${DOCKER_EE_URL}"/gpg | apt-key add - &&\
   echo "deb [arch=amd64] ${DOCKER_EE_URL} xenial stable-17.06" > /etc/apt/sources.list.d/docker.list &&\
   apt-get update &&\
