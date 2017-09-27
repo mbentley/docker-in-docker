@@ -19,6 +19,7 @@ scripts
   * [Pre-production DDC](#pre-production-ddc)
     * [Create .tar.gz archives](#create-targz-archives)
   * [Launching UCP and DTR in various configurations](#launching-ucp-and-dtr-in-various-configurations)
+  * [Updating an environment](#updating-an-environment)
 
 ## Quickstart (tl;dr)
 Check out the [Prerequisites](#prerequisites) and then go down to [Launching Docker EE with default configuration](#launching-docker-ee-with-default-configuration) for released versions or [Environment Variable Overrides](#environment-variable-overrides) for custom settings you can pass as well as [Using an environment file for persistent settings](#using-an-environment-file-for-persistent-settings) to make the management of your custom settings more manageable.  See [Pre-production DDC](#pre-production-ddc) for details of how to launch an environment with pre-production images.
@@ -378,3 +379,16 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
 
   ./dind_ddc launch ucp
   ```
+
+### Updating an environment
+If you need to update the Docker engine version or update the HAProxy image, this can be done without destroying any data:
+
+1. Pull updated images
+    ```
+    ./dind_ddc env pull
+    ```
+
+2. Recycle the environment (stop and re-create all Docker containers)
+    ```
+    ./dind_ddc env recycle
+    ```
