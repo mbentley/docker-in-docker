@@ -902,6 +902,16 @@ destroy_swarm() {
   fi
 }
 
+pull_images() {
+  echo "Pulling mbentley/docker-in-docker:haproxy..."
+  docker pull mbentley/docker-in-docker:haproxy
+  echo -e "done.\n"
+
+  echo "Pulling mbentley/docker-in-docker:${DIND_TAG}..."
+  docker pull mbentley/docker-in-docker:"${DIND_TAG}"
+  echo -e "done.\n"
+}
+
 check_subnet() {
   for i in $(docker -H unix:///var/run/docker.sock network ls -q)
   do
@@ -1022,6 +1032,10 @@ main() {
       initialize
       destroy_swarm
       ;;
+    env:pull)
+      initialize
+      pull_images
+      ;;
     env:status)
       initialize
       project_status "${3}"
@@ -1035,7 +1049,7 @@ main() {
       env_info
       ;;
     env:*)
-      echo -e "Usage: $0 env {start|stop|pause|unpause|recycle|destroy|status|info|help}"
+      echo -e "Usage: $0 env {start|stop|pause|unpause|recycle|destroy|pull|status|info|help}"
       echo -e "\nCommands:"
       echo -e "  start\t\tstart ddc-lb, docker1, docker2, and docker3 daemon containers"
       echo -e "  stop\t\tstop ddc-lb, docker1, docker2, and docker3 daemon containers"
@@ -1043,6 +1057,7 @@ main() {
       echo -e "  unpause\tunpause ddc-lb, docker1, docker2, and docker3 daemon containers"
       echo -e "  recycle\tstop, remove, and re-create the Docker engines and 'dind' network, keeping persistent data"
       echo -e "  destroy\tremove Swarm, the engines, and all persistent data"
+      echo -e "  pull\t\tpull latest Docker images for current environment"
       echo -e "  status\tdisplay environment status"
       echo -e "  info\t\tdisplay enviroment variable overrides currently set"
       exit 1
