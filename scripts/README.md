@@ -63,7 +63,7 @@ Usage: ./dind_ddc {launch|env|create_tar|net_alias|connect_engine|help}
 
 Commands:
   ./dind_ddc launch {all|swarm|ee|ucp|dtr|demo|help}
-  ./dind_ddc env {start|stop|pause|unpause|recycle|destroy|status|info|help}
+  ./dind_ddc env {start|stop|pause|unpause|recycle|destroy|pull|status|info|help}
   ./dind_ddc create_tar {all|ucp|dtr|help}
   ./dind_ddc net_alias {create|remove|recreate|help}
   ./dind_ddc connect_engine {n|help}
@@ -87,7 +87,7 @@ Commands:
 ### `dind_ddc env`
 ```
 $ ./dind_ddc env help
-Usage: ./dind_ddc env {start|stop|pause|unpause|recycle|destroy|status|info|help}
+Usage: ./dind_ddc env {start|stop|pause|unpause|recycle|destroy|pull|status|info|help}
 
 Commands:
   start         start ddc-lb, docker1, docker2, and docker3 daemon containers
@@ -96,6 +96,7 @@ Commands:
   unpause       unpause ddc-lb, docker1, docker2, and docker3 daemon containers
   recycle       stop, remove, and re-create the Docker engines and 'dind' network, keeping persistent data
   destroy       remove Swarm, the engines, and all persistent data
+  pull          pull latest Docker images for current environment
   status        display environment status
   info          display enviroment variable overrides currently set
 ```
