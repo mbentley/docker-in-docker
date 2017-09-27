@@ -669,6 +669,7 @@ launch_haproxy() {
   docker -H unix:///var/run/docker.sock run -d \
     -p 80:80 \
     -p 443:443 \
+    -p 6443:6443 \
     --name "${PROJECT}"_ddc-lb \
     --label project="${PROJECT}" \
     --net "${PROJECT}"_dind \

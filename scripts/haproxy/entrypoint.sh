@@ -15,6 +15,14 @@ ucp_upstreams_4443() {
   done
 }
 
+kube_upstreams_6443() {
+  # make upstream include all managers
+  for ((ENGINE_NUM=1; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
+  do
+    echo "        server ${PROJECT}_docker${ENGINE_NUM}:6443 ${PROJECT}_docker${ENGINE_NUM}:6443 weight 100 check check-ssl verify none"
+  done
+}
+
 dtr_upstreams_80() {
   ## make upstream include all replicas
   for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+DTR_REPLICAS)); ENGINE_NUM++))
@@ -85,11 +93,26 @@ frontend https
         use_backend dtr_upstream_servers_443 if { req.ssl_sni -i dtr.${DOMAIN_NAME} }
         default_backend hrm_upstream_servers_8443
 
+frontend https_6443
+        mode tcp
+        bind 0.0.0.0:6443
+        tcp-request inspect-delay 5s
+        tcp-request content accept if { req_ssl_hello_type 1 }
+        # figure out which backend to use
+        use_backend kube_upstream_servers if { req.ssl_sni -i ucp.${DOMAIN_NAME} }
+        default_backend kube_upstream_servers
+
 ### backends
 backend ucp_upstream_servers
         mode tcp
         option httpchk GET /_ping HTTP/1.1\r\nHost:\ ucp.${DOMAIN_NAME}
 $(ucp_upstreams_4443)
+
+backend kube_upstream_servers
+        mode tcp
+        # TODO: figure out what health check should be used
+        #option httpchk GET /_ping HTTP/1.1\r\nHost:\ ucp.${DOMAIN_NAME}
+$(kube_upstreams_6443)
 
 backend dtr_upstream_servers_80
         #mode tcp
