@@ -594,6 +594,15 @@ install_ucp() {
   # get IP of the first container
   DOCKER1_IP="$(docker -H unix:///var/run/docker.sock container inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${PROJECT}"_docker1)"
 
+  # set mount propgation
+  for ((ENGINE_NUM=1; ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
+  do
+    echo "Setting mount propagation on ${PROJECT}_docker${ENGINE_NUM}..."
+    docker -H unix:///var/run/docker.sock exec -it "${PROJECT}"_docker${ENGINE_NUM} mount --make-rshared /
+    docker -H unix:///var/run/docker.sock exec -it "${PROJECT}"_docker${ENGINE_NUM} mount --make-rshared /run
+    echo -e "done.\n"
+  done
+
   # load images on managers
   for ((ENGINE_NUM=1; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
   do
