@@ -348,6 +348,7 @@ launch_engines() {
         -v "${PROJECT}"_docker${ENGINE_NUM}:/var/lib/docker \
         -v "${PROJECT}"_shared:/data \
         --tmpfs /run \
+        -e MOUNT_PROPAGATION="/" \
         mbentley/docker-in-docker:"${DIND_TAG}" \
         dockerd -s overlay2 \
           -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 \
@@ -378,6 +379,7 @@ launch_engines() {
         -v "${PROJECT}"_docker${ENGINE_NUM}:/var/lib/docker \
         -v "${PROJECT}"_shared:/data \
         --tmpfs /run \
+        -e MOUNT_PROPAGATION="/" \
         mbentley/docker-in-docker:"${DIND_TAG}" \
         dockerd -s overlay2 \
           -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 \
