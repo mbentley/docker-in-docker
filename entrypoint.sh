@@ -14,4 +14,14 @@ then
   rm /var/run/docker/libcontainerd/docker-containerd.pid
 fi
 
+# set mount propagation
+if [ ! -z "${MOUNT_PROPAGATION}" ]
+then
+  for MOUNT in ${MOUNT_PROPAGATION}
+  do
+    echo "Mounting ${MOUNT} as 'rshared'..."
+    mount --make-rshared "${MOUNT}"
+  done
+fi
+
 exec "${@}"
