@@ -777,7 +777,7 @@ install_dtr() {
 
   echo "Installing DTR on ${PROJECT}_docker${ENGINE_NUM}..."
   #shellcheck disable=SC2086
-  docker -H tcp://127.0.0.1:100${ENGINE_NUM} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install ${DTR_OPTIONS} --ucp-url https://ucp.${DOMAIN_NAME} --ucp-username admin --ucp-password docker123 --ucp-node "${PROJECT}"_docker${ENGINE_NUM} --ucp-ca "$(docker run -i --rm mbentley/curl -ks https://ucp.${DOMAIN_NAME}/ca)" --dtr-external-url "dtr.${DOMAIN_NAME}" --dtr-storage-volume /data --replica-id 0000000000e${ENGINE_NUM}
+  docker -H tcp://127.0.0.1:100${ENGINE_NUM} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" install ${DTR_OPTIONS} --ucp-url https://ucp.${DOMAIN_NAME} --ucp-username admin --ucp-password docker123 --ucp-node "${PROJECT}"_docker${ENGINE_NUM} --ucp-ca "$(docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -ks https://ucp.${DOMAIN_NAME}/ca)" --dtr-external-url "dtr.${DOMAIN_NAME}" --dtr-storage-volume /data --replica-id 0000000000e${ENGINE_NUM}
   echo -e "done.\n"
 
   # load images and join additional DTR replicas
@@ -789,7 +789,7 @@ install_dtr() {
 
     echo "Joining ${PROJECT}_docker${ENGINE_NUM} as a DTR replica..."
     #shellcheck disable=SC2086
-    docker -H tcp://127.0.0.1:100${ENGINE_NUM} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" join ${DTR_OPTIONS} --ucp-url https://ucp.${DOMAIN_NAME} --ucp-username admin --ucp-password docker123 --ucp-node "${PROJECT}"_docker${ENGINE_NUM} --ucp-ca "$(docker run -i --rm mbentley/curl -ks https://ucp.${DOMAIN_NAME}/ca)" --existing-replica-id 0000000000e$((MANAGERS+1)) --replica-id 0000000000e${ENGINE_NUM}
+    docker -H tcp://127.0.0.1:100${ENGINE_NUM} run -it --rm "${DTR_REPO}":"${DTR_VERSION}" join ${DTR_OPTIONS} --ucp-url https://ucp.${DOMAIN_NAME} --ucp-username admin --ucp-password docker123 --ucp-node "${PROJECT}"_docker${ENGINE_NUM} --ucp-ca "$(docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -ks https://ucp.${DOMAIN_NAME}/ca)" --existing-replica-id 0000000000e$((MANAGERS+1)) --replica-id 0000000000e${ENGINE_NUM}
     echo -e "done.\n"
   done
 
