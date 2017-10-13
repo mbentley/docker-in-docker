@@ -265,15 +265,14 @@ remove_net_alias() {
 
 recreate_net_alias() {
   echo "Checking to see if network alias is functional..."
-  HAPROXY_STATUS="$(curl -m 5 -s -o /dev/null -w "%{http_code}" "http://${ALIAS_IP}/" || true)"
-  if [ "${HAPROXY_STATUS}" = "503" ]
+  MIRROR_STATUS="$(curl -m 5 -s -o /dev/null -w "%{http_code}" "http://${ALIAS_IP}:5000/" || true)"
+  if [ "${MIRROR_STATUS}" = "200" ]
   then
     echo -e "Connection test successful; skipping network alias re-creation...\ndone.\n"
   else
-    echo "Connection test to HAProxy failed; re-creating network alias..."
+    echo "Connection test to the registry mirror failed; re-creating network alias..."
     remove_net_alias
     create_net_alias
-#    echo -e "done.\n"
   fi
 }
 
@@ -327,13 +326,13 @@ launch_engines() {
     "${PROJECT}"_shared
   echo -e "done.\n"
 
-  echo "Launching ${MANAGERS} Docker engines for Swarm managers..."
+  echo "Creating ${MANAGERS} Docker engines for Swarm managers..."
   # launch all managers
   for ((ENGINE_NUM=1; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
   do
     #shellcheck disable=SC2086
     {
-      docker -H unix:///var/run/docker.sock run -d \
+      docker -H unix:///var/run/docker.sock create \
         -p 127.0.0.1:100${ENGINE_NUM}:12375 \
         --name "${PROJECT}"_docker${ENGINE_NUM} \
         --hostname "${PROJECT}"_docker${ENGINE_NUM} \
@@ -355,18 +354,26 @@ launch_engines() {
           --log-driver json-file --log-opt max-size=50m --log-opt max-file=3 \
           --dns "${DIND_DNS}" \
           --registry-mirror http://"${PROJECT}"_mirror:5000 \
-          ${ENGINE_OPTS}
+          ${ENGINE_OPTS} > /dev/null
+
+      # check to see if we should start the newly created engine
+      if [ "${WAS_RUNNING}" != "false" ]
+      then
+        echo -n "Starting ${PROJECT}_docker${ENGINE_NUM}..."
+        docker -H unix:///var/run/docker.sock start "${PROJECT}"_docker${ENGINE_NUM} > /dev/null
+        echo "done"
+      fi
      }
   done
   echo -e "done.\n"
 
-  echo "Launching ${WORKERS} Docker engines for Swarm workers..."
+  echo "Creating ${WORKERS} Docker engines for Swarm workers..."
   # launch all managers
   for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((NUM_NODES)); ENGINE_NUM++))
   do
     #shellcheck disable=SC2086
     {
-      docker -H unix:///var/run/docker.sock run -d \
+      docker -H unix:///var/run/docker.sock create \
         -p 127.0.0.1:100${ENGINE_NUM}:12375 \
         --name "${PROJECT}"_docker${ENGINE_NUM} \
         --hostname "${PROJECT}"_docker${ENGINE_NUM} \
@@ -388,7 +395,15 @@ launch_engines() {
           --log-driver json-file --log-opt max-size=50m --log-opt max-file=3 \
           --dns "${DIND_DNS}" \
           --registry-mirror http://"${PROJECT}"_mirror:5000 \
-          ${ENGINE_OPTS}
+          ${ENGINE_OPTS} > /dev/null
+
+      # check to see if we should start the newly created engine
+      if [ "${WAS_RUNNING}" != "false" ]
+      then
+        echo -n "Starting ${PROJECT}_docker${ENGINE_NUM}..."
+        docker -H unix:///var/run/docker.sock start "${PROJECT}"_docker${ENGINE_NUM} > /dev/null
+        echo "done"
+      fi
      }
   done
   echo -e "done.\n"
@@ -399,15 +414,23 @@ launch_engines() {
     shared_mirror_cache
   echo -e "done.\n"
 
-  echo "Launching registry mirror for Docker engines..."
-  docker -H unix:///var/run/docker.sock run -d \
+  echo "Creating registry mirror for Docker engines..."
+  docker -H unix:///var/run/docker.sock create \
+    -p 5000:5000 \
     --name "${PROJECT}"_mirror \
     --hostname "${PROJECT}"_mirror \
     --label project="${PROJECT}" \
     --net "${PROJECT}"_dind \
     --restart "${DIND_RESTART}" \
     -v shared_mirror_cache:/var/lib/registry \
-    mbentley/docker-in-docker:mirror
+    mbentley/docker-in-docker:mirror > /dev/null
+
+  if [ "${WAS_RUNNING}" != "false" ]
+  then
+    echo -n "Starting ${PROJECT}_mirror..."
+    docker -H unix:///var/run/docker.sock start "${PROJECT}"_mirror > /dev/null
+    echo "done"
+  fi
   echo -e "done.\n"
 }
 
@@ -421,6 +444,21 @@ get_volume_list() {
 
 get_network_list() {
   docker -H unix:///var/run/docker.sock network ls --filter label=project="${PROJECT}" --format '{{.Name}}'
+}
+
+check_running_containers() {
+  # get a list of running containers for project
+  RUNNING_CONTAINERS="$(curl -s -G -XGET --unix-socket /var/run/docker.sock -d "all=1" --data-urlencode 'filters={"status":["running"],"label":["project='"${PROJECT}"'"]}' "http:/v1.24/containers/json")"
+
+  # check to see if there were any running containers for the project
+  if [ "${RUNNING_CONTAINERS}" != "[]" ]
+  then
+    # running containers found; assume running
+    echo "true"
+  else
+    # no running containers found; assume to be not running
+    echo "false"
+  fi
 }
 
 start_containers() {
@@ -481,6 +519,9 @@ unpause_containers() {
 recycle_containers() {
   # count the number of existing containers
   get_current_num_engines
+
+  # check to see if any of the project containers are currently running
+  WAS_RUNNING="$(check_running_containers)"
 
   # check to see if the ddc-lb exists
   if [ "$(docker -H unix:///var/run/docker.sock ps -a --filter label=project="${PROJECT}" --format '{{.Names}}' --filter name="${PROJECT}"_ddc-lb)" == "${PROJECT}_ddc-lb" ]
