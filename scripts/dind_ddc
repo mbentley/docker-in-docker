@@ -309,21 +309,36 @@ launch_engines() {
   echo "Creating volumes for Docker engines..."
   for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
   do
-    docker -H unix:///var/run/docker.sock volume create \
-      --label project="${PROJECT}" \
-      --driver local \
-      "${PROJECT}"_docker${ENGINE_NUM}
+    if [ "$(docker -H unix:///var/run/docker.sock volume ls -q --filter name="${PROJECT}_docker${ENGINE_NUM}" | grep -w "${PROJECT}_docker${ENGINE_NUM}")" = "${PROJECT}_docker${ENGINE_NUM}" ]
+    then
+      echo "Volume (${PROJECT}_docker${ENGINE_NUM}) already exists; skipping creation."
+    else
+      docker -H unix:///var/run/docker.sock volume create \
+        --label project="${PROJECT}" \
+        --driver local \
+        "${PROJECT}"_docker${ENGINE_NUM}
+    fi
 
-    docker -H unix:///var/run/docker.sock volume create \
-      --label project="${PROJECT}" \
-      --driver local \
-      "${PROJECT}"_docker${ENGINE_NUM}_etc
+    if [ "$(docker -H unix:///var/run/docker.sock volume ls -q --filter name="${PROJECT}_docker${ENGINE_NUM}_etc" | grep -w "${PROJECT}_docker${ENGINE_NUM}_etc")" = "${PROJECT}_docker${ENGINE_NUM}_etc" ]
+    then
+      echo "Volume (${PROJECT}_docker${ENGINE_NUM}_etc) already exists; skipping creation."
+    else
+      docker -H unix:///var/run/docker.sock volume create \
+        --label project="${PROJECT}" \
+        --driver local \
+        "${PROJECT}"_docker${ENGINE_NUM}_etc
+    fi
   done
 
-  docker -H unix:///var/run/docker.sock volume create \
-    --label project="${PROJECT}" \
-    --driver local \
-    "${PROJECT}"_shared
+  if [ "$(docker -H unix:///var/run/docker.sock volume ls -q --filter name="${PROJECT}_shared" | grep -w "${PROJECT}_shared")" = "${PROJECT}_shared" ]
+  then
+    echo "Volume (${PROJECT}_shared) already exists; skipping creation."
+  else
+    docker -H unix:///var/run/docker.sock volume create \
+      --label project="${PROJECT}" \
+      --driver local \
+      "${PROJECT}"_shared
+  fi
   echo -e "done.\n"
 
   echo "Creating ${MANAGERS} Docker engines for Swarm managers..."
@@ -409,9 +424,14 @@ launch_engines() {
   echo -e "done.\n"
 
   echo "Creating volume for registry mirror cache..."
-  docker -H unix:///var/run/docker.sock volume create \
-    --driver local \
-    shared_mirror_cache
+  if [ "$(docker -H unix:///var/run/docker.sock volume ls -q --filter name="shared_mirror_cache" | grep -w "shared_mirror_cache")" = "shared_mirror_cache" ]
+  then
+    echo "Volume (shared_mirror_cache) already exists; skipping creation."
+  else
+    docker -H unix:///var/run/docker.sock volume create \
+      --driver local \
+      shared_mirror_cache
+  fi
   echo -e "done.\n"
 
   echo "Creating registry mirror for Docker engines..."
