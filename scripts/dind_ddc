@@ -337,7 +337,7 @@ launch_engines() {
         -p 127.0.0.1:100${ENGINE_NUM}:12375 \
         --name "${PROJECT}"_docker${ENGINE_NUM} \
         --hostname "${PROJECT}"_docker${ENGINE_NUM} \
-        --label project=${PROJECT} \
+        --label project="${PROJECT}" \
         --label role=manager \
         --privileged \
         --net "${PROJECT}"_dind \
@@ -353,7 +353,9 @@ launch_engines() {
         dockerd -s overlay2 \
           -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 \
           --log-driver json-file --log-opt max-size=50m --log-opt max-file=3 \
-          --dns "${DIND_DNS}" ${ENGINE_OPTS}
+          --dns "${DIND_DNS}" \
+          --registry-mirror http://"${PROJECT}"_mirror:5000 \
+          ${ENGINE_OPTS}
      }
   done
   echo -e "done.\n"
@@ -368,7 +370,7 @@ launch_engines() {
         -p 127.0.0.1:100${ENGINE_NUM}:12375 \
         --name "${PROJECT}"_docker${ENGINE_NUM} \
         --hostname "${PROJECT}"_docker${ENGINE_NUM} \
-        --label project=${PROJECT} \
+        --label project="${PROJECT}" \
         --label role=worker \
         --privileged \
         --net "${PROJECT}"_dind \
@@ -384,9 +386,29 @@ launch_engines() {
         dockerd -s overlay2 \
           -H unix:///var/run/docker.sock -H tcp://0.0.0.0:12375 \
           --log-driver json-file --log-opt max-size=50m --log-opt max-file=3 \
-          --dns "${DIND_DNS}" ${ENGINE_OPTS}
+          --dns "${DIND_DNS}" \
+          --registry-mirror http://"${PROJECT}"_mirror:5000 \
+          ${ENGINE_OPTS}
      }
   done
+  echo -e "done.\n"
+
+  echo "Creating volume for registry mirror cache..."
+  docker -H unix:///var/run/docker.sock volume create \
+    --label project="${PROJECT}" \
+    --driver local \
+    "${PROJECT}"_mirror_cache
+  echo -e "done.\n"
+
+  echo "Launching registry mirror for Docker engines..."
+  docker -H unix:///var/run/docker.sock run -d \
+    --name "${PROJECT}"_mirror \
+    --hostname "${PROJECT}"_mirror \
+    --label project="${PROJECT}" \
+    --net "${PROJECT}"_dind \
+    --restart "${DIND_RESTART}" \
+    -v "${PROJECT}"_mirror_cache:/var/lib/registry \
+    mbentley/docker-in-docker:mirror
   echo -e "done.\n"
 }
 
