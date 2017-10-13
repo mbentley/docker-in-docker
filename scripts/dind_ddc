@@ -904,6 +904,17 @@ destroy_swarm() {
   fi
   echo -e "done.\n"
 
+  VOLUMES="$(docker volume ls -q --filter name=shared_mirror_cache)"
+  if [ -z "${VOLUMES}" ]
+  then
+    echo "No shared volumes to remove; skipping..."
+  else
+    echo "Removing shared persistent data for Docker engines..."
+    #shellcheck disable=SC2086
+    docker -H unix:///var/run/docker.sock volume rm ${VOLUMES} || true
+  fi
+  echo -e "done.\n"
+
   NETWORKS="$(get_network_list)"
   if [ -z "${NETWORKS}" ]
   then
