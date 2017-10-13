@@ -124,6 +124,41 @@ env_info() {
   exit 0
 }
 
+check_total_memory() {
+  echo "Checking to see if your system meets the system requirements..."
+  # run a container to see how much memory is available in the Docker for Mac VM (or standard host OS)
+  TOTAL_MEMORY="$(docker -H unix:///var/run/docker.sock run -it --rm busybox cat /proc/meminfo | grep ^MemTotal | awk '{print $2}')"
+
+  # 1 GB recommended per manager
+  MANAGER_MEM=1048576
+
+  # 512 MB recommended per worker
+  WORKER_MEM=524288
+
+  # Additional memory for registry mirror and HAProxy
+  ADDL_MEM=524288
+
+  # calculate the recommended amount of memory
+  TTL_MANAGER_MEM="$((MANAGER_MEM * MANAGERS))"
+  TTL_WORKER_MEM="$((WORKER_MEM * WORKERS))"
+  TTL_MEM_REQ="$((TTL_MANAGER_MEM + TTL_WORKER_MEM + ADDL_MEM))"
+
+  # get some more user friendly numbers
+  TTL_MEM_REQ="$((TTL_MEM_REQ / 1024))"
+  TOTAL_MEMORY="$((TOTAL_MEMORY / 1024))"
+
+  # check to see if the system has the recommended amount of memory
+  if [ "${TOTAL_MEMORY}" -lt "${TTL_MEM_REQ}" ]
+  then
+    echo "Warning: The amount of memory on your system is less than recommended based off of the number of managers (${MANAGERS}) and workers (${WORKERS}) configured!"
+    echo "Your system has a total of ${TOTAL_MEMORY} MB but ${TTL_MEM_REQ} MB is recommended."
+    sleep 2
+  else
+    echo "OK: Your system has a total of ${TOTAL_MEMORY} MB of memory (${TTL_MEM_REQ} MB is the recommended minimum)"
+  fi
+  echo -e "done.\n"
+}
+
 ddc_check_license() {
   if [ ! -f "${DDC_LICENSE}" ]
   then
@@ -1045,6 +1080,7 @@ main() {
   case ${1}:${2} in
     launch:all|create_all:*)
       initialize
+      check_total_memory
       ddc_check_license
       ucp_check_tar
       dtr_check_tar
@@ -1062,6 +1098,7 @@ main() {
       ;;
     launch:ee|install_ee:*)
       initialize
+      check_total_memory
       ddc_check_license
       ucp_check_tar
       dtr_check_tar
@@ -1082,6 +1119,7 @@ main() {
       ;;
     launch:ucp|install_ucp:*)
       initialize
+      check_total_memory
       ddc_check_license
       ucp_check_tar
       install_ucp
@@ -1089,12 +1127,14 @@ main() {
       ;;
     launch:dtr|install_dtr:*)
       initialize
+      check_total_memory
       dtr_check_tar
       install_dtr
       install_summary_dtr
       ;;
     launch:swarm|create_swarm:*)
       initialize
+      check_total_memory
       create_swarm
       install_summary_swarm
       ;;
@@ -1150,6 +1190,10 @@ main() {
     env:info|env_info:*)
       initialize
       env_info
+      ;;
+    env:mem)
+      initialize
+      check_total_memory
       ;;
     env:*)
       echo -e "Usage: $0 env {start|stop|pause|unpause|recycle|destroy|pull|status|info|help}"
