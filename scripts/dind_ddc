@@ -395,9 +395,8 @@ launch_engines() {
 
   echo "Creating volume for registry mirror cache..."
   docker -H unix:///var/run/docker.sock volume create \
-    --label project="${PROJECT}" \
     --driver local \
-    "${PROJECT}"_mirror_cache
+    shared_mirror_cache
   echo -e "done.\n"
 
   echo "Launching registry mirror for Docker engines..."
@@ -407,7 +406,7 @@ launch_engines() {
     --label project="${PROJECT}" \
     --net "${PROJECT}"_dind \
     --restart "${DIND_RESTART}" \
-    -v "${PROJECT}"_mirror_cache:/var/lib/registry \
+    -v shared_mirror_cache:/var/lib/registry \
     mbentley/docker-in-docker:mirror
   echo -e "done.\n"
 }
