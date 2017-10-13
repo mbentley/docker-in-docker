@@ -1013,9 +1013,16 @@ destroy_swarm() {
   then
     echo "No shared volumes to remove; skipping..."
   else
-    echo "Removing shared persistent data for Docker engines..."
-    #shellcheck disable=SC2086
-    docker -H unix:///var/run/docker.sock volume rm ${VOLUMES} || true
+    # check to see if containers are using the volume
+    SHARED_CONTAINERS="$(docker -H unix:///var/run/docker.sock ps -a --format '{{.Names}}' --filter=volume=shared_mirror_cache | tr '\n' ' ' | sed 's/ *$//')"
+    if [ -z "${SHARED_CONTAINERS}" ]
+    then
+      echo "Removing shared persistent data for Docker engines..."
+      #shellcheck disable=SC2086
+      docker -H unix:///var/run/docker.sock volume rm ${VOLUMES}
+    else
+      echo "Shared data volume is being used by other containers (${SHARED_CONTAINERS}); skipping removal..."
+    fi
   fi
   echo -e "done.\n"
 
