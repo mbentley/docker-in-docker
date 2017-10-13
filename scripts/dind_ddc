@@ -76,7 +76,7 @@ initialize() {
   # check for valid number of workers
   if ((WORKERS<1))
   then
-    echo "Warning: The number of WORKERS (${MANAGERS}) is less than 1; you will not be able to install DTR"
+    echo "Warning: The number of WORKERS (${WORKERS}) is less than 1; you will not be able to install DTR"
     sleep 2
   fi
 
@@ -572,8 +572,12 @@ unpause_containers() {
 }
 
 recycle_containers() {
-  # count the number of existing containers
-  get_current_num_engines
+  # check to see if an environment file was provided; if so, use that because it is more trustworth on counting the number of engines
+  if [ -z "${DIND_ENV}" ]
+  then
+    # can't guarantee how many engines we might have; count the number of existing containers
+    get_current_num_engines
+  fi
 
   # check to see if any of the project containers are currently running
   WAS_RUNNING="$(check_running_containers)"
@@ -652,6 +656,20 @@ get_current_num_engines() {
   # count the number of existing containers
   MANAGERS="$(docker -H unix:///var/run/docker.sock ps -a --filter label=project="${PROJECT}" --filter label=role=manager --filter name=docker --format '{{.Names}}' | wc -l | tr -d ' ')"
   WORKERS="$(docker -H unix:///var/run/docker.sock ps -a --filter label=project="${PROJECT}" --filter label=role=worker --filter name=docker --format '{{.Names}}' | wc -l | tr -d ' ')"
+
+  # validate the results we received
+  if ((MANAGERS<1))
+  then
+    echo "Error: The number of MANAGERS (${MANAGERS}) returned was not greater than 0"
+    exit 1
+  fi
+
+  # check for valid number of workers
+  if ((WORKERS<0))
+  then
+    echo "Warning: The number of WORKERS (${WORKERS}) returned was not greater than 0"
+    exit 1
+  fi
 }
 
 init_swarm() {
@@ -701,8 +719,13 @@ connect_engine() {
 
 install_ucp() {
   echo -e "Preparing cluster for UCP installation...\n"
-  # count the number of existing containers
-  get_current_num_engines
+
+  # check to see if an environment file was provided; if so, use that because it is more trustworth on counting the number of engines
+  if [ -z "${DIND_ENV}" ]
+  then
+    # can't guarantee how many engines we might have; count the number of existing containers
+    get_current_num_engines
+  fi
 
   # create network alias
   create_net_alias
@@ -888,8 +911,12 @@ install_dtr() {
   # validate the value for # of dtr replicas
   validate_dtr_replicas
 
-  # count the number of existing containers
-  get_current_num_engines
+  # check to see if an environment file was provided; if so, use that because it is more trustworth on counting the number of engines
+  if [ -z "${DIND_ENV}" ]
+  then
+    # can't guarantee how many engines we might have; count the number of existing containers
+    get_current_num_engines
+  fi
 
   # make sure hosts file has correct entries written to it
   write_hosts
