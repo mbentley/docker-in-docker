@@ -729,8 +729,8 @@ launch_haproxy() {
   # get subnet prefix
   DIND_SUBNET_PREFIX="$(docker -H unix:///var/run/docker.sock network inspect --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' "${PROJECT}"_dind | awk -F '/' '{print $1}' | awk -F '.' '{print $1"."$2"."$3"."}')"
 
-  echo "Launching HAProxy (${PROJECT}_ddc-lb)..."
-  docker -H unix:///var/run/docker.sock run -d \
+  echo "Creating HAProxy (${PROJECT}_ddc-lb)..."
+  docker -H unix:///var/run/docker.sock create \
     -p 80:80 \
     -p 443:443 \
     -p 6443:6443 \
@@ -744,7 +744,15 @@ launch_haproxy() {
     -e PROJECT="${PROJECT}" \
     -e DTR_REPLICAS="${DTR_REPLICAS}" \
     -e DOMAIN_NAME="${DOMAIN_NAME}" \
-    mbentley/docker-in-docker:haproxy
+    mbentley/docker-in-docker:haproxy > /dev/null
+
+    # check to see if we should start HAProxy
+    if [ "${WAS_RUNNING}" != "false" ]
+    then
+      echo -n "Starting ${PROJECT}_ddc-lb"
+      docker -H unix:///var/run/docker.sock start "${PROJECT}"_ddc-lb > /dev/null
+      echo "done"
+    fi
   echo -e "done.\n"
 }
 
