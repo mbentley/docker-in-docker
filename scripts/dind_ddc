@@ -828,7 +828,7 @@ launch_haproxy() {
     # check to see if we should start HAProxy
     if [ "${WAS_RUNNING}" != "false" ]
     then
-      echo -n "Starting ${PROJECT}_ddc-lb"
+      echo -n "Starting ${PROJECT}_ddc-lb..."
       docker -H unix:///var/run/docker.sock start "${PROJECT}"_ddc-lb > /dev/null
       echo "done"
     fi
