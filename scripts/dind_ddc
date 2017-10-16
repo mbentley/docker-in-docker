@@ -817,7 +817,7 @@ launch_haproxy() {
     --label project="${PROJECT}" \
     --net "${PROJECT}"_dind \
     --ip "${DIND_SUBNET_PREFIX}"$((MANAGERS+WORKERS+52)) \
-    --restart=unless-stopped \
+    --restart "${DIND_RESTART}" \
     -e MANAGERS="${MANAGERS}" \
     -e WORKERS="${WORKERS}" \
     -e PROJECT="${PROJECT}" \
