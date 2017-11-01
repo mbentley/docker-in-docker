@@ -39,7 +39,7 @@ initialize() {
   DTR_REPLICAS="${DTR_REPLICAS:-1}"
   DDC_LICENSE="${DDC_LICENSE:-${HOME}/Downloads/docker_subscription.lic}"
   DIND_SUBNET="${DIND_SUBNET:-172.250.1.0/24}"
-  DIND_RESTART="${DIND_RESTART:-unless-stopped}"
+  DIND_RESTART="${DIND_RESTART:-no}"
   ALIAS_IP="${ALIAS_IP:-10.1.2.3}"
   DOMAIN_NAME="${DOMAIN_NAME:-demo.mac}"
   GH_USERNAME="${GH_USERNAME:-demo}"
