@@ -6,12 +6,13 @@ MANAGERS="${MANAGERS:-1}"
 WORKERS="${WORKERS:-2}"
 DTR_REPLICAS="${DTR_REPLICAS:-1}"
 DOMAIN_NAME="${DOMAIN_NAME:-demo.mac}"
+DIND_SUBNET_PREFIX="${DIND_SUBNET_PREFIX:-172.250.1.}"
 
 ucp_upstreams_4443() {
   # make upstream include all managers
   for ((ENGINE_NUM=1; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
   do
-    echo "        server ${PROJECT}_docker${ENGINE_NUM}:4443 ${PROJECT}_docker${ENGINE_NUM}:4443 weight 100 check check-ssl verify none"
+    echo "        server ${PROJECT}_docker${ENGINE_NUM}:4443 ${DIND_SUBNET_PREFIX}$((ENGINE_NUM+51)):4443 weight 100 check check-ssl verify none"
   done
 }
 
@@ -19,7 +20,7 @@ kube_upstreams_6443() {
   # make upstream include all managers
   for ((ENGINE_NUM=1; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
   do
-    echo "        server ${PROJECT}_docker${ENGINE_NUM}:6443 ${PROJECT}_docker${ENGINE_NUM}:6443 weight 100 check check-ssl verify none"
+    echo "        server ${PROJECT}_docker${ENGINE_NUM}:6443 ${DIND_SUBNET_PREFIX}$((ENGINE_NUM+51)):6443 weight 100 check check-ssl verify none"
   done
 }
 
@@ -27,7 +28,7 @@ dtr_upstreams_80() {
   ## make upstream include all replicas
   for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+DTR_REPLICAS)); ENGINE_NUM++))
   do
-    echo "        server ${PROJECT}_docker${ENGINE_NUM}:80 ${PROJECT}_docker${ENGINE_NUM}:80 check weight 100"
+    echo "        server ${PROJECT}_docker${ENGINE_NUM}:80 ${DIND_SUBNET_PREFIX}$((ENGINE_NUM+51)):80 check weight 100"
   done
 }
 
@@ -35,7 +36,7 @@ dtr_upstreams_443() {
   ## make upstream include all replicas
   for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+DTR_REPLICAS)); ENGINE_NUM++))
   do
-    echo "        server ${PROJECT}_docker${ENGINE_NUM}:443 ${PROJECT}_docker${ENGINE_NUM}:443 weight 100 check check-ssl verify none"
+    echo "        server ${PROJECT}_docker${ENGINE_NUM}:443 ${DIND_SUBNET_PREFIX}$((ENGINE_NUM+51)):443 weight 100 check check-ssl verify none"
   done
 }
 
@@ -43,7 +44,7 @@ hrm_upstreams_8080() {
   # make upstream include all nodes
   for ((ENGINE_NUM=1; ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
   do
-    echo "        server ${PROJECT}_docker${ENGINE_NUM}:8080 ${PROJECT}_docker${ENGINE_NUM}:8080 check weight 100"
+    echo "        server ${PROJECT}_docker${ENGINE_NUM}:8080 ${DIND_SUBNET_PREFIX}$((ENGINE_NUM+51)):8080 check weight 100"
   done
 }
 
@@ -51,7 +52,7 @@ hrm_upstreams_8443() {
   # make upstream include all nodes
   for ((ENGINE_NUM=1; ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
   do
-    echo "        server ${PROJECT}_docker${ENGINE_NUM}:8443 ${PROJECT}_docker${ENGINE_NUM}:8443 check weight 100"
+    echo "        server ${PROJECT}_docker${ENGINE_NUM}:8443 ${DIND_SUBNET_PREFIX}$((ENGINE_NUM+51)):8443 check weight 100"
   done
 }
 

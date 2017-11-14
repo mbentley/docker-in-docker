@@ -823,6 +823,7 @@ launch_haproxy() {
     -e PROJECT="${PROJECT}" \
     -e DTR_REPLICAS="${DTR_REPLICAS}" \
     -e DOMAIN_NAME="${DOMAIN_NAME}" \
+    -e DIND_SUBNET_PREFIX="${DIND_SUBNET_PREFIX}" \
     mbentley/docker-in-docker:haproxy > /dev/null
 
     # check to see if we should start HAProxy
