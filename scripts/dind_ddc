@@ -829,7 +829,7 @@ launch_haproxy() {
     -e DTR_REPLICAS="${DTR_REPLICAS}" \
     -e DOMAIN_NAME="${DOMAIN_NAME}" \
     -e DIND_SUBNET_PREFIX="${DIND_SUBNET_PREFIX}" \
-    -e UCP_PORT="4443" \
+    -e UCP_PORT="443" \
     -e KUBE_PORT="6443" \
     -e HRM_HTTP_PORT="8080" \
     -e HRM_HTTPS_PORT="8443" \
