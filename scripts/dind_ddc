@@ -773,7 +773,7 @@ install_ucp() {
 
   echo "Installing UCP on ${PROJECT}-docker1..."
   #shellcheck disable=SC2086
-  docker -H tcp://127.0.0.1:1001 run -it --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock "${UCP_REPO}":"${UCP_VERSION}" install ${UCP_OPTIONS} --admin-username admin --admin-password docker123 --host-address "${DOCKER1_IP}" --controller-port 4443 --disable-tracking --disable-usage --san ucp.${DOMAIN_NAME} --san "${DOCKER1_IP}" --san "${ALIAS_IP}" --san "$(hostname)" --san "$(hostname -f)" --license "$(cat ${DDC_LICENSE})"
+  docker -H tcp://127.0.0.1:1001 run -it --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock "${UCP_REPO}":"${UCP_VERSION}" install ${UCP_OPTIONS} --admin-username admin --admin-password docker123 --host-address "${DOCKER1_IP}" --controller-port 443 --disable-tracking --disable-usage --san ucp.${DOMAIN_NAME} --san "${DOCKER1_IP}" --san "${ALIAS_IP}" --san "$(hostname)" --san "$(hostname -f)" --license "$(cat ${DDC_LICENSE})"
   echo -e "done.\n"
 
   # add the ALIAS_IP to the SANs engine labels of the managers
@@ -829,6 +829,10 @@ launch_haproxy() {
     -e DTR_REPLICAS="${DTR_REPLICAS}" \
     -e DOMAIN_NAME="${DOMAIN_NAME}" \
     -e DIND_SUBNET_PREFIX="${DIND_SUBNET_PREFIX}" \
+    -e UCP_PORT="4443" \
+    -e KUBE_PORT="6443" \
+    -e HRM_HTTP_PORT="8080" \
+    -e HRM_HTTPS_PORT="8443" \
     mbentley/docker-in-docker:haproxy > /dev/null
 
     # check to see if we should start HAProxy
