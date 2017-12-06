@@ -63,7 +63,7 @@ $ ./dind_ddc help
 Usage: ./dind_ddc {launch|env|create_tar|net_alias|connect_engine|help}
 
 Commands:
-  ./dind_ddc launch {all|swarm|ee|ucp|dtr|demo|help}
+  ./dind_ddc launch {all|swarm|engines|ee|ucp|dtr|demo|help}
   ./dind_ddc env {start|stop|pause|unpause|recycle|destroy|pull|status|info|help}
   ./dind_ddc create_tar {all|ucp|dtr|help}
   ./dind_ddc net_alias {create|remove|recreate|help}
@@ -79,6 +79,7 @@ Usage: ./dind_ddc launch {all|swarm|ee|ucp|dtr|demo|help}
 Commands:
   all           launch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, DTR, Jenkins, and Gogs
   swarm         launch 3 node Swarm mode cluster; 1 manager and 2 workers
+  engines       launch 3 nodes as stand alone Docker engines
   ee            launch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, and DTR
   ucp           launch UCP (only use if a Swarm mode cluster is already launched)
   dtr           launch DTR on the first worker (only use if UCP is already launched)

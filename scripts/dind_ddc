@@ -376,7 +376,12 @@ launch_engines() {
   fi
   echo -e "done.\n"
 
-  echo "Creating ${MANAGERS} Docker engines for Swarm managers..."
+  if [ "${1}" = "engineonly" ]
+  then
+    echo "Creating ${MANAGERS} Docker engines..."
+  else
+    echo "Creating ${MANAGERS} Docker engines for Swarm managers..."
+  fi
   # launch all managers
   for ((ENGINE_NUM=1; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
   do
@@ -417,7 +422,12 @@ launch_engines() {
   done
   echo -e "done.\n"
 
-  echo "Creating ${WORKERS} Docker engines for Swarm workers..."
+  if [ "${1}" = "engineonly" ]
+  then
+    echo "Creating ${WORKERS} Docker engines..."
+  else
+    echo "Creating ${WORKERS} Docker engines for Swarm workers..."
+  fi
   # launch all managers
   for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((NUM_NODES)); ENGINE_NUM++))
   do
@@ -967,6 +977,14 @@ install_summary_swarm() {
   echo -e "\nTo connect to the engine/Swarm, use:\neval "'"$('"$0"' connect_engine 1)"'
 }
 
+install_summary_engines() {
+  # Swarm
+  echo -e "Docker Engines ready:"
+  project_status
+  #shellcheck disable=SC2016
+  echo -e "\nTo connect to the engines, use:\neval "'"$('"$0"' connect_engine 1)"'
+}
+
 install_summary_haproxy() {
   # HAProxy
   echo -e "The HAProxy stats page should now be available at http://${ALIAS_IP}/haproxy?stats"
@@ -1183,11 +1201,18 @@ main() {
       create_swarm
       install_summary_swarm
       ;;
+    launch:engines)
+      initialize
+      check_total_memory
+      launch_engines engineonly
+      install_summary_engines
+      ;;
     launch:*|launch:help)
       echo -e "Usage: $0 launch {all|swarm|ee|ucp|dtr|demo|help}"
       echo -e "\nCommands:"
       echo -e "  all\t\tlaunch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, DTR, Jenkins, and Gogs"
       echo -e "  swarm\t\tlaunch 3 node Swarm mode cluster; 1 manager and 2 workers"
+      echo -e "  engines\tlaunch 3 nodes as stand alone Docker engines"
       echo -e "  ee\t\tlaunch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, and DTR"
       echo -e "  ucp\t\tlaunch UCP (only use if a Swarm mode cluster is already launched)"
       echo -e "  dtr\t\tlaunch DTR on the first worker (only use if UCP is already launched)"
@@ -1328,7 +1353,7 @@ main() {
     *:*)
       echo "Usage: $0 {launch|env|create_tar|net_alias|connect_engine|help}"
       echo -e "\nCommands:"
-      echo "  $0 launch {all|swarm|ee|ucp|dtr|demo|help}"
+      echo "  $0 launch {all|swarm|engines|ee|ucp|dtr|demo|help}"
       echo "  $0 env {start|stop|pause|unpause|recycle|destroy|status|info|help}"
       echo "  $0 create_tar {all|ucp|dtr|help}"
       echo "  $0 net_alias {create|remove|recreate|help}"
