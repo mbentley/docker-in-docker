@@ -807,10 +807,17 @@ install_ucp() {
   echo -n "Waiting for UCP to be ready..."
   #shellcheck disable=SC2016
   docker -H unix:///var/run/docker.sock run -i --rm -e DOMAIN_NAME="${DOMAIN_NAME}" --entrypoint sh mbentley/curl -c 'while [ "$(curl -sk -o /dev/null -w "%{http_code}" "https://ucp.${DOMAIN_NAME}/_ping")" -ne "200" ]; do   echo -n ".";   sleep 1; done'
-  echo -e "done.\\n\\nEnabling HRM..."
-  AUTH_TOKEN="$(docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -sk -d '{"username":"admin","password":"docker123"}' "https://ucp.${DOMAIN_NAME}/auth/login" | ${JQ} -r .auth_token 2>/dev/null)"
-  docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"HTTPPort":8080,"HTTPSPort":8443}' "https://ucp.${DOMAIN_NAME}/api/hrm"
-  echo -e "done.\\n"
+  echo -e "done.\\n\\n"
+
+  if [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $1}')" == "2" ]
+  then
+    echo "Enabling HRM..."
+    AUTH_TOKEN="$(docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -sk -d '{"username":"admin","password":"docker123"}' "https://ucp.${DOMAIN_NAME}/auth/login" | ${JQ} -r .auth_token 2>/dev/null)"
+    docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"HTTPPort":8080,"HTTPSPort":8443}' "https://ucp.${DOMAIN_NAME}/api/hrm"
+    echo -e "done.\\n"
+  else
+    echo "Skipping enabling HRM (need to look up new API calls to setup HRM/Interlock 2.0)..."
+  fi
 
   echo "Creating 'demo' user with password 'docker123'..."
   docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"name":"demo","password":"docker123","fullName":"Demo User","isAdmin":true,"isActive":true}' "https://ucp.${DOMAIN_NAME}/accounts/"
