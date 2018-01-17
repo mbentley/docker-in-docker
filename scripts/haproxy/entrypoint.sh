@@ -110,24 +110,24 @@ frontend https_6443
 ### backends
 backend ucp_upstream_servers
         mode tcp
-        option httpchk GET /_ping HTTP/1.1\r\nHost:\ ucp.${DOMAIN_NAME}
+        option httpchk GET /_ping HTTP/1.1\\r\\nHost:\\ ucp.${DOMAIN_NAME}
 $(ucp_upstreams_https)
 
 backend kube_upstream_servers
         mode tcp
         # TODO: figure out what health check should be used
-        #option httpchk GET /_ping HTTP/1.1\r\nHost:\ ucp.${DOMAIN_NAME}
+        #option httpchk GET /_ping HTTP/1.1\\r\\nHost:\\ ucp.${DOMAIN_NAME}
 $(kube_upstreams_https)
 
 backend dtr_upstream_servers_80
         #mode tcp
         mode http
-        option httpchk GET /health HTTP/1.1\r\nHost:\ dtr.${DOMAIN_NAME}
+        option httpchk GET /health HTTP/1.1\\r\\nHost:\\ dtr.${DOMAIN_NAME}
 $(dtr_upstreams_http)
 
 backend dtr_upstream_servers_443
         mode tcp
-        option httpchk GET /health HTTP/1.1\r\nHost:\ dtr.${DOMAIN_NAME}
+        option httpchk GET /health HTTP/1.1\\r\\nHost:\\ dtr.${DOMAIN_NAME}
 $(dtr_upstreams_https)
 
 backend hrm_upstream_servers_${HRM_HTTP_PORT}
