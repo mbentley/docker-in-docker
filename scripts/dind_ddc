@@ -206,7 +206,7 @@ ucp_create_tar() {
     {
       docker -H unix:///var/run/docker.sock run --rm "${UCP_REPO}":"${UCP_VERSION}" images --list ${UCP_OPTIONS} | xargs -L 1 docker -H unix:///var/run/docker.sock pull
       docker -H unix:///var/run/docker.sock save -o "${UCP_IMAGES}" $(docker -H unix:///var/run/docker.sock run --rm "${UCP_REPO}":"${UCP_VERSION}" images --list ${UCP_OPTIONS}) "${UCP_REPO}":"${UCP_VERSION}"
-      docker -H unix:///var/run/docker.sock rmi $(docker -H unix:///var/run/docker.sock run --rm "${UCP_REPO}":"${UCP_VERSION}" images --list ${UCP_OPTIONS}) "${UCP_REPO}":"${UCP_VERSION}"
+      docker -H unix:///var/run/docker.sock rmi $(docker -H unix:///var/run/docker.sock run --rm "${UCP_REPO}":"${UCP_VERSION}" images --list ${UCP_OPTIONS}) "${UCP_REPO}":"${UCP_VERSION}" || true
     }
     echo -e "done.\\n"
   else
