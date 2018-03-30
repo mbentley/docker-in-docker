@@ -760,20 +760,16 @@ install_ucp() {
   for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
   do
     echo "Loading UCP images for workers on ${PROJECT}-docker${ENGINE_NUM}..."
-    #shellcheck disable=SC2086
-    docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-agent:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${ENGINE_NUM} load || true
-    docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-dsinfo:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${ENGINE_NUM} load || true
-
-    # load hrm image only if running UCP 2.0
+    # load only necessary images for UCP 2.0; load all for everything else
     if [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $1}')" == "2" ]
     then
+      # only load necessary images from the primary manager
+      docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-agent:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${ENGINE_NUM} load || true
+      docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-dsinfo:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${ENGINE_NUM} load || true
       docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-hrm:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${ENGINE_NUM} load || true
-    fi
-
-    # load hyperkube image only if running UCP 3.0 or greater
-    if [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $1}')" == "3" ]
-    then
-      docker -H tcp://127.0.0.1:1001 save "${UCP_REPO}"-hyperkube:"${UCP_VERSION}" | docker -H tcp://127.0.0.1:100${ENGINE_NUM} load || true
+    else
+      # load all images for anything not UCP 2.x
+      docker -H tcp://127.0.0.1:100${ENGINE_NUM} load -i "${UCP_IMAGES}"
     fi
     echo -e "done.\\n"
   done
@@ -867,6 +863,13 @@ launch_haproxy() {
 }
 
 launch_demo() {
+  if [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $1}')" == "2" ]
+  then
+    HRM_NETWORK="ucp-hrm"
+  else
+    HRM_NETWORK="ucp-interlock"
+  fi
+
   # launch Jenkins on the first manager for predictable storage
   echo "Creating Jenkins service on '${PROJECT}-docker1'..."
   docker -H tcp://127.0.0.1:1001 service create \
@@ -879,7 +882,7 @@ launch_demo() {
     --env GITHUB_USERNAME="${GH_USERNAME}" \
     --env GIT_SERVER="http://gogs.${DOMAIN_NAME}" \
     --mount type=volume,source=jenkins-data,destination=/var/lib/jenkins,readonly=false \
-    --network ucp-hrm \
+    --network ${HRM_NETWORK} \
     --label "com.docker.ucp.mesh.http.8080=internal_port=8080,external_route=http://jenkins.${DOMAIN_NAME}" \
     --name jenkins \
     dockersolutions/jenkins:latest
@@ -892,7 +895,7 @@ launch_demo() {
     --replicas 1 \
     --constraint "node.hostname == ${PROJECT}-docker1" \
     --mount type=volume,source=gogs-data,destination=/data,readonly=false \
-    --network ucp-hrm \
+    --network ${HRM_NETWORK} \
     --label "com.docker.ucp.mesh.http.3000=internal_port=3000,external_route=http://gogs.${DOMAIN_NAME}" \
     --name gogs \
     mbentley/solutions-gogs:latest
