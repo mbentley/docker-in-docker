@@ -173,7 +173,7 @@ ucp_check_tar() {
   if [ ! -f "${UCP_IMAGES}" ]
   then
     echo "Error: Unable to find UCP_IMAGES"
-    echo "Hint: try running '$0 ucp_create_tar' or download an offline tarball to '${UCP_IMAGES}'"
+    echo "Hint: try running '$0 create_tar ucp' or download an offline tarball to '${UCP_IMAGES}'"
     exit 1
   else
     echo -e "Found UCP tarball '${UCP_IMAGES}'\\n"
@@ -184,7 +184,7 @@ dtr_check_tar() {
   if [ ! -f "${DTR_IMAGES}" ]
   then
     echo "Error: Unable to find DTR_IMAGES"
-    echo "Hint: try running '$0 dtr_create_tar' or download an offline tarball to '${DTR_IMAGES}'"
+    echo "Hint: try running '$0 create_tar dtr' or download an offline tarball to '${DTR_IMAGES}'"
     exit 1
   else
     echo -e "Found DTR tarball '${DTR_IMAGES}'\\n"
