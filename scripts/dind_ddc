@@ -5,6 +5,9 @@ set -e
 # unset DOCKER_HOST, DOCKER_TLS_VERIFY, and DOCKER_CERT_PATH to ensure we are not talking to a machine we shouldn't be
 unset DOCKER_HOST DOCKER_TLS_VERIFY DOCKER_CERT_PATH
 
+# Force orchestrator to be Swarm, if Kubernetes is installed on Docker for Mac/Windows
+export DOCKER_ORCHESTRATOR=swarm
+
 initialize() {
   # source an external env var file if DIND_ENV set
   DIND_ENV="${DIND_ENV:-}"
