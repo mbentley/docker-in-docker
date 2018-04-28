@@ -897,6 +897,7 @@ launch_demo() {
     --detach \
     --replicas 1 \
     --constraint "node.hostname == ${PROJECT}-docker1" \
+    --env DOMAIN_NAME="${DOMAIN_NAME}" \
     --mount type=volume,source=gogs-data,destination=/data,readonly=false \
     --network ${HRM_NETWORK} \
     --label "com.docker.ucp.mesh.http.3000=internal_port=3000,external_route=http://gogs.${DOMAIN_NAME}" \
