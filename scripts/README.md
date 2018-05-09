@@ -35,7 +35,7 @@ $ ./dind_ddc launch all
 
 ## Prerequisites
   * Docker for Mac installed
-    * I would suggest increasing the RAM in the Docker for Mac VM to 4 GB but it will run on 2 GB as long as you do not put heavy workloads on it
+    * I would suggest increasing the RAM in the Docker for Mac VM to 4+ GB but it will run on 2 GB as long as you do not put heavy workloads on it
   * Have the tarball of the UCP and DTR images in `~/ddc`, keeping the default names from [UCP offline tarballs](https://docs.docker.com/datacenter/ucp/2.1/guides/admin/install/install-offline/) and [DTR offline tarballs](https://docs.docker.com/datacenter/dtr/2.2/guides/admin/install/install-offline/)
     * Alternatively, use the `UCP_IMAGES` and `DTR_IMAGES` env vars to override the full path to the tarballs
     * For pre-release images, see [Pre-production DDC](#pre-production-ddc)
@@ -45,6 +45,7 @@ $ ./dind_ddc launch all
     * `100n` - TCP connection to Docker engines where n is 1-n number of engines you're running
     * `8181`, `443`- DTR (HTTP and HTTPS)
     * `4443` - UCP (HTTPS)
+    * `6443` - UCP k8s (HTTPS)
     * `80`, `8443` - UCP HRM (HTTP and HTTPS)
       * see [HRM Example Usage](#hrm-example-usage) for HRM usage
   * Internet access to pull images (see list below)
@@ -55,6 +56,7 @@ $ ./dind_ddc launch all
   * mbentley/docker-in-docker:<tag>
   * mbentley/curl:latest
   * mbentley/jq:latest
+  * busybox
 </p></details>
 
 ## `dind_ddc` Usage
