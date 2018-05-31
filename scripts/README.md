@@ -347,7 +347,7 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
     UCP_OPTIONS="--image-version dev:" \
     DTR_REPO="dockerhubenterprise/dtr" \
     DTR_VERSION="2.3.0-tp5" \
-    DIND_TAG="ce-test"
+    DIND_TAG="test-ce"
 
   ./dind_ddc launch all
   ```
@@ -357,7 +357,7 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
   export UCP_REPO="dockerorcadev/ucp" \
     UCP_VERSION="2.2.0-tp6" \
     UCP_OPTIONS="--image-version dev:" \
-    DIND_TAG="ce-test"
+    DIND_TAG="test-ce"
 
   ./dind_ddc launch all
   ```
@@ -366,7 +366,7 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
   ```
   export DTR_REPO="dockerhubenterprise/dtr" \
     DTR_VERSION="2.3.0-tp5" \
-    DIND_TAG="ce-test"
+    DIND_TAG="test-ce"
 
   ./dind_ddc launch all
   ```
@@ -376,7 +376,7 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
   export UCP_REPO="dockerorcadev/ucp" \
     UCP_VERSION="2.2.0-tp6" \
     UCP_OPTIONS="--image-version dev:" \
-    DIND_TAG="ce-test"
+    DIND_TAG="test-ce"
 
   ./dind_ddc launch swarm
 

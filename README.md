@@ -44,13 +44,13 @@ The images are published to Docker Hub so you do not need to build them unless y
   ```
   docker build \
     -t mbentley/docker-in-docker:test-ce \
-    -f Dockerfile.ce-test .
+    -f Dockerfile.test-ce .
   ```
 * Docker CE (edge)
   ```
   docker build \
     -t mbentley/docker-in-docker:edge-ce \
-    -f Dockerfile.ce-edge .
+    -f Dockerfile.edge-ce .
   ```
 * Docker EE (stable)
   ```
