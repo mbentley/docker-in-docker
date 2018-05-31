@@ -66,7 +66,7 @@ The images are published to Docker Hub so you do not need to build them unless y
   docker build \
     --build-arg DOCKER_EE_URL="<DOCKER-EE-URL>" \
     -t mbentley/docker-in-docker:17.03-ee \
-    -f Dockerfile.ee-17.03 .
+    -f Dockerfile.17.03-ee .
 
   docker push mbentley/docker-in-docker:17.03-ee
   ```
@@ -75,7 +75,7 @@ The images are published to Docker Hub so you do not need to build them unless y
   docker build \
     --build-arg DOCKER_EE_URL="<DOCKER-EE-URL>" \
     -t mbentley/docker-in-docker:17.06-ee \
-    -f Dockerfile.ee-17.06 .
+    -f Dockerfile.17.06-ee .
 
   docker push mbentley/docker-in-docker:17.06-ee
   ```
@@ -84,7 +84,7 @@ The images are published to Docker Hub so you do not need to build them unless y
   docker build \
     --build-arg DOCKER_EE_URL="<DOCKER-EE-URL>" \
     -t mbentley/docker-in-docker:test-ee \
-    -f Dockerfile.ee-test .
+    -f Dockerfile.test-ee .
 
   docker push mbentley/docker-in-docker:test-ee
   ```
