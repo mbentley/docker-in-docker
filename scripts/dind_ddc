@@ -27,7 +27,7 @@ initialize() {
 
   # set default values; allow for override
   PROJECT="${PROJECT:-dind-ddc}"
-  DIND_TAG="${DIND_TAG:-ee-17.06}"
+  DIND_TAG="${DIND_TAG:-17.06-ee}"
   ENGINE_OPTS="${ENGINE_OPTS:-}"
   MANAGERS="${MANAGERS:-1}"
   WORKERS="${WORKERS:-2}"
