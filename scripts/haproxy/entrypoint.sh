@@ -11,6 +11,8 @@ UCP_PORT="${UCP_PORT:-4443}"
 KUBE_PORT="${KUBE_PORT:-6443}"
 HRM_HTTP_PORT="${HRM_HTTP_PORT:-8080}"
 HRM_HTTPS_PORT="${HRM_HTTPS_PORT:-8443}"
+INGRESS_HTTP_PORT="${INGRESS_HTTP_PORT:-34080}"
+INGRESS_HTTPS_PORT="${INGRESS_HTTPS_PORT:-34443}"
 
 ucp_upstreams_https() {
   # make upstream include all managers
@@ -60,6 +62,22 @@ hrm_upstreams_https() {
   done
 }
 
+ingress_upstreams_http() {
+  # make upstream include all nodes
+  for ((ENGINE_NUM=1; ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
+  do
+    echo "        server ${PROJECT}-docker${ENGINE_NUM}:${INGRESS_HTTP_PORT} ${DIND_SUBNET_PREFIX}$((ENGINE_NUM+51)):${INGRESS_HTTP_PORT} check weight 100"
+  done
+}
+
+ingress_upstreams_https() {
+  # make upstream include all nodes
+  for ((ENGINE_NUM=1; ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
+  do
+    echo "        server ${PROJECT}-docker${ENGINE_NUM}:${INGRESS_HTTPS_PORT} ${DIND_SUBNET_PREFIX}$((ENGINE_NUM+51)):${INGRESS_HTTPS_PORT} check weight 100"
+  done
+}
+
 # create template
 #shellcheck disable=SC2028
 echo "global
@@ -86,6 +104,7 @@ frontend http
         redirect scheme https code 302 if { hdr(Host) -i ucp.${DOMAIN_NAME} } !{ ssl_fc }
         # figure out which backend to use
         use_backend dtr_upstream_servers_80 if { hdr(Host) -i dtr.${DOMAIN_NAME} }
+        use_backend ingress_upstream_servers_${INGRESS_HTTP_PORT} if { hdr_end(Host) -i k8s.${DOMAIN_NAME} }
         default_backend hrm_upstream_servers_${HRM_HTTP_PORT}
 
 frontend https
@@ -96,6 +115,7 @@ frontend https
         # figure out which backend to use
         use_backend ucp_upstream_servers if { req.ssl_sni -i ucp.${DOMAIN_NAME} }
         use_backend dtr_upstream_servers_443 if { req.ssl_sni -i dtr.${DOMAIN_NAME} }
+        use_backend ingress_upstream_servers_${INGRESS_HTTPS_PORT} if { hdr_end(Host) -i k8s.${DOMAIN_NAME} }
         default_backend hrm_upstream_servers_${HRM_HTTPS_PORT}
 
 frontend https_6443
@@ -140,7 +160,21 @@ $(hrm_upstreams_http)
 backend hrm_upstream_servers_${HRM_HTTPS_PORT}
         mode tcp
         option tcp-check
-$(hrm_upstreams_https)" \
+$(hrm_upstreams_https)
+
+backend ingress_upstream_servers_${INGRESS_HTTP_PORT}
+        mode http
+        stats enable
+        stats admin if TRUE
+        stats refresh 5m
+$(ingress_upstreams_http)
+
+backend ingress_upstream_servers_${INGRESS_HTTPS_PORT}
+        mode tcp
+        option tcp-check
+$(ingress_upstreams_https)
+
+" \
 > /usr/local/etc/haproxy/haproxy.cfg
 
 exec /docker-entrypoint.sh "${@}"

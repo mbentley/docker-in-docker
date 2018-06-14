@@ -43,10 +43,9 @@ $ ./dind_ddc launch all
     * Alternatively, use the `DDC_LICENSE` env var to override the full path to the license
   * Must have the following ports available on your host:
     * `100n` - TCP connection to Docker engines where n is 1-n number of engines you're running
-    * `8181`, `443`- DTR (HTTP and HTTPS)
-    * `4443` - UCP (HTTPS)
+    * `80`, `443`- HAProxy (HTTP and HTTPS)
+    * `5000` - Docker registry mirror
     * `6443` - UCP k8s (HTTPS)
-    * `80`, `8443` - UCP HRM (HTTP and HTTPS)
       * see [HRM Example Usage](#hrm-example-usage) for HRM usage
   * Internet access to pull images (see list below)
 
