@@ -19,6 +19,7 @@ For a complete list of published images, see the [list of tags on Docker Hub](ht
   * `test-ce` ([Dockerfile.test-ce](./Dockerfile.test-ce))
   * `edge-ce` ([Dockerfile.edge-ce](./Dockerfile.edge-ce))
   * `ee` ([Dockerfile.ee](./Dockerfile.ee))
+  * `18.03-ee`, `18.03.z-ee-n` ([Dockerfile.18.03-ee](./Dockerfile.18.03-ee))
   * `17.06-ee`, `17.06.z-ee-n` ([Dockerfile.17.06-ee](./Dockerfile.17.06-ee))
   * `17.03-ee`, `17.03.z-ee-n` ([Dockerfile.17.03-ee](./Dockerfile.17.03-ee))
   * `test-ee` ([Dockerfile.test-ee](./Dockerfile.test-ee))
@@ -63,14 +64,14 @@ The images are published to Docker Hub so you do not need to build them unless y
 
   docker push mbentley/docker-in-docker:ee
   ```
-* Docker EE (stable-17.03)
+* Docker EE (stable-18.03)
   ```
   docker build \
     --build-arg DOCKER_EE_URL="<DOCKER-EE-URL>" \
-    -t mbentley/docker-in-docker:17.03-ee \
-    -f Dockerfile.17.03-ee .
+    -t mbentley/docker-in-docker:18.03-ee \
+    -f Dockerfile.18.03-ee .
 
-  docker push mbentley/docker-in-docker:17.03-ee
+  docker push mbentley/docker-in-docker:17.06-ee
   ```
 * Docker EE (stable-17.06)
   ```
@@ -80,6 +81,15 @@ The images are published to Docker Hub so you do not need to build them unless y
     -f Dockerfile.17.06-ee .
 
   docker push mbentley/docker-in-docker:17.06-ee
+  ```
+* Docker EE (stable-17.03)
+  ```
+  docker build \
+    --build-arg DOCKER_EE_URL="<DOCKER-EE-URL>" \
+    -t mbentley/docker-in-docker:17.03-ee \
+    -f Dockerfile.17.03-ee .
+
+  docker push mbentley/docker-in-docker:17.03-ee
   ```
 * Docker EE (test)
   ```
