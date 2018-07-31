@@ -37,7 +37,7 @@ initialize() {
   UCP_OPTIONS="${UCP_OPTIONS:-}"
   DTR_REPO="${DTR_REPO:-docker/dtr}"
   DTR_VERSION="${DTR_VERSION:-2.5.4}"
-  DTR_IMAGES="${DTR_IMAGES:-${HOME}/ddc/dtr-"${DTR_VERSION}".tar.gz}"
+  DTR_IMAGES="${DTR_IMAGES:-${HOME}/ddc/dtr_images_"${DTR_VERSION}".tar.gz}"
   DTR_OPTIONS="${DTR_OPTIONS:-}"
   DTR_REPLICAS="${DTR_REPLICAS:-1}"
   DDC_LICENSE="${DDC_LICENSE:-${HOME}/Downloads/docker_subscription.lic}"
