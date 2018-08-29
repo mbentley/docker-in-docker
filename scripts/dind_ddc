@@ -1081,12 +1081,14 @@ install_summary_dtr() {
 
 launch_summary_demo() {
   # Jenkins
-  echo -e "Jenkins should now be available at http://jenkins.${DOMAIN_NAME}/ once HRM picks up the configuration"
-  echo -e "  Username: demo\\tPassword: docker123\\n"
+  echo -e "Jenkins should now be available at http://jenkins.${DOMAIN_NAME}/ once HRM/Interlock picks up the configuration"
+  echo -e "  Username: demo\\tPassword: docker123"
+  echo -e "  To initialize the Jenkins environment, execute the util > _initialize-demo-env job\\n"
 
   # Gogs
-  echo -e "Gogs should now be available at http://gogs.${DOMAIN_NAME}/ once HRM picks up the configuration"
+  echo -e "Gogs should now be available at http://gogs.${DOMAIN_NAME}/ once HRM/Interlock picks up the configuration"
   echo -e "  Username: demo\\tPassword: docker123\\n"
+  echo -e "  Jenkins will have pushed the initial data into the repo using the _initialize-demo-env job.\\n"
   echo -e "  Add a git remote using:\\n    git remote add gogs http://gogs.${DOMAIN_NAME}/demo/docker-demo.git\\n"
   echo -e "  Then you will be able to push using:\\n    git push gogs <branch>"
 }
