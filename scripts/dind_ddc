@@ -821,23 +821,26 @@ install_ucp() {
     docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"HTTPPort":8080,"HTTPSPort":8443}' "https://ucp.${DOMAIN_NAME}/api/hrm"
     echo -e "done.\\n"
   else
-    echo "Enabling HRM..."
+    echo "Enabling Interlock..."
     docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"HTTPPort":8080,"HTTPSPort":8443,"Arch":"x86_64"}' "https://ucp.${DOMAIN_NAME}/api/interlock"
     echo -e "done.\\n"
 
     echo "Enabling Kubernetes Ingress ..."
-    # Create namespace
-    docker -H unix:///var/run/docker.sock run -i --rm -v `pwd`/json:/json/ mbentley/curl -sk https://ucp.${DOMAIN_NAME}/api/v1/namespaces -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/namespace.json
-    # Add grant
-    docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -sk -X PUT -H "Authorization: Bearer ${AUTH_TOKEN}" https://ucp.${DOMAIN_NAME}/collectionGrants/system%3Aserviceaccount%3Aingress-nginx%3Adefault/kubernetesnamespaces/restrictedcontrol?type=grantobject
+    # Get script path
+    SCRIPT_PATH="$(dirname "$(readlink "${0}")")"
 
-    docker -H unix:///var/run/docker.sock run -i --rm -v `pwd`/json:/json/ mbentley/curl -sk https://ucp.${DOMAIN_NAME}/api/v1/namespaces/ingress-nginx/configmaps -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/configmap.json
-    docker -H unix:///var/run/docker.sock run -i --rm -v `pwd`/json:/json/ mbentley/curl -sk https://ucp.${DOMAIN_NAME}/api/v1/namespaces/ingress-nginx/configmaps -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/tcp-services-configmap.json
-    docker -H unix:///var/run/docker.sock run -i --rm -v `pwd`/json:/json/ mbentley/curl -sk https://ucp.${DOMAIN_NAME}/api/v1/namespaces/ingress-nginx/configmaps -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/udp-services-configmap.json
-    docker -H unix:///var/run/docker.sock run -i --rm -v `pwd`/json:/json/ mbentley/curl -sk https://ucp.${DOMAIN_NAME}/apis/apps/v1beta1/namespaces/ingress-nginx/deployments -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/default-backend-deploy.json
-    docker -H unix:///var/run/docker.sock run -i --rm -v `pwd`/json:/json/ mbentley/curl -sk https://ucp.${DOMAIN_NAME}/apis/apps/v1beta1/namespaces/ingress-nginx/deployments -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/ingress-deploy.json
-    docker -H unix:///var/run/docker.sock run -i --rm -v `pwd`/json:/json/ mbentley/curl -sk https://ucp.${DOMAIN_NAME}/api/v1/namespaces/ingress-nginx/services -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/default-backend-service.json
-    docker -H unix:///var/run/docker.sock run -i --rm -v `pwd`/json:/json/ mbentley/curl -sk https://ucp.${DOMAIN_NAME}/api/v1/namespaces/ingress-nginx/services -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/ingress-service.json
+    # Create namespace
+    docker -H unix:///var/run/docker.sock run -i --rm -v "${SCRIPT_PATH}"/json:/json mbentley/curl -sk "https://ucp.${DOMAIN_NAME}/api/v1/namespaces" -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/namespace.json
+    # Add grant
+    docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -sk -X PUT -H "Authorization: Bearer ${AUTH_TOKEN}" "https://ucp.${DOMAIN_NAME}/collectionGrants/system%3Aserviceaccount%3Aingress-nginx%3Adefault/kubernetesnamespaces/restrictedcontrol?type=grantobject"
+
+    docker -H unix:///var/run/docker.sock run -i --rm -v "${SCRIPT_PATH}"/json:/json mbentley/curl -sk "https://ucp.${DOMAIN_NAME}/api/v1/namespaces/ingress-nginx/configmaps" -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/configmap.json
+    docker -H unix:///var/run/docker.sock run -i --rm -v "${SCRIPT_PATH}"/json:/json mbentley/curl -sk "https://ucp.${DOMAIN_NAME}/api/v1/namespaces/ingress-nginx/configmaps" -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/tcp-services-configmap.json
+    docker -H unix:///var/run/docker.sock run -i --rm -v "${SCRIPT_PATH}"/json:/json mbentley/curl -sk "https://ucp.${DOMAIN_NAME}/api/v1/namespaces/ingress-nginx/configmaps" -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/udp-services-configmap.json
+    docker -H unix:///var/run/docker.sock run -i --rm -v "${SCRIPT_PATH}"/json:/json mbentley/curl -sk "https://ucp.${DOMAIN_NAME}/apis/apps/v1beta1/namespaces/ingress-nginx/deployments" -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/default-backend-deploy.json
+    docker -H unix:///var/run/docker.sock run -i --rm -v "${SCRIPT_PATH}"/json:/json mbentley/curl -sk "https://ucp.${DOMAIN_NAME}/apis/apps/v1beta1/namespaces/ingress-nginx/deployments" -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/ingress-deploy.json
+    docker -H unix:///var/run/docker.sock run -i --rm -v "${SCRIPT_PATH}"/json:/json mbentley/curl -sk "https://ucp.${DOMAIN_NAME}/api/v1/namespaces/ingress-nginx/services" -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/default-backend-service.json
+    docker -H unix:///var/run/docker.sock run -i --rm -v "${SCRIPT_PATH}"/json:/json mbentley/curl -sk "https://ucp.${DOMAIN_NAME}/api/v1/namespaces/ingress-nginx/services" -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/ingress-service.json
     echo -e "done.\\n"
   fi
 
