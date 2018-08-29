@@ -824,7 +824,24 @@ install_ucp() {
     echo "Enabling HRM..."
     docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"HTTPPort":8080,"HTTPSPort":8443,"Arch":"x86_64"}' "https://ucp.${DOMAIN_NAME}/api/interlock"
     echo -e "done.\\n"
+
+    echo "Enabling Kubernetes Ingress ..."
+    # Create namespace
+    docker -H unix:///var/run/docker.sock run -i --rm -v `pwd`/json:/json/ mbentley/curl -sk https://ucp.${DOMAIN_NAME}/api/v1/namespaces -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/namespace.json
+    # Add grant
+    docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -sk -X PUT -H "Authorization: Bearer ${AUTH_TOKEN}" https://ucp.${DOMAIN_NAME}/collectionGrants/system%3Aserviceaccount%3Aingress-nginx%3Adefault/kubernetesnamespaces/restrictedcontrol?type=grantobject
+
+    docker -H unix:///var/run/docker.sock run -i --rm -v `pwd`/json:/json/ mbentley/curl -sk https://ucp.${DOMAIN_NAME}/api/v1/namespaces/ingress-nginx/configmaps -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/configmap.json
+    docker -H unix:///var/run/docker.sock run -i --rm -v `pwd`/json:/json/ mbentley/curl -sk https://ucp.${DOMAIN_NAME}/api/v1/namespaces/ingress-nginx/configmaps -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/tcp-services-configmap.json
+    docker -H unix:///var/run/docker.sock run -i --rm -v `pwd`/json:/json/ mbentley/curl -sk https://ucp.${DOMAIN_NAME}/api/v1/namespaces/ingress-nginx/configmaps -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/udp-services-configmap.json
+    docker -H unix:///var/run/docker.sock run -i --rm -v `pwd`/json:/json/ mbentley/curl -sk https://ucp.${DOMAIN_NAME}/apis/apps/v1beta1/namespaces/ingress-nginx/deployments -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/default-backend-deploy.json
+    docker -H unix:///var/run/docker.sock run -i --rm -v `pwd`/json:/json/ mbentley/curl -sk https://ucp.${DOMAIN_NAME}/apis/apps/v1beta1/namespaces/ingress-nginx/deployments -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/ingress-deploy.json
+    docker -H unix:///var/run/docker.sock run -i --rm -v `pwd`/json:/json/ mbentley/curl -sk https://ucp.${DOMAIN_NAME}/api/v1/namespaces/ingress-nginx/services -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/default-backend-service.json
+    docker -H unix:///var/run/docker.sock run -i --rm -v `pwd`/json:/json/ mbentley/curl -sk https://ucp.${DOMAIN_NAME}/api/v1/namespaces/ingress-nginx/services -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/ingress-service.json
+    echo -e "done.\\n"
   fi
+
+
 
   echo "Creating 'demo' user with password 'docker123'..."
   docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"name":"demo","password":"docker123","fullName":"Demo User","isAdmin":true,"isActive":true}' "https://ucp.${DOMAIN_NAME}/accounts/"
@@ -857,6 +874,8 @@ launch_haproxy() {
     -e KUBE_PORT="6443" \
     -e HRM_HTTP_PORT="8080" \
     -e HRM_HTTPS_PORT="8443" \
+    -e INGRESS_HTTP_PORT="34080" \
+    -e INGRESS_HTTPS_PORT="34443" \
     mbentley/docker-in-docker:haproxy > /dev/null
 
     # check to see if we should start HAProxy
@@ -916,10 +935,10 @@ launch_demo() {
 write_hosts() {
   # create entries in /etc/hosts file
   HOSTS_FILE="/etc/hosts"
-  HOSTS_LINE="${ALIAS_IP} ucp.${DOMAIN_NAME} dtr.${DOMAIN_NAME} jenkins.${DOMAIN_NAME} gogs.${DOMAIN_NAME} docker-demo-dev.${DOMAIN_NAME} docker-demo-test.${DOMAIN_NAME} docker-demo-prd.${DOMAIN_NAME} ### managed by dind_ddc"
+  HOSTS_LINE="${ALIAS_IP} ucp.${DOMAIN_NAME} dtr.${DOMAIN_NAME} jenkins.${DOMAIN_NAME} gogs.${DOMAIN_NAME} docker-demo-dev.${DOMAIN_NAME} docker-demo-test.${DOMAIN_NAME} docker-demo-prd.${DOMAIN_NAME} docker-demo-dev-k8s.${DOMAIN_NAME} docker-demo-test-k8s.${DOMAIN_NAME} docker-demo-prd-k8s.${DOMAIN_NAME} ### managed by dind_ddc"
   if ! grep -q "${HOSTS_LINE}" "${HOSTS_FILE}"
   then
-    echo -e "Adding entry to ${HOSTS_FILE} for the following DNS FQDNs (requires sudo):\\n  * ucp.${DOMAIN_NAME}\\n  * dtr.${DOMAIN_NAME}\\n  * jenkins.${DOMAIN_NAME}\\n  * gogs.${DOMAIN_NAME}\\n  * docker-demo-dev.${DOMAIN_NAME}\\n  * docker-demo-test.${DOMAIN_NAME}\\n  * docker-demo-prd.${DOMAIN_NAME}"
+    echo -e "Adding entry to ${HOSTS_FILE} for the following DNS FQDNs (requires sudo):\\n  * ucp.${DOMAIN_NAME}\\n  * dtr.${DOMAIN_NAME}\\n  * jenkins.${DOMAIN_NAME}\\n  * gogs.${DOMAIN_NAME}\\n  * docker-demo-dev.${DOMAIN_NAME}\\n  * docker-demo-test.${DOMAIN_NAME}\\n  * docker-demo-prd.${DOMAIN_NAME}\\n  * docker-demo-dev-k8s.${DOMAIN_NAME}\\n  * docker-demo-test-k8s.${DOMAIN_NAME}\\n  * docker-demo-prd-k8s.${DOMAIN_NAME}"
     echo "${HOSTS_LINE}" | sudo tee -a "${HOSTS_FILE}" > /dev/null
   else
     echo "Hosts file entry already exists; skipping..."
@@ -938,10 +957,10 @@ remove_hosts() {
 
   # remove entry if it exists
   HOSTS_FILE="/etc/hosts"
-  HOSTS_LINE="${ALIAS_IP} ucp.${DOMAIN_NAME} dtr.${DOMAIN_NAME} jenkins.${DOMAIN_NAME} gogs.${DOMAIN_NAME} docker-demo-dev.${DOMAIN_NAME} docker-demo-test.${DOMAIN_NAME} docker-demo-prd.${DOMAIN_NAME} ### managed by dind_ddc"
+  HOSTS_LINE="${ALIAS_IP} ucp.${DOMAIN_NAME} dtr.${DOMAIN_NAME} jenkins.${DOMAIN_NAME} gogs.${DOMAIN_NAME} docker-demo-dev.${DOMAIN_NAME} docker-demo-test.${DOMAIN_NAME} docker-demo-prd.${DOMAIN_NAME} docker-demo-dev-k8s.${DOMAIN_NAME} docker-demo-test-k8s.${DOMAIN_NAME} docker-demo-prd-k8s.${DOMAIN_NAME} ### managed by dind_ddc"
   if grep -q "${HOSTS_LINE}" "${HOSTS_FILE}"
   then
-    echo -e "Removing entry from ${HOSTS_FILE} for the following FQDNs (requires sudo):\\n  * ucp.${DOMAIN_NAME}\\n  * dtr.${DOMAIN_NAME}\\n  * jenkins.${DOMAIN_NAME}\\n  * gogs.${DOMAIN_NAME}\\n  * docker-demo-dev.${DOMAIN_NAME}\\n  * docker-demo-test.${DOMAIN_NAME}\\n  * docker-demo-prd.${DOMAIN_NAME}"
+    echo -e "Removing entry to ${HOSTS_FILE} for the following DNS FQDNs (requires sudo):\\n  * ucp.${DOMAIN_NAME}\\n  * dtr.${DOMAIN_NAME}\\n  * jenkins.${DOMAIN_NAME}\\n  * gogs.${DOMAIN_NAME}\\n  * docker-demo-dev.${DOMAIN_NAME}\\n  * docker-demo-test.${DOMAIN_NAME}\\n  * docker-demo-prd.${DOMAIN_NAME}\\n  * docker-demo-dev-k8s.${DOMAIN_NAME}\\n  * docker-demo-test-k8s.${DOMAIN_NAME}\\n  * docker-demo-prd-k8s.${DOMAIN_NAME}"
     #shellcheck disable=SC2086
     sudo ${SED} "/${HOSTS_LINE}/d" "${HOSTS_FILE}"
   else
@@ -949,6 +968,7 @@ remove_hosts() {
   fi
   echo -e "done.\\n"
 }
+
 install_dtr() {
   echo -e "Preparing cluster for DTR installation...\\n"
   # validate the value for # of dtr replicas
