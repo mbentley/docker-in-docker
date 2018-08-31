@@ -347,7 +347,7 @@ launch_engines() {
   echo "Creating volumes for Docker engines..."
   for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
   do
-    VOLUME_PATHS="/var/lib/docker /etc/docker /etc/cni /opt/cni /usr/libexec/kubernetes /var/lib/kubelet /var/log"
+    VOLUME_PATHS="/var/lib/docker /var/lib/containerd /etc/docker /etc/cni /opt/cni /usr/libexec/kubernetes /var/lib/kubelet /var/log"
     for VOLUME_PATH in ${VOLUME_PATHS}
     do
       if [ "$(docker -H unix:///var/run/docker.sock volume ls -q --filter name="${PROJECT}-docker${ENGINE_NUM}${VOLUME_PATH//\//-}" | grep -w "${PROJECT}-docker${ENGINE_NUM}${VOLUME_PATH//\//-}")" = "${PROJECT}-docker${ENGINE_NUM}${VOLUME_PATH//\//-}" ]
@@ -397,6 +397,7 @@ launch_engines() {
         -v /lib/modules:/lib/modules:ro \
         -v "${PROJECT}"-docker${ENGINE_NUM}-etc-docker:/etc/docker \
         -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-docker:/var/lib/docker \
+        -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-containerd:/var/lib/containerd \
         -v "${PROJECT}"-docker${ENGINE_NUM}-etc-cni:/etc/cni \
         -v "${PROJECT}"-docker${ENGINE_NUM}-opt-cni:/opt/cni \
         -v "${PROJECT}"-docker${ENGINE_NUM}-usr-libexec-kubernetes:/usr/libexec/kubernetes \
@@ -448,6 +449,7 @@ launch_engines() {
         -v /lib/modules:/lib/modules:ro \
         -v "${PROJECT}"-docker${ENGINE_NUM}-etc-docker:/etc/docker \
         -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-docker:/var/lib/docker \
+        -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-containerd:/var/lib/containerd \
         -v "${PROJECT}"-docker${ENGINE_NUM}-etc-cni:/etc/cni \
         -v "${PROJECT}"-docker${ENGINE_NUM}-opt-cni:/opt/cni \
         -v "${PROJECT}"-docker${ENGINE_NUM}-usr-libexec-kubernetes:/usr/libexec/kubernetes \
@@ -708,6 +710,12 @@ init_swarm() {
   # join managers
   for ((ENGINE_NUM=2; ENGINE_NUM<=MANAGERS; ENGINE_NUM++))
   do
+    # make sure engine is ready
+    while ! docker -H tcp://127.0.0.1:100${ENGINE_NUM} version > /dev/null 2>&1
+    do
+      sleep .1
+    done
+
     echo "Joining ${PROJECT}-docker${ENGINE_NUM} to the Swarm..."
     #shellcheck disable=SC2086
     docker -H tcp://127.0.0.1:100${ENGINE_NUM} ${MANAGER_JOIN_COMMAND}
@@ -717,6 +725,12 @@ init_swarm() {
   # join workers
   for ((ENGINE_NUM=((MANAGERS+1)); ENGINE_NUM<=((MANAGERS+WORKERS)); ENGINE_NUM++))
   do
+    # make sure engine is ready
+    while ! docker -H tcp://127.0.0.1:100${ENGINE_NUM} version > /dev/null 2>&1
+    do
+      sleep .1
+    done
+
     echo "Joining ${PROJECT}-docker${ENGINE_NUM} to the Swarm..."
     #shellcheck disable=SC2086
     docker -H tcp://127.0.0.1:100${ENGINE_NUM} ${WORKER_JOIN_COMMAND}
