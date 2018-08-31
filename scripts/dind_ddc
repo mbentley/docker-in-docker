@@ -693,6 +693,12 @@ get_current_num_engines() {
 }
 
 init_swarm() {
+  # make sure engine is ready
+  while ! docker -H tcp://127.0.0.1:1001 version > /dev/null 2>&1
+  do
+    sleep .1
+  done
+
   echo "Initializing Swarm on ${PROJECT}-docker1..."
   docker -H tcp://127.0.0.1:1001 swarm init
   echo -e "done.\\n"
