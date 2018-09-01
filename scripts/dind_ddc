@@ -851,8 +851,22 @@ install_ucp() {
 
     # Create namespace
     docker -H unix:///var/run/docker.sock run -i --rm -v "${SCRIPT_PATH}"/json:/json mbentley/curl -sk "https://ucp.${DOMAIN_NAME}/api/v1/namespaces" -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/namespace.json
-    # Add grant
-    docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -sk -X PUT -H "Authorization: Bearer ${AUTH_TOKEN}" "https://ucp.${DOMAIN_NAME}/collectionGrants/system%3Aserviceaccount%3Aingress-nginx%3Adefault/kubernetesnamespaces/restrictedcontrol?type=grantobject"
+
+    # check UCP version
+    if [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $1}')" -ge "3" ] && [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $2}')" -ge "1" ]
+    then
+      # UCP 3.1.x or higher
+      # add k8s rbac for nginx-ingress
+      docker -H unix:///var/run/docker.sock run -i --rm -v "${SCRIPT_PATH}"/json:/json mbentley/curl -sk "https://ucp.${DOMAIN_NAME}/api/v1/namespaces/ingress-nginx/serviceaccounts" -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/rbac-serviceaccount.json
+      docker -H unix:///var/run/docker.sock run -i --rm -v "${SCRIPT_PATH}"/json:/json mbentley/curl -sk "https://ucp.${DOMAIN_NAME}/apis/rbac.authorization.k8s.io/v1beta1/clusterroles/nginx-ingress-clusterrole" -XPATCH -H "Content-Type: application/strategic-merge-patch+json" -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/rbac-clusterrole.json
+      docker -H unix:///var/run/docker.sock run -i --rm -v "${SCRIPT_PATH}"/json:/json mbentley/curl -sk "https://ucp.${DOMAIN_NAME}/apis/rbac.authorization.k8s.io/v1beta1/namespaces/ingress-nginx/roles" -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/rbac-role.json
+      docker -H unix:///var/run/docker.sock run -i --rm -v "${SCRIPT_PATH}"/json:/json mbentley/curl -sk "https://ucp.${DOMAIN_NAME}/apis/rbac.authorization.k8s.io/v1beta1/namespaces/ingress-nginx/rolebindings" -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/rbac-rolebinding.json
+      docker -H unix:///var/run/docker.sock run -i --rm -v "${SCRIPT_PATH}"/json:/json mbentley/curl -sk "https://ucp.${DOMAIN_NAME}/apis/rbac.authorization.k8s.io/v1beta1/clusterrolebindings/nginx-ingress-clusterrole-nisa-binding" -XPATCH -H "Content-Type: application/strategic-merge-patch+json" -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/rbac-clusterrolebinding.json
+    else
+      # UCP 3.1.x or lower
+      # Add grant
+      docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -sk -X PUT -H "Authorization: Bearer ${AUTH_TOKEN}" "https://ucp.${DOMAIN_NAME}/collectionGrants/system%3Aserviceaccount%3Aingress-nginx%3Adefault/kubernetesnamespaces/restrictedcontrol?type=grantobject"
+    fi
 
     docker -H unix:///var/run/docker.sock run -i --rm -v "${SCRIPT_PATH}"/json:/json mbentley/curl -sk "https://ucp.${DOMAIN_NAME}/api/v1/namespaces/ingress-nginx/configmaps" -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/configmap.json
     docker -H unix:///var/run/docker.sock run -i --rm -v "${SCRIPT_PATH}"/json:/json mbentley/curl -sk "https://ucp.${DOMAIN_NAME}/api/v1/namespaces/ingress-nginx/configmaps" -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/tcp-services-configmap.json
