@@ -23,6 +23,7 @@
         }
       },
       "spec": {
+        "serviceAccountName": "nginx-ingress-serviceaccount",
         "containers": [
           {
             "name": "nginx-ingress-controller",
