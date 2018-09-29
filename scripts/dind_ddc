@@ -845,9 +845,17 @@ install_ucp() {
     docker -H unix:///var/run/docker.sock run -i --rm mbentley/curl -sk -X POST -H "Authorization: Bearer ${AUTH_TOKEN}" --header "Content-Type: application/json" --header "Accept: application/json" -d '{"HTTPPort":8080,"HTTPSPort":8443,"Arch":"x86_64"}' "https://ucp.${DOMAIN_NAME}/api/interlock"
     echo -e "done.\\n"
 
-    echo "Enabling Kubernetes Ingress ..."
+    echo "Enabling Kubernetes Ingress..."
     # Get script path
-    SCRIPT_PATH="$(dirname "$(readlink "${0}")")"
+    # test to see if script executed from symlink
+    if [ -L "${0}" ]
+    then
+      # resolve the symlink to the actual path
+      SCRIPT_PATH="$(dirname "$(readlink "${0}")")"
+    else
+      # cd to the path to get the full pwd
+      SCRIPT_PATH="$(cd "$(dirname "${0}")" && pwd)"
+    fi
 
     # Create namespace
     docker -H unix:///var/run/docker.sock run -i --rm -v "${SCRIPT_PATH}"/json:/json mbentley/curl -sk "https://ucp.${DOMAIN_NAME}/api/v1/namespaces" -XPOST -H 'Content-Type: application/json' -H "Authorization: Bearer ${AUTH_TOKEN}" -d@/json/namespace.json
