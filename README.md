@@ -145,12 +145,21 @@ The images are published to Docker Hub so you do not need to build them unless y
     ```
     docker run -d \
       --name docker \
+      --hostname docker \
+      --restart unless-stopped \
       --privileged \
       -p 127.0.0.1:1000:2375 \
       -v /lib/modules:/lib/modules:ro \
-      -v docker:/var/lib/docker \
-      -v docker-etc:/etc/docker \
+      -v docker-root:/root \
+      -v docker-var-lib-docker:/var/lib/docker \
+      -v docker-etc-docker:/etc/docker \
+      -v docker-etc-cni:/etc/cni \
+      -v docker-opt-cni:/opt/cni \
+      -v docker-usr-libexec-kubernetes:/usr/libexec/kubernetes \
+      -v docker-var-lib-kubelet:/var/lib/kubelet \
+      -v docker-var-log:/var/log \
       --tmpfs /run \
+      -e MOUNT_PROPAGATION="/" \
       mbentley/docker-in-docker \
       dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375
     ```
@@ -179,12 +188,21 @@ The images are published to Docker Hub so you do not need to build them unless y
     do
       docker run -d \
         --name docker${ENGINE_NUM} \
+        --hostname docker${ENGINE_NUM} \
+        --restart unless-stopped \
         --privileged \
         -p 127.0.0.1:100${ENGINE_NUM}:2375 \
         -v /lib/modules:/lib/modules:ro \
-        -v docker${ENGINE_NUM}:/var/lib/docker \
-        -v docker${ENGINE_NUM}-etc:/etc/docker \
+        -v docker${ENGINE_NUM}-root:/root \
+        -v docker${ENGINE_NUM}-var-lib-docker:/var/lib/docker \
+        -v docker${ENGINE_NUM}-etc-docker:/etc/docker \
+        -v docker${ENGINE_NUM}-etc-cni:/etc/cni \
+        -v docker${ENGINE_NUM}-opt-cni:/opt/cni \
+        -v docker${ENGINE_NUM}-usr-libexec-kubernetes:/usr/libexec/kubernetes \
+        -v docker${ENGINE_NUM}-var-lib-kubelet:/var/lib/kubelet \
+        -v docker${ENGINE_NUM}-var-log:/var/log \
         --tmpfs /run \
+        -e MOUNT_PROPAGATION="/" \
         mbentley/docker-in-docker \
         dockerd -s overlay2 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375
     done
