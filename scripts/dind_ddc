@@ -28,6 +28,7 @@ initialize() {
   # set default values; allow for override
   PROJECT="${PROJECT:-dind-ddc}"
   DIND_TAG="${DIND_TAG:-18.09-ee}"
+  ENGINE_ARGS="${ENGINE_ARGS:-}"
   ENGINE_OPTS="${ENGINE_OPTS:-}"
   MANAGERS="${MANAGERS:-1}"
   WORKERS="${WORKERS:-2}"
@@ -104,6 +105,7 @@ env_info() {
   echo -e "DIND_ENV:\\t${DIND_ENV}"
   echo -e "PROJECT:\\t${PROJECT}"
   echo -e "DIND_TAG:\\t${DIND_TAG}"
+  echo -e "ENGINE_ARGS:\\t${ENGINE_ARGS}"
   echo -e "ENGINE_OPTS:\\t${ENGINE_OPTS}"
   echo -e "MANAGERS:\\t${MANAGERS}"
   echo -e "WORKERS:\\t${WORKERS}"
@@ -403,6 +405,7 @@ launch_engines() {
         -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-kubelet:/var/lib/kubelet \
         -v "${PROJECT}"-docker${ENGINE_NUM}-var-log:/var/log \
         -v "${PROJECT}"-shared:/data \
+        ${ENGINE_ARGS} \
         --tmpfs /run \
         -e MOUNT_PROPAGATION="/" \
         mbentley/docker-in-docker:"${DIND_TAG}" \
@@ -454,6 +457,7 @@ launch_engines() {
         -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-kubelet:/var/lib/kubelet \
         -v "${PROJECT}"-docker${ENGINE_NUM}-var-log:/var/log \
         -v "${PROJECT}"-shared:/data \
+        ${ENGINE_ARGS} \
         --tmpfs /run \
         -e MOUNT_PROPAGATION="/" \
         mbentley/docker-in-docker:"${DIND_TAG}" \

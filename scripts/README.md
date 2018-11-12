@@ -142,6 +142,7 @@ If you wish to have your environment variables stored in a single file that can 
   * `PROJECT` - prefix for all resources; allows you to run multiple environments (although it is still one at a time)
   * `DIND_TAG` - Docker image tag used to run Docker
     * see the [docker-in-docker README](../README.md) for the available tags
+  * `ENGINE_ARGS` - custom arguments to the `docker run` commands for engines
   * `ENGINE_OPTS` - custom engine options to append to the defaults
   * `MANAGERS` - number of Swarm managers (also used to set number of UCP managers)
   * `WORKERS` - number of Swarm workers (also used to set number of UCP workers)
