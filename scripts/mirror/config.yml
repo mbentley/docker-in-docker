@@ -5,6 +5,8 @@ log:
 storage:
   cache:
     blobdescriptor: inmemory
+  delete:
+    enabled: true
   filesystem:
     rootdirectory: /var/lib/registry
 http:
