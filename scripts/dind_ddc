@@ -33,7 +33,7 @@ initialize() {
   MANAGERS="${MANAGERS:-1}"
   WORKERS="${WORKERS:-2}"
   UCP_REPO="${UCP_REPO:-docker/ucp}"
-  UCP_VERSION="${UCP_VERSION:-3.1.0}"
+  UCP_VERSION="${UCP_VERSION:-3.1.1}"
   UCP_IMAGES="${UCP_IMAGES:-${HOME}/ddc/ucp_images_"${UCP_VERSION}".tar.gz}"
   UCP_OPTIONS="${UCP_OPTIONS:-}"
   DTR_REPO="${DTR_REPO:-docker/dtr}"
