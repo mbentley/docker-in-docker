@@ -11,7 +11,7 @@ export DOCKER_ORCHESTRATOR=swarm
 initialize() {
   # source an external env var file if DIND_ENV set
   DIND_ENV="${DIND_ENV:-}"
-  if ! [ -z "${DIND_ENV}" ]
+  if [ -n "${DIND_ENV}" ]
   then
     # make sure DIND_ENV is a file
     if [ -f "${DIND_ENV}" ]
@@ -658,7 +658,7 @@ project_status() {
   echo -e "\\n"
 
   # if a project specified, use that
-  if [ ! -z "${1}" ]
+  if [ -n "${1}" ]
   then
     PROJECT="${1}"
   fi
