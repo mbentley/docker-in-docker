@@ -78,12 +78,11 @@ initialize() {
   fi
 
   # check for valid number of workers
-  if ((WORKERS<1))
+  if ((WORKERS<1)) && ((DTR_REPLICAS>0))
   then
     echo "Warning: The number of WORKERS (${WORKERS}) is less than 1; you will not be able to install DTR"
     sleep 2
   fi
-
 }
 
 validate_dtr_replicas() {
