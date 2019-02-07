@@ -2,18 +2,18 @@ docker-in-docker
 ================
 
 ## Table of Contents
-* [Docker EE (Engine, UCP and DTR)](#docker-ee-engine-ucp-and-dtr)
+* [Docker Enterprise (Docker Engine Enterprise, UCP and DTR)](#docker-enterprise-docker-engine-enterprise-ucp-and-dtr)
 * [Image Tags](#image-tags)
 * [Build images (optional)](#build-images-optional)
 * [Prerequisites](#prerequisites)
 * [Single engine](#single-engine)
 * [Swarm mode cluster](#swarm-mode-cluster)
 
-## Docker EE (Engine, UCP and DTR)
-Stop! Look at [scripts](./scripts) for tools to automatically create a Swarm mode cluster, a UCP cluster, or a DDC (both UCP & DTR) cluster. You can even start a preconfigured Jenkins to use for demos. If you want to manually stand up an engine or Swarm mode cluster, read on.
+## Docker Enterprise (Docker Engine Enterprise, UCP and DTR)
+Stop! Look at [scripts](./scripts) for tools to automatically create a Swarm mode cluster, a UCP cluster, or a Docker Enterprise (both UCP & DTR) cluster. You can even start a preconfigured Jenkins to use for demos. If you want to manually stand up an engine or Swarm mode cluster, read on.
 
 ## Image Tags
-For a complete list of published images, see the [list of tags on Docker Hub](https://hub.docker.com/r/mbentley/docker-in-docker/tags/).  For each major release, the specific Docker EE bugfix versions are also available and can be found via Docker Hub.  If you always want to use the latest of a given platform release, stick with the `17.06-ee` (or the like image for that platform release) image.
+For a complete list of published images, see the [list of tags on Docker Hub](https://hub.docker.com/r/mbentley/docker-in-docker/tags/).  For each major release, the specific Docker Enterprise bugfix versions are also available and can be found via Docker Hub.  If you always want to use the latest of a given platform release, stick with the `17.06-ee` (or the like image for that platform release) image.
 
   * `ce`, `latest` ([Dockerfile.ce](./Dockerfile.ce))
   * `test-ce` ([Dockerfile.test-ce](./Dockerfile.test-ce))
@@ -26,8 +26,8 @@ For a complete list of published images, see the [list of tags on Docker Hub](ht
   * `1.12-cs` [Dockerfile.1.12-cs](./Dockerfile.1.12-cs))
   * `1.10-cs` [Dockerfile.1.10-cs](./Dockerfile.1.10-cs))
   * `1.9-cs` [Dockerfile.1.9-cs](./Dockerfile.1.9-cs))
-  * `haproxy` ([Dockerfile.haproxy](./scripts/haproxy/Dockerfile.haproxy)) - used by  `dind_ddc`
-  * `mirror` ([Dockerfile.mirror](./scripts/mirror/Dockerfile.mirror)) - used by  `dind_ddc`
+  * `haproxy` ([Dockerfile.haproxy](./scripts/haproxy/Dockerfile.haproxy)) - used by  `dind_docker_enterprise`
+  * `mirror` ([Dockerfile.mirror](./scripts/mirror/Dockerfile.mirror)) - used by  `dind_docker_enterprise`
 
 ## Build images (optional)
 <details><summary>Expand for more details</summary><p>
@@ -55,7 +55,7 @@ The images are published to Docker Hub so you do not need to build them unless y
     -t mbentley/docker-in-docker:edge-ce \
     -f Dockerfile.edge-ce .
   ```
-* Docker EE (stable)
+* Docker Enterprise (stable)
   ```
   docker build \
     --build-arg DOCKER_EE_URL="<DOCKER-EE-URL>" \
@@ -65,7 +65,7 @@ The images are published to Docker Hub so you do not need to build them unless y
 
   docker push mbentley/docker-in-docker:ee
   ```
-* Docker EE (stable-18.09)
+* Docker Enterprise (stable-18.09)
   ```
   docker build \
     --build-arg DOCKER_EE_URL="<DOCKER-EE-URL>" \
@@ -105,7 +105,7 @@ The images are published to Docker Hub so you do not need to build them unless y
 
   docker push mbentley/docker-in-docker:17.03-ee
   ```
-* Docker EE (test)
+* Docker Enterprise (test)
   ```
   docker build \
     --build-arg DOCKER_EE_URL="<DOCKER-EE-URL>" \

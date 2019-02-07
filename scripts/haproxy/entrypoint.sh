@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # set some defaults just in case the values aren't passed
-PROJECT="${PROJECT:-dind-ddc}"
+PROJECT="${PROJECT:-dind-docker-enterprise}"
 MANAGERS="${MANAGERS:-1}"
 WORKERS="${WORKERS:-2}"
 DTR_REPLICAS="${DTR_REPLICAS:-1}"

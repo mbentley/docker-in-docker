@@ -1,45 +1,45 @@
 scripts
 =======
 
-## `dind_ddc`
+## `dind_docker_enterprise`
 * [Quickstart (tl;dr)](#quickstart-tldr)
 * [Prerequisites](#prerequisites)
-* [dind_ddc Usage](#dind_ddc-usage)
-  * [`dind_ddc` launch](#dind_ddc-launch)
-  * [`dind_ddc` env](#dind_ddc-env)
-  * [`dind_ddc` create_tar](#dind_ddc-create_tar)
-  * [`dind_ddc` net_alias](#dind_ddc-net_alias)
-  * [`dind_ddc` connect_engine](#dind_ddc-connect_engine)
+* [dind_docker_enterprise Usage](#dind_docker_enterprise-usage)
+  * [`dind_docker_enterprise` launch](#dind_docker_enterprise-launch)
+  * [`dind_docker_enterprise` env](#dind_docker_enterprise-env)
+  * [`dind_docker_enterprise` create_tar](#dind_docker_enterprise-create_tar)
+  * [`dind_docker_enterprise` net_alias](#dind_docker_enterprise-net_alias)
+  * [`dind_docker_enterprise` connect_engine](#dind_docker_enterprise-connect_engine)
   * [Environment Variable Overrides](#environment-variable-overrides)
 * [Examples](#examples)
   * [Jenkins Demo](#jenkins-demo)
   * [HRM Example Usage](#hrm-example-usage)
   * [Launching Docker EE with default configuration](#launching-docker-ee-with-default-configuration)
   * [Using an environment file for persistent settings](#using-an-environment-file-for-persistent-settings)
-  * [Pre-production DDC](#pre-production-ddc)
+  * [Pre-production Docker Enterprise](#pre-production-docker-enterprise)
     * [Create .tar.gz archives](#create-targz-archives)
   * [Launching UCP and DTR in various configurations](#launching-ucp-and-dtr-in-various-configurations)
   * [Updating an environment](#updating-an-environment)
 
 ## Quickstart (tl;dr)
-Check out the [Prerequisites](#prerequisites) and then go down to [Launching Docker EE with default configuration](#launching-docker-ee-with-default-configuration) for released versions or [Environment Variable Overrides](#environment-variable-overrides) for custom settings you can pass as well as [Using an environment file for persistent settings](#using-an-environment-file-for-persistent-settings) to make the management of your custom settings more manageable.  See [Pre-production DDC](#pre-production-ddc) for details of how to launch an environment with pre-production images.
+Check out the [Prerequisites](#prerequisites) and then go down to [Launching Docker EE with default configuration](#launching-docker-ee-with-default-configuration) for released versions or [Environment Variable Overrides](#environment-variable-overrides) for custom settings you can pass as well as [Using an environment file for persistent settings](#using-an-environment-file-for-persistent-settings) to make the management of your custom settings more manageable.  See [Pre-production Docker Enterprise](#pre-production-docker-enterprise) for details of how to launch an environment with pre-production images.
 
 Get a demo environment with 2 commands:
 ```bash
 # you only need to create the tars once
-$ ./dind_ddc create_tar all
+$ ./dind_docker_enterprise create_tar all
 
 # this starts the environment
-$ ./dind_ddc launch all
+$ ./dind_docker_enterprise launch all
 ```
 
 ## Prerequisites
   * Docker for Mac installed
     * I would suggest increasing the RAM in the Docker for Mac VM to 4+ GB but it will run on 2 GB as long as you do not put heavy workloads on it
-  * Have the tarball of the UCP and DTR images in `~/ddc`, keeping the default names from [UCP offline tarballs](https://docs.docker.com/datacenter/ucp/2.1/guides/admin/install/install-offline/) and [DTR offline tarballs](https://docs.docker.com/datacenter/dtr/2.2/guides/admin/install/install-offline/)
+  * Have the tarball of the UCP and DTR images in `~/dind_docker_enterprise`, keeping the default names from [UCP offline tarballs](https://docs.docker.com/ee/ucp/admin/install/install-offline/#versions-available) and [DTR offline tarballs](https://docs.docker.com/ee/dtr/admin/install/install-offline/#versions-available)
     * Alternatively, use the `UCP_IMAGES` and `DTR_IMAGES` env vars to override the full path to the tarballs
-    * For pre-release images, see [Pre-production DDC](#pre-production-ddc)
-  * Have a DDC license file in `~/Downloads/docker_subscription.lic`
+    * For pre-release images, see [Pre-production Docker Enterprise](#pre-production-docker-enterprise)
+  * Have a Docker Enterprise license file in `~/Downloads/docker_subscription.lic`
     * Alternatively, use the `DDC_LICENSE` env var to override the full path to the license
   * Must have the following ports available on your host:
     * `100n` - TCP connection to Docker engines where n is 1-n number of engines you're running
@@ -58,24 +58,24 @@ $ ./dind_ddc launch all
   * busybox
 </p></details>
 
-## `dind_ddc` Usage
+## `dind_docker_enterprise` Usage
 ```
-$ ./dind_ddc help
-Usage: ./dind_ddc {launch|env|create_tar|net_alias|connect_engine|help}
+$ ./dind_docker_enterprise help
+Usage: ./dind_docker_enterprise {launch|env|create_tar|net_alias|connect_engine|help}
 
 Commands:
-  ./dind_ddc launch {all|swarm|engines|ee|ucp|dtr|demo|help}
-  ./dind_ddc env {start|stop|pause|unpause|recycle|destroy|pull|status|info|help}
-  ./dind_ddc create_tar {all|ucp|dtr|help}
-  ./dind_ddc net_alias {create|remove|recreate|help}
-  ./dind_ddc connect_engine {n|help}
+  ./dind_docker_enterprise launch {all|swarm|engines|ee|ucp|dtr|demo|help}
+  ./dind_docker_enterprise env {start|stop|pause|unpause|recycle|destroy|pull|status|info|help}
+  ./dind_docker_enterprise create_tar {all|ucp|dtr|help}
+  ./dind_docker_enterprise net_alias {create|remove|recreate|help}
+  ./dind_docker_enterprise connect_engine {n|help}
 ```
 </p></details>
 
-### `dind_ddc launch`
+### `dind_docker_enterprise launch`
 ```
-$ ./dind_ddc launch help
-Usage: ./dind_ddc launch {all|swarm|ee|ucp|dtr|demo|help}
+$ ./dind_docker_enterprise launch help
+Usage: ./dind_docker_enterprise launch {all|swarm|ee|ucp|dtr|demo|help}
 
 Commands:
   all           launch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, DTR, Jenkins, and Gogs
@@ -87,10 +87,10 @@ Commands:
   demo          launch Jenkins and Gogs (only use if you've launched UCP and DTR)
 ```
 
-### `dind_ddc env`
+### `dind_docker_enterprise env`
 ```
-$ ./dind_ddc env help
-Usage: ./dind_ddc env {start|stop|pause|unpause|recycle|destroy|pull|status|info|help}
+$ ./dind_docker_enterprise env help
+Usage: ./dind_docker_enterprise env {start|stop|pause|unpause|recycle|destroy|pull|status|info|help}
 
 Commands:
   start         start ddc-lb, docker1, docker2, and docker3 daemon containers
@@ -104,10 +104,10 @@ Commands:
   info          display enviroment variable overrides currently set
 ```
 
-### `dind_ddc create_tar`
+### `dind_docker_enterprise create_tar`
 ```
-$ ./dind_ddc create_tar help
-Usage: ./dind_ddc create_tar {all|ucp|dtr|help}
+$ ./dind_docker_enterprise create_tar help
+Usage: ./dind_docker_enterprise create_tar {all|ucp|dtr|help}
 
 Commands:
   all   create tarball of the UCP and DTR images
@@ -115,10 +115,10 @@ Commands:
   dtr   create tarball of the DTR images
 ```
 
-### `dind_ddc net_alias`
+### `dind_docker_enterprise net_alias`
 ```
-$ ./dind_ddc net_alias help
-Usage: ./dind_ddc net_alias {create|remove|recreate|help}
+$ ./dind_docker_enterprise net_alias help
+Usage: ./dind_docker_enterprise net_alias {create|remove|recreate|help}
 
 Commands:
   create        create a network alias used for keeping a persistent IP no matter when you are (only for D4M)
@@ -126,10 +126,10 @@ Commands:
   recreate      re-create network alias (only for D4M)
 ```
 
-### `dind_ddc connect_engine`
+### `dind_docker_enterprise connect_engine`
 ```
-$ ./dind_ddc connect_engine help
-Usage: eval "$(./dind_ddc connect_engine n)"
+$ ./dind_docker_enterprise connect_engine help
+Usage: eval "$(./dind_docker_enterprise connect_engine n)"
 
 Commands:
   n     where 'n' is the engine number to connect to; sets 'DOCKER*' environment variables
@@ -159,7 +159,7 @@ If you wish to have your environment variables stored in a single file that can 
     * see https://docs.docker.com/datacenter/dtr/2.2/guides/admin/install/install-offline/#versions-available for the tar.gz
   * `DTR_OPTIONS` - additional DTR install options
   * `DTR_REPLICAS` - number of DTR replicas to install
-  * `DDC_LICENSE` - path to your DDC license
+  * `DDC_LICENSE` - path to your Docker Enterprise license
   * `DIND_SUBNET` - subnet used for the bridge network created
   * `DIND_DNS` - DNS server to use for the Docker daemons running in docker
   * `DIND_RESTART` - restart policy for the Docker daemon containers
@@ -168,7 +168,7 @@ If you wish to have your environment variables stored in a single file that can 
   * `DOMAIN_NAME` - domain name to use for Jenkins behind HRM
   * `GH_USERNAME` - GitHub username to pass to Jenkins for configuration
 
-*Note*: To see the default values, run `./dind_ddc env info`
+*Note*: To see the default values, run `./dind_docker_enterprise env info`
 
 ## Examples
 
@@ -189,7 +189,7 @@ Launching Jenkins and Gogs allows for utilizing a full local demo environment.  
 
 1. Launch Jenkins and Gogs:
     ```
-    $ ./dind_ddc launch demo
+    $ ./dind_docker_enterprise launch demo
     ```
 
 2. Login to Jenkins and initialize Jenkins:
@@ -258,13 +258,13 @@ $ echo "10.1.2.3 nginx.test" | sudo tee -a /etc/hosts
 
 ### Launching Docker EE with default configuration
 ```
-./dind_ddc launch all
+./dind_docker_enterprise launch all
 ```
 
 [![asciicast](https://asciinema.org/a/125041.png)](https://asciinema.org/a/125041)
 
 ### Using an environment file for persistent settings
-With the many configuration options comes the difficulty in keeping track of the environment variables you've set.  To make this easier, use an environment variable file. This section covers how to do so with an example of launching Docker EE using tech preview images. There are also may other scenarios that you can launch enviroments for with `dind_ddc`.  See [Launching UCP and DTR in various configurations](#launching-ucp-and-dtr-in-various-configurations) for examples.
+With the many configuration options comes the difficulty in keeping track of the environment variables you've set.  To make this easier, use an environment variable file. This section covers how to do so with an example of launching Docker EE using tech preview images. There are also may other scenarios that you can launch enviroments for with `dind_docker_enterprise`.  See [Launching UCP and DTR in various configurations](#launching-ucp-and-dtr-in-various-configurations) for examples.
 
 1. Create or modify one of the example environment files with the custom variables you would like to use while launching your environment. There are example environment files for [tech preview](./17.06-tp.env), [beta](./17.06-beta.env), [17.03](./17.03.env), and [17.06](./17.06.env) in this repository.
 
@@ -273,21 +273,21 @@ With the many configuration options comes the difficulty in keeping track of the
     * Directly source the env file:
     ```
     . ${PWD}/17.03.env
-    ./dind_ddc launch all
+    ./dind_docker_enterprise launch all
     ```
 
-    * Export `DIND_ENV` to tell the `dind_ddc` script where to find the env file:
+    * Export `DIND_ENV` to tell the `dind_docker_enterprise` script where to find the env file:
     ```
     export DIND_ENV="${PWD}/17.03.env"
-    ./dind_ddc launch all
+    ./dind_docker_enterprise launch all
     ```
 
-    * One-liner to pass the env file location to the `dind_ddc` script:
+    * One-liner to pass the env file location to the `dind_docker_enterprise` script:
     ```
-    DIND_ENV=${PWD}/17.03.env ./dind_ddc launch all
+    DIND_ENV=${PWD}/17.03.env ./dind_docker_enterprise launch all
     ```
 
-### Pre-production DDC
+### Pre-production Docker Enterprise
 
 #### Create .tar.gz archives
 
@@ -296,7 +296,7 @@ With the many configuration options comes the difficulty in keeping track of the
   Automatic:
   ```
   export UCP_REPO="dockerorcadev/ucp" UCP_VERSION="2.2.0-tp6" UCP_OPTIONS="--image-version dev:"
-  ./dind_ddc create_tar ucp
+  ./dind_docker_enterprise create_tar ucp
   ```
 
   Manual:
@@ -312,7 +312,7 @@ With the many configuration options comes the difficulty in keeping track of the
   Automatic:
   ```
   export DTR_REPO="dockerhubenterprise/dtr" DTR_VERSION="2.3.0-tp6"
-  ./dind_ddc create_tar dtr
+  ./dind_docker_enterprise create_tar dtr
   ```
 
   Manual:
@@ -329,15 +329,15 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
 
 * UCP standalone
   ```
-  ./dind_ddc launch swarm
-  ./dind_ddc launch ucp
+  ./dind_docker_enterprise launch swarm
+  ./dind_docker_enterprise launch ucp
   ```
 
 * UCP in HA (3 managers, 3 workers) with DTR on the first worker
   ```
   export MANAGERS=3 \
     WORKERS=3
-  ./dind_ddc launch all
+  ./dind_docker_enterprise launch all
   ```
 
 * UCP and DTR - UCP (dev/TP) and DTR (dev/TP)
@@ -349,7 +349,7 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
     DTR_VERSION="2.3.0-tp5" \
     DIND_TAG="test-ce"
 
-  ./dind_ddc launch all
+  ./dind_docker_enterprise launch all
   ```
 
 * UCP and DTR - UCP (dev/TP) images and DTR (stable)
@@ -359,7 +359,7 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
     UCP_OPTIONS="--image-version dev:" \
     DIND_TAG="test-ce"
 
-  ./dind_ddc launch all
+  ./dind_docker_enterprise launch all
   ```
 
 * UCP and DTR - UCP (stable) and DTR (dev/TP)
@@ -368,7 +368,7 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
     DTR_VERSION="2.3.0-tp5" \
     DIND_TAG="test-ce"
 
-  ./dind_ddc launch all
+  ./dind_docker_enterprise launch all
   ```
 
 * UCP (dev/TP) only; no DTR
@@ -378,9 +378,9 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
     UCP_OPTIONS="--image-version dev:" \
     DIND_TAG="test-ce"
 
-  ./dind_ddc launch swarm
+  ./dind_docker_enterprise launch swarm
 
-  ./dind_ddc launch ucp
+  ./dind_docker_enterprise launch ucp
   ```
 
 ### Updating an environment
@@ -388,10 +388,10 @@ If you need to update the Docker engine version or update the HAProxy image, thi
 
 1. Pull updated images
     ```
-    ./dind_ddc env pull
+    ./dind_docker_enterprise env pull
     ```
 
 2. Recycle the environment (stop and re-create all Docker containers)
     ```
-    ./dind_ddc env recycle
+    ./dind_docker_enterprise env recycle
     ```
