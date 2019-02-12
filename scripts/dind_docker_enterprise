@@ -760,6 +760,7 @@ connect_engine() {
   echo "# to connect to a given engine, use:"
   #shellcheck disable=SC2016
   echo '# eval "$('"$0"' connect_engine '"${1}"')"'
+  echo 'unset DOCKER_HOST DOCKER_TLS_VERIFY DOCKER_CERT_PATH'
   echo "export DOCKER_HOST=tcp://127.0.0.1:100${ENGINE_NUM}"
 }
 
