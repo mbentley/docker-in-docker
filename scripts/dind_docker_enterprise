@@ -822,7 +822,16 @@ install_ucp() {
   # create custom config and set the `--existing-config` option if UCP verison is greater than 3.1.1 but not 4.x.x
   if [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $1}')" -eq "3" ] && [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $2}')" -ge "1" ] && [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $3}')" -ge "2" ] || [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $1}')" -ge "4" ]
   then
-    docker -H tcp://127.0.0.1:1001 config create com.docker.ucp.config ucp-config.toml
+    # test to see if script executed from symlink
+    if [ -L "${0}" ]
+    then
+      # resolve the symlink to the actual path
+      SCRIPT_PATH="$(dirname "$(readlink "${0}")")"
+    else
+      # cd to the path to get the full pwd
+      SCRIPT_PATH="$(cd "$(dirname "${0}")" && pwd)"
+    fi
+    docker -H tcp://127.0.0.1:1001 config create com.docker.ucp.config "${SCRIPT_PATH}"/ucp-config.toml
     UCP_OPTIONS="${UCP_OPTIONS} --existing-config"
   fi
 
