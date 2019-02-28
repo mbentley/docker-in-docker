@@ -1368,6 +1368,12 @@ main() {
       launch_engines engineonly
       install_summary_engines
       ;;
+    launch:haproxy)
+      initialize
+      create_net_alias
+      write_hosts
+      launch_haproxy
+      ;;
     launch:*)
       echo -e "Usage: $0 launch {all|swarm|ee|ucp|dtr|demo|help}"
       echo -e "\\nCommands:"
