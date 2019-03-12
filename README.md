@@ -18,7 +18,7 @@ For a complete list of published images, see the [list of tags on Docker Hub](ht
   * `ce`, `latest` ([Dockerfile.ce](./Dockerfile.ce))
   * `test-ce` ([Dockerfile.test-ce](./Dockerfile.test-ce))
   * `edge-ce` ([Dockerfile.edge-ce](./Dockerfile.edge-ce))
-  * `ee`, `18.09-ee`, `18.09.z-ee` ([Dockerfile.ee](./Dockerfile.ee))
+  * `ee`, `18.09-ee`, `18.09.z-ee` ([Dockerfile.ee-with-cli](./Dockerfile.ee-with-cli))
   * `18.03-ee`, `18.03.z-ee-n` ([Dockerfile.ee](./Dockerfile.ee))
   * `17.06-ee`, `17.06.z-ee-n` ([Dockerfile.ee](./Dockerfile.ee))
   * `17.03-ee`, `17.03.z-ee-n` ([Dockerfile.ee](./Dockerfile.ee))
