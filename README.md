@@ -71,7 +71,7 @@ The images are published to Docker Hub so you do not need to build them unless y
     --build-arg DOCKER_EE_URL="<DOCKER-EE-URL>" \
     --build-arg DOCKER_EE_REPO="stable-18.09" \
     -t mbentley/docker-in-docker:18.09-ee \
-    -f Dockerfile.ee .
+    -f Dockerfile.ee-with-cli .
 
   docker push mbentley/docker-in-docker:18.09-ee
   ```
