@@ -1,0 +1,23 @@
+#!/bin/bash
+
+case $1:$2 in
+  docker-cli-plugin-metadata:*)
+    # return the appropriate metadata
+    echo '{"SchemaVersion": "0.1.0","Vendor":"mbentley","Version":"v0.0.1","ShortDescription":"Docker-in-Docker Docker Enterprise"}'
+    exit 0
+    ;;
+  *:*)
+    # shift the parameters
+    shift
+
+    # export the SCRIPT_PATH variable to override the command
+    export SCRIPT_PATH="docker dind"
+
+    # figure out the path
+    DIND_PATH="$(dirname "$(readlink "${0}")")"
+
+    # execute the dind script
+    "${DIND_PATH}"/scripts/dind_docker_enterprise "${@}"
+    exit $?
+    ;;
+esac

@@ -6,7 +6,10 @@ set -e
 unset DOCKER_HOST DOCKER_TLS_VERIFY DOCKER_CERT_PATH
 
 # Force orchestrator to be Swarm, if Kubernetes is installed on Docker for Mac/Windows
-export DOCKER_ORCHESTRATOR=swarm
+export DOCKER_STACK_ORCHESTRATOR=swarm
+
+# set the script path to allow for an override for a docker plugin
+SCRIPT_PATH="${SCRIPT_PATH:-$0}"
 
 initialize() {
   # source an external env var file if DIND_ENV set
@@ -184,7 +187,7 @@ ucp_check_tar() {
   if [ ! -f "${UCP_IMAGES}" ]
   then
     echo "Error: Unable to find UCP_IMAGES"
-    echo "Hint: try running '$0 create_tar ucp' or download an offline tarball to '${UCP_IMAGES}'"
+    echo "Hint: try running '${SCRIPT_PATH} create_tar ucp' or download an offline tarball to '${UCP_IMAGES}'"
     exit 1
   else
     echo -e "Found UCP tarball '${UCP_IMAGES}'\\n"
@@ -195,7 +198,7 @@ dtr_check_tar() {
   if [ ! -f "${DTR_IMAGES}" ]
   then
     echo "Error: Unable to find DTR_IMAGES"
-    echo "Hint: try running '$0 create_tar dtr' or download an offline tarball to '${DTR_IMAGES}'"
+    echo "Hint: try running '${SCRIPT_PATH} create_tar dtr' or download an offline tarball to '${DTR_IMAGES}'"
     exit 1
   else
     echo -e "Found DTR tarball '${DTR_IMAGES}'\\n"
@@ -759,7 +762,7 @@ connect_engine() {
   ENGINE_NUM="$(echo "${1}" | grep -o '[0-9]\+')"
   echo "# to connect to a given engine, use:"
   #shellcheck disable=SC2016
-  echo '# eval "$('"$0"' connect_engine '"${1}"')"'
+  echo '# eval "$('"${SCRIPT_PATH}"' connect_engine '"${1}"')"'
   echo 'unset DOCKER_HOST DOCKER_TLS_VERIFY DOCKER_CERT_PATH'
   echo "export DOCKER_HOST=tcp://127.0.0.1:100${ENGINE_NUM}"
 }
@@ -1133,7 +1136,7 @@ install_summary_swarm() {
   echo -e "Swarm mode cluster ready:"
   docker -H tcp://127.0.0.1:1001 node ls
   #shellcheck disable=SC2016
-  echo -e "\\nTo connect to the engine/Swarm, use:\\neval "'"$('"$0"' connect_engine 1)"'
+  echo -e "\\nTo connect to the engine/Swarm, use:\\neval "'"$('"${SCRIPT_PATH}"' connect_engine 1)"'
 }
 
 install_summary_engines() {
@@ -1141,7 +1144,7 @@ install_summary_engines() {
   echo -e "Docker Engines ready:"
   project_status
   #shellcheck disable=SC2016
-  echo -e "\\nTo connect to the engines, use:\\neval "'"$('"$0"' connect_engine 1)"'
+  echo -e "\\nTo connect to the engines, use:\\neval "'"$('"${SCRIPT_PATH}"' connect_engine 1)"'
 }
 
 install_summary_haproxy() {
@@ -1375,7 +1378,7 @@ main() {
       launch_haproxy
       ;;
     launch:*)
-      echo -e "Usage: $0 launch {all|swarm|ee|ucp|dtr|demo|help}"
+      echo -e "Usage: ${SCRIPT_PATH} launch {all|swarm|ee|ucp|dtr|demo|help}"
       echo -e "\\nCommands:"
       echo -e "  all\\t\\tlaunch a 3 node Swarm mode cluster (1 manager 2 workers), UCP, DTR, Jenkins, and Gogs"
       echo -e "  swarm\\t\\tlaunch 3 node Swarm mode cluster; 1 manager and 2 workers"
@@ -1433,7 +1436,7 @@ main() {
       check_total_memory
       ;;
     env:*)
-      echo -e "Usage: $0 env {start|stop|pause|unpause|recycle|destroy|pull|status|info|help}"
+      echo -e "Usage: ${SCRIPT_PATH} env {start|stop|pause|unpause|recycle|destroy|pull|status|info|help}"
       echo -e "\\nCommands:"
       echo -e "  start\\t\\tstart ddc-lb, docker1, docker2, and docker3 daemon containers"
       echo -e "  stop\\t\\tstop ddc-lb, docker1, docker2, and docker3 daemon containers"
@@ -1460,7 +1463,7 @@ main() {
       dtr_create_tar
       ;;
     create_tar:*)
-      echo -e "Usage: $0 create_tar {all|ucp|dtr|help}"
+      echo -e "Usage: ${SCRIPT_PATH} create_tar {all|ucp|dtr|help}"
       echo -e "\\nCommands:"
       echo -e "  all\\tcreate tarball of the UCP and DTR images"
       echo -e "  ucp\\tcreate tarball of the UCP images"
@@ -1480,7 +1483,7 @@ main() {
       recreate_net_alias
       ;;
     net_alias:*)
-      echo -e "Usage: $0 net_alias {create|remove|recreate|help}"
+      echo -e "Usage: ${SCRIPT_PATH} net_alias {create|remove|recreate|help}"
       echo -e "\\nCommands:"
       echo -e "  create\\tcreate a network alias used for keeping a persistent IP no matter when you are (only for D4M)"
       echo -e "  remove\\tremove network alias (only for D4M)"
@@ -1496,7 +1499,7 @@ main() {
       remove_hosts
       ;;
     hosts:*)
-      echo -e "Usage: $0 hosts {write|remove|help}"
+      echo -e "Usage: ${SCRIPT_PATH} hosts {write|remove|help}"
       echo -e "\\nCommands:"
       echo -e "  write\\t\\twrite entries to hosts file"
       echo -e "  remove\\tremove entries from hosts file"
@@ -1506,7 +1509,7 @@ main() {
       if [ -z "${2}" ] || [ "${2}" = "help" ]
       then
         #shellcheck disable=SC2016
-        echo 'Usage: eval "$('"$0"' connect_engine n)"'
+        echo 'Usage: eval "$('"${SCRIPT_PATH}"' connect_engine n)"'
         if [ "${2}" = "help" ]
         then
           echo -e "\\nCommands:"
@@ -1518,13 +1521,13 @@ main() {
       fi
       ;;
     *:*)
-      echo "Usage: $0 {launch|env|create_tar|net_alias|connect_engine|help}"
+      echo "Usage: ${SCRIPT_PATH} {launch|env|create_tar|net_alias|connect_engine|help}"
       echo -e "\\nCommands:"
-      echo "  $0 launch {all|swarm|engines|ee|ucp|dtr|demo|help}"
-      echo "  $0 env {start|stop|pause|unpause|recycle|destroy|status|info|help}"
-      echo "  $0 create_tar {all|ucp|dtr|help}"
-      echo "  $0 net_alias {create|remove|recreate|help}"
-      echo "  $0 connect_engine {n|help}"
+      echo "  ${SCRIPT_PATH} launch {all|swarm|engines|ee|ucp|dtr|demo|help}"
+      echo "  ${SCRIPT_PATH} env {start|stop|pause|unpause|recycle|destroy|status|info|help}"
+      echo "  ${SCRIPT_PATH} create_tar {all|ucp|dtr|help}"
+      echo "  ${SCRIPT_PATH} net_alias {create|remove|recreate|help}"
+      echo "  ${SCRIPT_PATH} connect_engine {n|help}"
       exit 1
       ;;
   esac
