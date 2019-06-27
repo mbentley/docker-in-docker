@@ -27,9 +27,9 @@ For a complete list of published images, see the [list of tags on Docker Hub](ht
   * `17.06-ee`, `17.06.z-ee-n` ([Dockerfile.ee](./Dockerfile.ee))
   * `17.03-ee`, `17.03.z-ee-n` ([Dockerfile.ee](./Dockerfile.ee))
   * `test-ee` ([Dockerfile.test-ee](./Dockerfile.ee))
-  * `1.12-cs` [Dockerfile.1.12-cs](./Dockerfile.1.12-cs))
-  * `1.10-cs` [Dockerfile.1.10-cs](./Dockerfile.1.10-cs))
-  * `1.9-cs` [Dockerfile.1.9-cs](./Dockerfile.1.9-cs))
+  * `1.12-cs` ([Dockerfile.1.12-cs](./Dockerfile.1.12-cs))
+  * `1.10-cs` ([Dockerfile.1.10-cs](./Dockerfile.1.10-cs))
+  * `1.9-cs` ([Dockerfile.1.9-cs](./Dockerfile.1.9-cs))
   * `haproxy` ([Dockerfile.haproxy](./scripts/haproxy/Dockerfile.haproxy)) - used by  `dind_docker_enterprise`
   * `mirror` ([Dockerfile.mirror](./scripts/mirror/Dockerfile.mirror)) - used by  `dind_docker_enterprise`
 
