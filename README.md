@@ -2,12 +2,16 @@ docker-in-docker
 ================
 
 ## Table of Contents
+* [`docker dind` plugin](#docker-dind-plugin)
 * [Docker Enterprise (Docker Engine Enterprise, UCP and DTR)](#docker-enterprise-docker-engine-enterprise-ucp-and-dtr)
 * [Image Tags](#image-tags)
 * [Build images (optional)](#build-images-optional)
 * [Prerequisites](#prerequisites)
 * [Single engine](#single-engine)
 * [Swarm mode cluster](#swarm-mode-cluster)
+
+## `docker dind` plugin
+I have created a `docker dind` plugin that utilizes the `dind_docker_enterprise` script for launching `dind` environments.  Symlink the `docker-dind` script to `~/.docker/cli-plugins` in order to use the plugin.  Instead of calling `./dind_docker_enterprise`, utilize `docker dind <arguments>`.
 
 ## Docker Enterprise (Docker Engine Enterprise, UCP and DTR)
 Stop! Look at [scripts](./scripts) for tools to automatically create a Swarm mode cluster, a UCP cluster, or a Docker Enterprise (both UCP & DTR) cluster. You can even start a preconfigured Jenkins to use for demos. If you want to manually stand up an engine or Swarm mode cluster, read on.
