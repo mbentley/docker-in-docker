@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# docker dind plugin
+# see https://github.com/mbentley/docker-in-docker#docker-dind-plugin for usage
+
 case $1:$2 in
   docker-cli-plugin-metadata:*)
     # return the appropriate metadata
@@ -7,6 +10,7 @@ case $1:$2 in
     exit 0
     ;;
   *:*)
+    # for all commands, execute the dind_docker_enterprise script
     # shift the parameters
     shift
 
