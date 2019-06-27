@@ -11,10 +11,10 @@ docker-in-docker
 * [Swarm mode cluster](#swarm-mode-cluster)
 
 ## `docker dind` plugin
-I have created a `docker dind` plugin that utilizes the `dind_docker_enterprise` script for launching `dind` environments.  Symlink the `docker-dind` script to `~/.docker/cli-plugins` in order to use the plugin.  Instead of calling `./dind_docker_enterprise`, utilize `docker dind <arguments>`.
+I have created a `docker dind` CLI plugin that utilizes the `dind_docker_enterprise` script for launching `dind` environments.  Symlink (do not copy!) the `docker-dind` script to `~/.docker/cli-plugins/docker-dind` in order to use the plugin.  Once you have done so, instead of calling `./dind_docker_enterprise <arguments>`, utilize the syntax `docker dind <arguments>`.
 
 ## Docker Enterprise (Docker Engine Enterprise, UCP and DTR)
-Stop! Look at [scripts](./scripts) for tools to automatically create a Swarm mode cluster, a UCP cluster, or a Docker Enterprise (both UCP & DTR) cluster. You can even start a preconfigured Jenkins to use for demos. If you want to manually stand up an engine or Swarm mode cluster, read on.
+Stop! Look at [scripts](./scripts) for tools to automatically create a Swarm mode cluster, a UCP cluster, or a Docker Enterprise (both UCP & DTR) cluster. You can even start a preconfigured Jenkins to use for demos. If you want to manually stand up an engine or Swarm mode cluster, read on.  Also see the [`docker dind` CLI plugin](#docker-dind-plugin)
 
 ## Image Tags
 For a complete list of published images, see the [list of tags on Docker Hub](https://hub.docker.com/r/mbentley/docker-in-docker/tags/).  For each major release, the specific Docker Enterprise bugfix versions are also available and can be found via Docker Hub.  If you always want to use the latest of a given platform release, stick with the `17.06-ee` (or the like image for that platform release) image.
