@@ -414,6 +414,7 @@ launch_engines() {
         -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-kubelet:/var/lib/kubelet \
         -v "${PROJECT}"-docker${ENGINE_NUM}-var-log:/var/log \
         -v "${PROJECT}"-shared:/data \
+        -v "${PROJECT}"-shared:/shared \
         ${ENGINE_ARGS} \
         --tmpfs /run \
         -e MOUNT_PROPAGATION="/" \
@@ -465,6 +466,7 @@ launch_engines() {
         -v "${PROJECT}"-docker${ENGINE_NUM}-usr-libexec-kubernetes:/usr/libexec/kubernetes \
         -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-kubelet:/var/lib/kubelet \
         -v "${PROJECT}"-docker${ENGINE_NUM}-var-log:/var/log \
+        -v "${PROJECT}"-shared:/shared \
         -v "${PROJECT}"-shared:/data \
         ${ENGINE_ARGS} \
         --tmpfs /run \
