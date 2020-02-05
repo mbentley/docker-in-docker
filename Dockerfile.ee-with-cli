@@ -19,6 +19,6 @@ RUN /apt_proxy.sh &&\
 
 COPY entrypoint.sh /entrypoint.sh
 
-VOLUME ["/var/lib/docker"]
+VOLUME ["/var/lib/docker","var/lib/containerd"]
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["dockerd","-s","overlay2","-H","unix:///var/run/docker.sock","-H","0.0.0.0:12375"]
