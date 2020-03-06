@@ -818,8 +818,13 @@ install_ucp() {
   # launch haproxy
   launch_haproxy
 
-  # create custom config and set the `--existing-config` option if UCP verison is greater than 3.1.1
-  if { [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $1}')" -eq "3" ] && [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $2}')" -ge "1" ] && [ "$(echo "${UCP_VERSION}" | awk -F '-' '{print $1}' | awk -F '.' '{print $3}')" -ge "2" ]; } || { [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $1}')" -eq "3" ] && [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $2}')" -ge "2" ]; } || { [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $1}')" -ge "4" ]; }
+  # break out UCP version to major, minor, and patch
+  UCP_MAJ_VER="$(echo "${UCP_VERSION}" | awk -F '.' '{print $1}')"
+  UCP_MIN_VER="$(echo "${UCP_VERSION}" | awk -F '.' '{print $2}')"
+  UCP_PAT_VER="$(echo "${UCP_VERSION}" | awk -F '.' '{print $3}' | awk '{print $1}')"
+
+  # create custom config and set the `--existing-config` option if UCP verison is greater than 3.1.1 but less than 3.3.0
+  if { { [ "${UCP_MAJ_VER}" -eq "3" ] && [ "${UCP_MIN_VER}" -ge "1" ] && [ "${UCP_PAT_VER}" -ge "2" ]; } || { [ "${UCP_MAJ_VER}" -eq "3" ] && [ "${UCP_MIN_VER}" -ge "2" ]; } } && { [ "${UCP_MAJ_VER}" -eq "3" ] && [ "${UCP_MIN_VER}" -le "2" ]; }
   then
     echo -e '[cluster_config]\n  custom_kubelet_flags = ["--http-check-frequency=20s", "--containerized=false"]' | docker -H tcp://127.0.0.1:1001 config create com.docker.ucp.config -
     UCP_OPTIONS="${UCP_OPTIONS} --existing-config"
@@ -830,8 +835,8 @@ install_ucp() {
   docker -H tcp://127.0.0.1:1001 run -it --rm --name ucp -v /var/run/docker.sock:/var/run/docker.sock "${UCP_REPO}":"${UCP_VERSION}" install ${UCP_OPTIONS} --admin-username admin --admin-password docker123 --host-address "${DOCKER1_IP}" --controller-port 443 --disable-tracking --disable-usage --san ucp.${DOMAIN_NAME} --san "${DOCKER1_IP}" --san "${ALIAS_IP}" --san "$(hostname)" --san "$(hostname -f)" --license "$(cat ${DDC_LICENSE})"
   echo -e "done.\\n"
 
-  # delete custom config if UCP verison is greater than 3.1.1
-  if { [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $1}')" -eq "3" ] && [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $2}')" -ge "1" ] && [ "$(echo "${UCP_VERSION}" | awk -F '-' '{print $1}' | awk -F '.' '{print $3}')" -ge "2" ]; } || { [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $1}')" -eq "3" ] && [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $2}')" -ge "2" ]; } || { [ "$(echo "${UCP_VERSION}" | awk -F '.' '{print $1}')" -ge "4" ]; }
+  # delete custom config if UCP verison is greater than 3.1.1 but less than 3.3.0
+  if { { [ "${UCP_MAJ_VER}" -eq "3" ] && [ "${UCP_MIN_VER}" -ge "1" ] && [ "${UCP_PAT_VER}" -ge "2" ]; } || { [ "${UCP_MAJ_VER}" -eq "3" ] && [ "${UCP_MIN_VER}" -ge "2" ]; } } && { [ "${UCP_MAJ_VER}" -eq "3" ] && [ "${UCP_MIN_VER}" -le "2" ]; }
   then
     docker -H tcp://127.0.0.1:1001 config rm com.docker.ucp.config
   fi
