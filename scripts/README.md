@@ -1,8 +1,9 @@
-scripts
-=======
+# scripts
 
 ## `dind_docker_enterprise`
+
 * [Quickstart (tl;dr)](#quickstart-tldr)
+* [Known Issues](#known-issues)
 * [Prerequisites](#prerequisites)
 * [dind_docker_enterprise Usage](#dind_docker_enterprise-usage)
   * [`dind_docker_enterprise` launch](#dind_docker_enterprise-launch)
@@ -22,9 +23,11 @@ scripts
   * [Updating an environment](#updating-an-environment)
 
 ## Quickstart (tl;dr)
+
 Check out the [Prerequisites](#prerequisites) and then go down to [Launching Docker EE with default configuration](#launching-docker-ee-with-default-configuration) for released versions or [Environment Variable Overrides](#environment-variable-overrides) for custom settings you can pass as well as [Using an environment file for persistent settings](#using-an-environment-file-for-persistent-settings) to make the management of your custom settings more manageable.  See [Pre-production Docker Enterprise](#pre-production-docker-enterprise) for details of how to launch an environment with pre-production images.
 
 Get a demo environment with 2 commands:
+
 ```bash
 # you only need to create the tars once
 $ ./dind_docker_enterprise create_tar all
@@ -33,32 +36,48 @@ $ ./dind_docker_enterprise create_tar all
 $ ./dind_docker_enterprise launch all
 ```
 
+## Known Issues
+
+When using Docker for Mac with UCP 3.3.x, `coredns` will not start.  This is due to the built in Docker DNS causing a loop (https://coredns.io/plugins/loop/#troubleshooting).  You currently need to edit the `coredns` config map in the `kube-system` namespace either via the UCP UI or via the CLI (`kubectl -n kube-system edit cm/coredns`) and change the following line:
+
+```
+forward . /etc/resolv.conf
+```
+
+to the default Docker for Mac DNS which can be found using `docker -H unix:///var/run/docker.sock run --rm busybox cat /etc/resolv.conf | grep -m 1 ^nameserver | awk '{print $2}'` or by speciying the upstream DNS server of your choosing:
+
+```
+forward . 192.168.65.1
+```
+
 ## Prerequisites
-  * Docker for Mac installed
-    * I would suggest increasing the RAM in the Docker for Mac VM to 4+ GB but it will run on 2 GB as long as you do not put heavy workloads on it
-  * Have the tarball of the UCP and DTR images in `~/dind_docker_enterprise`, keeping the default names from [UCP offline tarballs](https://docs.docker.com/ee/ucp/admin/install/install-offline/#versions-available) and [DTR offline tarballs](https://docs.docker.com/ee/dtr/admin/install/install-offline/#versions-available)
-    * Alternatively, use the `UCP_IMAGES` and `DTR_IMAGES` env vars to override the full path to the tarballs
-    * For pre-release images, see [Pre-production Docker Enterprise](#pre-production-docker-enterprise)
-  * Have a Docker Enterprise license file in `~/Downloads/docker_subscription.lic`
-    * Alternatively, use the `DDC_LICENSE` env var to override the full path to the license
-  * Must have the following ports available on your host:
-    * `100n` - TCP connection to Docker engines where n is 1-n number of engines you're running
-    * `80`, `443`- HAProxy (HTTP and HTTPS)
-    * `5000` - Docker registry mirror
-    * `6443` - UCP k8s (HTTPS)
-      * see [HRM Example Usage](#hrm-example-usage) for HRM usage
-  * Internet access to pull images (see list below)
+
+* Docker for Mac installed
+  * I would suggest increasing the RAM in the Docker for Mac VM to 4+ GB but it will run on 2 GB as long as you do not put heavy workloads on it
+* Have the tarball of the UCP and DTR images in `~/dind_docker_enterprise`, keeping the default names from [UCP offline tarballs](https://docs.docker.com/ee/ucp/admin/install/install-offline/#versions-available) and [DTR offline tarballs](https://docs.docker.com/ee/dtr/admin/install/install-offline/#versions-available)
+  * Alternatively, use the `UCP_IMAGES` and `DTR_IMAGES` env vars to override the full path to the tarballs
+  * For pre-release images, see [Pre-production Docker Enterprise](#pre-production-docker-enterprise)
+* Have a Docker Enterprise license file in `~/Downloads/docker_subscription.lic`
+  * Alternatively, use the `DDC_LICENSE` env var to override the full path to the license
+* Must have the following ports available on your host:
+  * `100n` - TCP connection to Docker engines where n is 1-n number of engines you're running
+  * `80`, `443`- HAProxy (HTTP and HTTPS)
+  * `5000` - Docker registry mirror
+  * `6443` - UCP k8s (HTTPS)
+    * see [HRM Example Usage](#hrm-example-usage) for HRM usage
+* Internet access to pull images (see list below)
 
 <details><summary>Expand for details on images that will be pulled if not present</summary><p>
 
-  * mbentley/docker-in-docker:haproxy
-  * mbentley/docker-in-docker:<tag>
-  * mbentley/curl:latest
-  * mbentley/jq:latest
-  * busybox
+* mbentley/docker-in-docker:haproxy
+* mbentley/docker-in-docker:<tag>
+* mbentley/curl:latest
+* mbentley/jq:latest
+* busybox
 </p></details>
 
 ## `dind_docker_enterprise` Usage
+
 ```
 $ ./dind_docker_enterprise help
 Usage: ./dind_docker_enterprise {launch|env|create_tar|net_alias|connect_engine|help}
@@ -70,9 +89,11 @@ Commands:
   ./dind_docker_enterprise net_alias {create|remove|recreate|help}
   ./dind_docker_enterprise connect_engine {n|help}
 ```
+
 </p></details>
 
 ### `dind_docker_enterprise launch`
+
 ```
 $ ./dind_docker_enterprise launch help
 Usage: ./dind_docker_enterprise launch {all|swarm|ee|ucp|dtr|demo|help}
@@ -88,6 +109,7 @@ Commands:
 ```
 
 ### `dind_docker_enterprise env`
+
 ```
 $ ./dind_docker_enterprise env help
 Usage: ./dind_docker_enterprise env {start|stop|pause|unpause|recycle|destroy|pull|status|info|help}
@@ -105,6 +127,7 @@ Commands:
 ```
 
 ### `dind_docker_enterprise create_tar`
+
 ```
 $ ./dind_docker_enterprise create_tar help
 Usage: ./dind_docker_enterprise create_tar {all|ucp|dtr|help}
@@ -116,6 +139,7 @@ Commands:
 ```
 
 ### `dind_docker_enterprise net_alias`
+
 ```
 $ ./dind_docker_enterprise net_alias help
 Usage: ./dind_docker_enterprise net_alias {create|remove|recreate|help}
@@ -127,6 +151,7 @@ Commands:
 ```
 
 ### `dind_docker_enterprise connect_engine`
+
 ```
 $ ./dind_docker_enterprise connect_engine help
 Usage: eval "$(./dind_docker_enterprise connect_engine n)"
@@ -138,35 +163,35 @@ Commands:
 ### Environment Variable Overrides
 If you wish to have your environment variables stored in a single file that can be referenced instead of manually settings them each time, see [Using an environment file for persistent settings](#using-an-environment-file-for-persistent-settings).
 
-  * `DIND_ENV` - environment variable file to source for the below environment variable overrides
-  * `PROJECT` - prefix for all resources; allows you to run multiple environments (although it is still one at a time)
-  * `DIND_TAG` - Docker image tag used to run Docker
-    * see the [docker-in-docker README](../README.md) for the available tags
-  * `ENGINE_ARGS` - custom arguments to the `docker run` commands for engines
-  * `ENGINE_OPTS` - custom engine options to append to the defaults
-  * `MANAGERS` - number of Swarm managers (also used to set number of UCP managers)
-  * `WORKERS` - number of Swarm workers (also used to set number of UCP workers)
-  * `UCP_REPO` - image to use for UCP (without the tag)
-  * `UCP_VERSION` - change the UCP version installed
-    * see https://hub.docker.com/r/docker/ucp/tags/ for the tags
-  * `UCP_IMAGES` - path to the `.tar.gz` of the UCP images
-    * see https://docs.docker.com/datacenter/ucp/2.1/guides/admin/install/install-offline/#versions-available for the tar.gz
-  * `UCP_OPTIONS` - additional UCP install options
-  * `DTR_REPO` - image to use for DTR (without the tag)
-  * `DTR_VERSION` - change the DTR version installed
-    * see https://hub.docker.com/r/docker/dtr/tags/ for the tags
-  * `DTR_IMAGES` - path to the `.tar.gz` of the DTR images
-    * see https://docs.docker.com/datacenter/dtr/2.2/guides/admin/install/install-offline/#versions-available for the tar.gz
-  * `DTR_OPTIONS` - additional DTR install options
-  * `DTR_REPLICAS` - number of DTR replicas to install
-  * `DDC_LICENSE` - path to your Docker Enterprise license
-  * `DIND_SUBNET` - subnet used for the bridge network created
-  * `DIND_DNS` - DNS server to use for the Docker daemons running in docker
-  * `DIND_RESTART` - restart policy for the Docker daemon containers
-  * `NET_IF` - customize the network interface name used for creating the ALIAS_IP
-  * `ALIAS_IP` - IP address to set as an alias to your network interface; used to keep static IP when changing networks
-  * `DOMAIN_NAME` - domain name to use for Jenkins behind HRM
-  * `GH_USERNAME` - GitHub username to pass to Jenkins for configuration
+* `DIND_ENV` - environment variable file to source for the below environment variable overrides
+* `PROJECT` - prefix for all resources; allows you to run multiple environments (although it is still one at a time)
+* `DIND_TAG` - Docker image tag used to run Docker
+  * see the [docker-in-docker README](../README.md) for the available tags
+* `ENGINE_ARGS` - custom arguments to the `docker run` commands for engines
+* `ENGINE_OPTS` - custom engine options to append to the defaults
+* `MANAGERS` - number of Swarm managers (also used to set number of UCP managers)
+* `WORKERS` - number of Swarm workers (also used to set number of UCP workers)
+* `UCP_REPO` - image to use for UCP (without the tag)
+* `UCP_VERSION` - change the UCP version installed
+  * see https://hub.docker.com/r/docker/ucp/tags/ for the tags
+* `UCP_IMAGES` - path to the `.tar.gz` of the UCP images
+  * see https://docs.docker.com/datacenter/ucp/2.1/guides/admin/install/install-offline/#versions-available for the tar.gz
+* `UCP_OPTIONS` - additional UCP install options
+* `DTR_REPO` - image to use for DTR (without the tag)
+* `DTR_VERSION` - change the DTR version installed
+  * see https://hub.docker.com/r/docker/dtr/tags/ for the tags
+* `DTR_IMAGES` - path to the `.tar.gz` of the DTR images
+  * see https://docs.docker.com/datacenter/dtr/2.2/guides/admin/install/install-offline/#versions-available for the tar.gz
+* `DTR_OPTIONS` - additional DTR install options
+* `DTR_REPLICAS` - number of DTR replicas to install
+* `DDC_LICENSE` - path to your Docker Enterprise license
+* `DIND_SUBNET` - subnet used for the bridge network created
+* `DIND_DNS` - DNS server to use for the Docker daemons running in docker
+* `DIND_RESTART` - restart policy for the Docker daemon containers
+* `NET_IF` - customize the network interface name used for creating the ALIAS_IP
+* `ALIAS_IP` - IP address to set as an alias to your network interface; used to keep static IP when changing networks
+* `DOMAIN_NAME` - domain name to use for Jenkins behind HRM
+* `GH_USERNAME` - GitHub username to pass to Jenkins for configuration
 
 *Note*: To see the default values, run `./dind_docker_enterprise env info`
 
@@ -180,14 +205,16 @@ Launching Jenkins and Gogs allows for utilizing a full local demo environment.  
 
 <details><summary>Expand for details on images that will be pulled on the first engine</summary><p>
 
-  * golang:1.8-alpine
-  * alpine:latest
-  * dockersolutions/jenkins:latest
-  * mbentley/solutions-gogs:latest
-  * official images to populate DTR
+* golang:1.8-alpine
+* alpine:latest
+* dockersolutions/jenkins:latest
+* mbentley/solutions-gogs:latest
+* official images to populate DTR
+
 </p></details>
 
 1. Launch Jenkins and Gogs:
+
     ```
     $ ./dind_docker_enterprise launch demo
     ```
@@ -209,6 +236,7 @@ Launching Jenkins and Gogs allows for utilizing a full local demo environment.  
 Create a service and test it.  You can also add a hosts file entry so you can bring up the site in a browser.
 
 Create a basic service:
+
 ```
 $ docker -H tcp://localhost:1001 \
     service create \
@@ -252,11 +280,13 @@ Commercial support is available at
 ```
 
 Add a hosts file entry for use with a browser to access application at http://nginx.test:
+
 ```
 $ echo "10.1.2.3 nginx.test" | sudo tee -a /etc/hosts
 ```
 
 ### Launching Docker EE with default configuration
+
 ```
 ./dind_docker_enterprise launch all
 ```
@@ -271,18 +301,21 @@ With the many configuration options comes the difficulty in keeping track of the
 2. There are multiple ways to launch Docker EE while sourcing an env file for your custom settings:
 
     * Directly source the env file:
+
     ```
     . ${PWD}/17.03.env
     ./dind_docker_enterprise launch all
     ```
 
     * Export `DIND_ENV` to tell the `dind_docker_enterprise` script where to find the env file:
+
     ```
     export DIND_ENV="${PWD}/17.03.env"
     ./dind_docker_enterprise launch all
     ```
 
     * One-liner to pass the env file location to the `dind_docker_enterprise` script:
+
     ```
     DIND_ENV=${PWD}/17.03.env ./dind_docker_enterprise launch all
     ```
@@ -294,12 +327,14 @@ With the many configuration options comes the difficulty in keeping track of the
 * UCP
 
   Automatic:
+
   ```
   export UCP_REPO="dockerorcadev/ucp" UCP_VERSION="2.2.0-tp6" UCP_OPTIONS="--image-version dev:"
   ./dind_docker_enterprise create_tar ucp
   ```
 
   Manual:
+
   ```
   TAG="2.2.0-tp6"
   docker run --rm dockerorcadev/ucp:"${TAG}" images --list --image-version dev: | xargs -L 1 docker pull
@@ -310,12 +345,14 @@ With the many configuration options comes the difficulty in keeping track of the
 * DTR
 
   Automatic:
+
   ```
   export DTR_REPO="dockerhubenterprise/dtr" DTR_VERSION="2.3.0-tp6"
   ./dind_docker_enterprise create_tar dtr
   ```
 
   Manual:
+
   ```
   TAG="2.3.0-tp6"
   docker run --rm dockerhubenterprise/dtr:"${TAG}" images | xargs -L 1 docker pull
@@ -328,12 +365,14 @@ With the many configuration options comes the difficulty in keeping track of the
 Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [create offline tarballs](#create-targz-archives) of the images.  The below examples utilize exporting environment variables.  See `DIND_ENV` in [Environment Variable Overrides](#environment-variable-overrides) if you'd like to utilize a file with environment variables instead.
 
 * UCP standalone
+
   ```
   ./dind_docker_enterprise launch swarm
   ./dind_docker_enterprise launch ucp
   ```
 
 * UCP in HA (3 managers, 3 workers) with DTR on the first worker
+
   ```
   export MANAGERS=3 \
     WORKERS=3
@@ -341,6 +380,7 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
   ```
 
 * UCP and DTR - UCP (dev/TP) and DTR (dev/TP)
+
   ```
   export UCP_REPO="dockerorcadev/ucp" \
     UCP_VERSION="2.2.0-tp6" \
@@ -353,6 +393,7 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
   ```
 
 * UCP and DTR - UCP (dev/TP) images and DTR (stable)
+
   ```
   export UCP_REPO="dockerorcadev/ucp" \
     UCP_VERSION="2.2.0-tp6" \
@@ -363,6 +404,7 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
   ```
 
 * UCP and DTR - UCP (stable) and DTR (dev/TP)
+
   ```
   export DTR_REPO="dockerhubenterprise/dtr" \
     DTR_VERSION="2.3.0-tp5" \
@@ -372,6 +414,7 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
   ```
 
 * UCP (dev/TP) only; no DTR
+
   ```
   export UCP_REPO="dockerorcadev/ucp" \
     UCP_VERSION="2.2.0-tp6" \
@@ -387,11 +430,13 @@ Before you can run UCP and/or DTR dev or tech preview (TP) images, you must [cre
 If you need to update the Docker engine version or update the HAProxy image, this can be done without destroying any data:
 
 1. Pull updated images
+
     ```
     ./dind_docker_enterprise env pull
     ```
 
 2. Recycle the environment (stop and re-create all Docker containers)
+
     ```
     ./dind_docker_enterprise env recycle
     ```
