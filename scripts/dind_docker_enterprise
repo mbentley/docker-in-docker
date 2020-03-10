@@ -358,7 +358,7 @@ launch_engines() {
   echo "Creating volumes for Docker engines..."
   for ((ENGINE_NUM=1; ENGINE_NUM<=NUM_NODES; ENGINE_NUM++))
   do
-    VOLUME_PATHS="/var/lib/docker /etc/docker /etc/cni /opt/cni /usr/libexec/kubernetes /var/lib/kubelet /var/log"
+    VOLUME_PATHS="/etc/docker /etc/cni /opt/cni /opt/containerd /var/lib/cni /var/lib/containerd /var/lib/docker /var/lib/dockershim /var/lib/kubelet /usr/libexec/kubernetes /var/log"
     for VOLUME_PATH in ${VOLUME_PATHS}
     do
       if [ "$(docker -H unix:///var/run/docker.sock volume ls -q --filter name="${PROJECT}-docker${ENGINE_NUM}${VOLUME_PATH//\//-}" | grep -w "${PROJECT}-docker${ENGINE_NUM}${VOLUME_PATH//\//-}")" = "${PROJECT}-docker${ENGINE_NUM}${VOLUME_PATH//\//-}" ]
@@ -407,11 +407,15 @@ launch_engines() {
         --restart "${DIND_RESTART}" \
         -v /lib/modules:/lib/modules:ro \
         -v "${PROJECT}"-docker${ENGINE_NUM}-etc-docker:/etc/docker \
-        -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-docker:/var/lib/docker \
         -v "${PROJECT}"-docker${ENGINE_NUM}-etc-cni:/etc/cni \
         -v "${PROJECT}"-docker${ENGINE_NUM}-opt-cni:/opt/cni \
-        -v "${PROJECT}"-docker${ENGINE_NUM}-usr-libexec-kubernetes:/usr/libexec/kubernetes \
+        -v "${PROJECT}"-docker${ENGINE_NUM}-opt-containerd:/opt/containerd \
+        -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-cni:/var/lib/cni \
+        -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-containerd:/var/lib/containerd \
+        -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-docker:/var/lib/docker \
+        -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-dockershim:/var/lib/dockershim \
         -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-kubelet:/var/lib/kubelet \
+        -v "${PROJECT}"-docker${ENGINE_NUM}-usr-libexec-kubernetes:/usr/libexec/kubernetes \
         -v "${PROJECT}"-docker${ENGINE_NUM}-var-log:/var/log \
         -v "${PROJECT}"-shared:/data \
         -v "${PROJECT}"-shared:/shared \
@@ -460,11 +464,15 @@ launch_engines() {
         --restart "${DIND_RESTART}" \
         -v /lib/modules:/lib/modules:ro \
         -v "${PROJECT}"-docker${ENGINE_NUM}-etc-docker:/etc/docker \
-        -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-docker:/var/lib/docker \
         -v "${PROJECT}"-docker${ENGINE_NUM}-etc-cni:/etc/cni \
         -v "${PROJECT}"-docker${ENGINE_NUM}-opt-cni:/opt/cni \
-        -v "${PROJECT}"-docker${ENGINE_NUM}-usr-libexec-kubernetes:/usr/libexec/kubernetes \
+        -v "${PROJECT}"-docker${ENGINE_NUM}-opt-containerd:/opt/containerd \
+        -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-cni:/var/lib/cni \
+        -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-containerd:/var/lib/containerd \
+        -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-docker:/var/lib/docker \
+        -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-dockershim:/var/lib/dockershim \
         -v "${PROJECT}"-docker${ENGINE_NUM}-var-lib-kubelet:/var/lib/kubelet \
+        -v "${PROJECT}"-docker${ENGINE_NUM}-usr-libexec-kubernetes:/usr/libexec/kubernetes \
         -v "${PROJECT}"-docker${ENGINE_NUM}-var-log:/var/log \
         -v "${PROJECT}"-shared:/shared \
         -v "${PROJECT}"-shared:/data \
