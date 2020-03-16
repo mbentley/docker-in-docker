@@ -829,7 +829,7 @@ install_ucp() {
   # break out UCP version to major, minor, and patch
   UCP_MAJ_VER="$(echo "${UCP_VERSION}" | awk -F '.' '{print $1}')"
   UCP_MIN_VER="$(echo "${UCP_VERSION}" | awk -F '.' '{print $2}')"
-  UCP_PAT_VER="$(echo "${UCP_VERSION}" | awk -F '.' '{print $3}' | awk '{print $1}')"
+  UCP_PAT_VER="$(echo "${UCP_VERSION}" | awk -F '.' '{print $3}' | awk -F '-' '{print $1}')"
 
   # create custom config and set the `--existing-config` option if UCP verison is greater than 3.1.1 but less than 3.3.0
   if { { [ "${UCP_MAJ_VER}" -eq "3" ] && [ "${UCP_MIN_VER}" -ge "1" ] && [ "${UCP_PAT_VER}" -ge "2" ]; } || { [ "${UCP_MAJ_VER}" -eq "3" ] && [ "${UCP_MIN_VER}" -ge "2" ]; } } && { [ "${UCP_MAJ_VER}" -eq "3" ] && [ "${UCP_MIN_VER}" -le "2" ]; }
