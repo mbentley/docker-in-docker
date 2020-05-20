@@ -2,12 +2,12 @@ FROM ubuntu:18.04
 MAINTAINER Matt Bentley <mbentley@mbentley.net>
 
 RUN apt-get update &&\
-  apt-get install -y apt-transport-https ca-certificates curl gnupg iproute2 module-init-tools net-tools socat &&\
+  DEBIAN_FRONTEND=noninteractive apt-get install -y apt-transport-https ca-certificates curl gnupg iproute2 module-init-tools net-tools socat &&\
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - &&\
   echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable" > /etc/apt/sources.list.d/docker.list &&\
   apt-get update &&\
-  apt-get install -y docker-ce &&\
-  rm -rf /var/lib/apt/lists/* /etc/apt/sources.list.d/docker.list
+  DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce &&\
+  rm -rf /var/lib/apt/lists/*
 
 COPY entrypoint.sh /entrypoint.sh
 

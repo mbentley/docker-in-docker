@@ -2,5 +2,5 @@ FROM mbentley/docker-in-docker:ce
 
 # add qemu-user for buildx multi-arch builds
 RUN apt-get update &&\
-  apt-get install -y qemu-user &&\
+  DEBIAN_FRONTEND=noninteractive apt-get install -y qemu-user &&\
   rm -rf /var/lib/apt/lists/*
