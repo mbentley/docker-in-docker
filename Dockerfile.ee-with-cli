@@ -1,23 +1,32 @@
 FROM ubuntu:18.04
 MAINTAINER Matt Bentley <mbentley@mbentley.net>
 
+# set defaults for build args
 ARG DOCKER_EE_URL="https://repos.mirantis.com"
 ARG DOCKER_EE_REPO="stable"
-ARG DOCKER_EE_PKG="*"
 ARG APT_PROXY
 
-COPY apt_proxy.sh /apt_proxy.sh
+# copy in the proxy and entrypoint scripts
+COPY apt_proxy.sh entrypoint.sh /
 
+# install all dependencies; remove the docker-ee packages so that we can install them in the next RUN to optimize for caching
 RUN /apt_proxy.sh &&\
   apt-get update &&\
   DEBIAN_FRONTEND=noninteractive apt-get install -y apt-transport-https ca-certificates curl gnupg iproute2 module-init-tools net-tools socat &&\
   curl -fsSL "${DOCKER_EE_URL}"/ubuntu/gpg | apt-key add - &&\
   echo "deb [arch=amd64] ${DOCKER_EE_URL}/ubuntu bionic ${DOCKER_EE_REPO}" > /etc/apt/sources.list.d/docker.list &&\
   apt-get update &&\
-  DEBIAN_FRONTEND=noninteractive apt-get install -y containerd.io docker-ee-cli="${DOCKER_EE_PKG}" docker-ee="${DOCKER_EE_PKG}" &&\
+  DEBIAN_FRONTEND=noninteractive apt-get install -y containerd.io docker-ee-cli docker-ee &&\
+  DEBIAN_FRONTEND=noninteractive apt-get remove -y docker-ee-cli docker-ee &&\
   rm -rf /var/lib/apt/lists/* /etc/apt/apt.conf.d/00proxy
 
-COPY entrypoint.sh /entrypoint.sh
+# package argument is down here to optimized cache
+ARG DOCKER_EE_PKG="*"
+
+# install the actual docker-ee packages
+RUN apt-get update &&\
+  DEBIAN_FRONTEND=noninteractive apt-get install -y containerd.io docker-ee-cli="${DOCKER_EE_PKG}" docker-ee="${DOCKER_EE_PKG}" &&\
+  rm -rf /var/lib/apt/lists/* /etc/apt/apt.conf.d/00proxy
 
 VOLUME ["/var/lib/docker","/var/lib/containerd"]
 ENTRYPOINT ["/entrypoint.sh"]
