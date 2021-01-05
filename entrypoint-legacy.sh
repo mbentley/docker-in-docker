@@ -7,4 +7,4 @@ then
   rm  /var/run/docker.pid
 fi
 
-exec "${@}"
+exec /tini -- "${@}"

@@ -24,8 +24,8 @@ then
   CONTAINERD_RUNNING="$(pgrep docker-containerd > /dev/null 2>&1; echo $?)"
   if [ -f "/var/run/docker/libcontainerd/docker-containerd.pid" ] && [ "${CONTAINERD_RUNNING}" -eq "1" ]
   then
-      echo "Removing stale pid file (/var/run/docker/libcontainerd/docker-containerd.pid)..."
-        rm /var/run/docker/libcontainerd/docker-containerd.pid
+    echo "Removing stale pid file (/var/run/docker/libcontainerd/docker-containerd.pid)..."
+    rm /var/run/docker/libcontainerd/docker-containerd.pid
   fi
 else
   # /usr/bin/containerd exists; we should start containerd because docker will start it differently than systemd would have
@@ -38,4 +38,4 @@ else
   done
 fi
 
-exec "${@}"
+exec /tini -- "${@}"
