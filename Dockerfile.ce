@@ -1,6 +1,8 @@
 FROM ubuntu:18.04
 MAINTAINER Matt Bentley <mbentley@mbentley.net>
 
+ARG DOCKER_VER
+
 RUN apt-get update &&\
   DEBIAN_FRONTEND=noninteractive apt-get install -y apt-transport-https ca-certificates curl gnupg iproute2 module-init-tools net-tools socat &&\
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - &&\
