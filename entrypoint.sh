@@ -38,4 +38,4 @@ else
   done
 fi
 
-exec /tini -- "${@}"
+exec "${@}"
