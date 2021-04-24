@@ -10,7 +10,7 @@
 
 ## Image Tags
 
-For a complete list of published images, see the [list of tags on Docker Hub](https://hub.docker.com/r/mbentley/docker-in-docker/tags/).  For each major release, the specific Docker Enterprise bugfix versions are also available and can be found via Docker Hub.  If you always want to use the latest of a given platform release, stick with the `17.06-ee` (or the like image for that platform release) image.
+For a complete list of published images, see the [list of tags on Docker Hub](https://hub.docker.com/r/mbentley/docker-in-docker/tags/).  For each major release, the specific Docker Enterprise bugfix versions are also available and can be found via Docker Hub.
 
 * `ce`, `latest` ([Dockerfile.ce](./Dockerfile.ce))
 * `ce-systemd` ([Dockerfile.ce-systemd](./Dockerfile.ce-systemd))
