@@ -1,12 +1,24 @@
-FROM mbentley/systemd:latest
+FROM mbentley/docker-in-docker:ce
 MAINTAINER Matt Bentley <mbentley@mbentley.net>
 
-RUN apt-get update &&\
-  DEBIAN_FRONTEND=noninteractive apt-get install -y apt-transport-https ca-certificates curl gnupg iproute2 module-init-tools net-tools socat &&\
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - &&\
-  echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable" > /etc/apt/sources.list.d/docker.list &&\
-  apt-get update &&\
-  DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce &&\
-  rm -rf /var/lib/apt/lists/*
+ENV container=docker LC_ALL=C
 
-VOLUME ["/var/lib/docker","/var/lib/containerd"]
+RUN apt-get update &&\
+  DEBIAN_FRONTEND=noninteractive apt-get install -y systemd systemd-sysv &&\
+  systemctl set-default multi-user.target &&\
+  rm -rf /var/lib/apt/lists/* &&\
+  rm -f /lib/systemd/system/multi-user.target.wants/* \
+    /etc/systemd/system/*.wants/* \
+    /lib/systemd/system/local-fs.target.wants/* \
+    /lib/systemd/system/sockets.target.wants/*udev* \
+    /lib/systemd/system/sockets.target.wants/*initctl* \
+    /lib/systemd/system/basic.target.wants/* \
+    /lib/systemd/system/anaconda.target.wants/* \
+    /lib/systemd/system/plymouth* \
+    /lib/systemd/system/systemd-update-utmp* &&\
+  (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ "${i}" = "systemd-tmpfiles-setup.service" ] || rm -f "${i}"; done) &&\
+  /lib/systemd/systemd-sysv-install enable docker
+
+STOPSIGNAL SIGRTMIN+3
+ENTRYPOINT [""]
+CMD ["/lib/systemd/systemd"]

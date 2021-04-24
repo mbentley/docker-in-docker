@@ -20,30 +20,35 @@ For a complete list of published images, see the [list of tags on Docker Hub](ht
 
 <details><summary>Expand for more details</summary><p>
 
-The images are published to Docker Hub so you do not need to build them unless you want to,
+The images are published to Docker Hub so you do not need to build them unless you want to.
+
+*Note*: the images build on each other.  The `ce` tag is its own build and has no other dependencies other than `ubuntu:18.04`.  The `ce-systemd` tag builds from `ce`.  The `ce-systemd-ssh` tag builds from `ce-systemd`.  So if you want to build `ce-systemd-ssh`, you should first build `ce`, then `ce-systemd`, and finally `ce-systemd-ssh`.  This process is to re-use layers.  I also recommend using `docker build buildx` as just `docker build` fails to re-use some layers that have no changed.
 
 * Docker CE (stable)
 
   ```
-  docker build \
+  docker buildx build \
+    -f Dockerfile.ce \
     -t mbentley/docker-in-docker:ce \
-    -f Dockerfile.ce .
+    .
   ```
 
 * Docker CE (with systemd)
 
   ```
-  docker build \
+  docker buildx build \
+    -f Dockerfile.ce-systemd \
     -t mbentley/docker-in-docker:ce-systemd \
-    -f Dockerfile.ce-systemd .
+    .
   ```
 
 * Docker CE (with systemd + ssh)
 
   ```
-  docker build \
+  docker buildx build \
+    -f Dockerfile.ce-systemd-ssh \
     -t mbentley/docker-in-docker:ce-systemd-ssh \
-    -f Dockerfile.ce-systemd-ssh .
+    .
   ```
 
 </p></details>
