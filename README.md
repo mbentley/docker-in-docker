@@ -28,6 +28,7 @@ The images are published to Docker Hub so you do not need to build them unless y
 
   ```
   docker buildx build \
+    --build-arg DOCKER_VER="$(wget -q -O - https://api.github.com/repos/moby/moby/releases/latest | jq -r .tag_name)" \
     -f Dockerfile.ce \
     -t mbentley/docker-in-docker:ce \
     .
