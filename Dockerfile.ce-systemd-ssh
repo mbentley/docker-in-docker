@@ -1,7 +1,9 @@
 FROM mbentley/docker-in-docker:ce-systemd
 MAINTAINER Matt Bentley <mbentley@mbentley.net>
 
+ARG DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update &&\
-  DEBIAN_FRONTEND=noninteractive apt-get install -y openssh-server &&\
+  apt-get install -y openssh-server &&\
   rm -rf /var/lib/apt/lists/* &&\
   rm -v /etc/ssh/ssh_host_*

@@ -2,9 +2,10 @@ FROM mbentley/docker-in-docker:ce
 MAINTAINER Matt Bentley <mbentley@mbentley.net>
 
 ENV container=docker LC_ALL=C
+ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update &&\
-  DEBIAN_FRONTEND=noninteractive apt-get install -y systemd systemd-sysv &&\
+  apt-get install -y systemd systemd-sysv &&\
   systemctl set-default multi-user.target &&\
   rm -rf /var/lib/apt/lists/* &&\
   rm -f /lib/systemd/system/multi-user.target.wants/* \
