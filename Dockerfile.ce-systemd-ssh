@@ -1,5 +1,5 @@
 FROM mbentley/docker-in-docker:ce-systemd
-MAINTAINER Matt Bentley <mbentley@mbentley.net>
+LABEL maintainer="Matt Bentley <mbentley@mbentley.net>"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
