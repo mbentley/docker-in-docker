@@ -3,6 +3,7 @@ FROM mbentley/ubuntu:18.04
 LABEL maintainer="Matt Bentley <mbentley@mbentley.net>"
 
 ARG DOCKER_VER
+ARG BUILDX_VER
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update &&\
@@ -13,7 +14,10 @@ RUN apt-get update &&\
   apt-get install -y docker-ce &&\
   apt-get purge -y docker-ce-rootless-extras docker-scan-plugin &&\
   apt-get autoremove -y &&\
-  rm -rf /var/lib/apt/lists/*
+  rm -rf /var/lib/apt/lists/* &&\
+  curl -fsSL -o /tmp/docker-buildx "https://github.com/docker/buildx/releases/download/${BUILDX_VER}/buildx-${BUILDX_VER}.linux-amd64" &&\
+  chmod +x /tmp/docker-buildx &&\
+  mv /tmp/docker-buildx /usr/libexec/docker/cli-plugins/docker-buildx
 
 COPY entrypoint.sh /entrypoint.sh
 
