@@ -1,4 +1,4 @@
-# docker-in-docker
+# mbentley/docker-in-docker
 
 ## Table of Contents
 
@@ -22,7 +22,7 @@ For a complete list of published images, see the [list of tags on Docker Hub](ht
 
 The images are published to Docker Hub so you do not need to build them unless you want to.
 
-*Note*: the images build on each other.  The `ce` tag is its own build and has no other dependencies other than `ubuntu:18.04`.  The `ce-systemd` tag builds from `ce`.  The `ce-systemd-ssh` tag builds from `ce-systemd`.  So if you want to build `ce-systemd-ssh`, you should first build `ce`, then `ce-systemd`, and finally `ce-systemd-ssh`.  This process is to re-use layers.  I also recommend using `docker build buildx` as just `docker build` fails to re-use some layers that have no changed.
+*Note*: the images build on each other.  The `ce` tag is its own build and has no other dependencies other than `ubuntu:20.04`.  The `ce-systemd` tag builds from `ce`.  The `ce-systemd-ssh` tag builds from `ce-systemd`.  So if you want to build `ce-systemd-ssh`, you should first build `ce`, then `ce-systemd`, and finally `ce-systemd-ssh`.  This process is to re-use layers.  I also recommend using `docker build buildx` as just `docker build` fails to re-use some layers that have no changed.
 
 * Docker CE (stable)
 
