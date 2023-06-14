@@ -8,8 +8,9 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update &&\
   apt-get install -y apt-transport-https ca-certificates curl gnupg iproute2 kmod net-tools socat &&\
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - &&\
-  echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" > /etc/apt/sources.list.d/docker.list &&\
+  mkdir /etc/apt/keyrings &&\
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg &&\
+  echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" > /etc/apt/sources.list.d/docker.list &&\
   apt-get update &&\
   apt-get install -y docker-ce &&\
   apt-get purge -y docker-ce-rootless-extras docker-scan-plugin &&\
