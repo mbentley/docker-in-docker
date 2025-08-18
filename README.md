@@ -28,7 +28,10 @@ The images are published to Docker Hub so you do not need to build them unless y
 
   ```
   docker buildx build \
+    --pull \
+    --progress plain \
     --build-arg DOCKER_VER="$(wget -q -O - https://api.github.com/repos/moby/moby/releases/latest | jq -r .tag_name)" \
+    --build-arg BUILDX_VER="$(wget -q -O - https://api.github.com/repos/docker/buildx/releases | jq -r 'map(select(.prerelease)) | first | .tag_name')" \
     -f Dockerfile.ce \
     -t mbentley/docker-in-docker:ce \
     .
