@@ -7,14 +7,12 @@ ARG BUILDX_VER
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update &&\
-  apt-get install -y apt-transport-https ca-certificates curl gnupg iproute2 kmod net-tools socat &&\
+  apt-get install -y --no-install-recommends apt-transport-https ca-certificates curl gnupg iproute2 kmod net-tools socat &&\
   mkdir -p /etc/apt/keyrings &&\
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg &&\
   echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list &&\
   apt-get update &&\
-  apt-get install -y docker-ce &&\
-  apt-get purge -y docker-ce-rootless-extras &&\
-  apt-get autoremove -y &&\
+  apt-get install -y --no-install-recommends docker-ce docker-compose-plugin &&\
   rm -rf /var/lib/apt/lists/* &&\
   curl -fsSL -o /tmp/docker-buildx "https://github.com/docker/buildx/releases/download/${BUILDX_VER}/buildx-${BUILDX_VER}.linux-amd64" &&\
   chmod +x /tmp/docker-buildx &&\

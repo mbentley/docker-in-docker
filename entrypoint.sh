@@ -9,32 +9,37 @@ DOCKERD_PID="$(pgrep dockerd || true)"
 if [ -f "/var/run/docker.pid" ] && [ -z "${DOCKERD_PID}" ]
 then
   # pid file exists and docker isn't running
-  echo -n "INFO: Removing stale pid file (/var/run/docker.pid)..."
+  echo -n "INFO: removing stale pid file (/var/run/docker.pid)..."
   rm /var/run/docker.pid
   echo "done"
 elif [ -n "${DOCKERD_RUNNING}" ]
 then
   # docker is running
-  echo "ERROR: Docker is already running!"
-  echo "  Hint: This script should only be executed as the container entrypoint!"
+  echo "ERROR: docker is already running!"
+  echo "  Hint: this script should only be executed as the container entrypoint!"
   exit 1
 fi
 
-# set mount propagation
-if [ -n "${MOUNT_PROPAGATION}" ]
+# allow apparmor inside the container
+if [ -d /sys/kernel/security ] && ! mountpoint -q /sys/kernel/security
 then
-  for MOUNT in ${MOUNT_PROPAGATION}
-  do
-    echo -n "INFO: Mounting ${MOUNT} as 'rshared'..."
-    mount --make-rshared "${MOUNT}"
-    echo "done"
-  done
+  echo -n "INFO: mounting /sys/kernel/security as securityfs..."
+  mount -t securityfs none /sys/kernel/security || {
+    echo >&2 "WARN: could not mount /sys/kernel/security"
+    echo >&2 "WARN: AppArmor detection and --privileged mode might break!"
+  }
+  echo "done"
 fi
 
-# Mount /tmp, if needed
+# set mount propagation for /
+echo -n "INFO: mounting / as 'rshared'..."
+mount --make-rshared /
+echo "done"
+
+# mount /tmp, if needed
 if ! mountpoint -q /tmp
 then
-  echo -n "INFO: Mounting /tmp with as tmpfs..."
+  echo -n "INFO: mounting /tmp with as tmpfs..."
   mount -t tmpfs none /tmp
   echo "done"
 fi
@@ -47,10 +52,21 @@ then
   # otherwise writing subtree_control fails with EBUSY.
   # An error during moving non-existent process (i.e., "cat") is ignored.
   mkdir -p /sys/fs/cgroup/init
-  xargs -rn1 < /sys/fs/cgroup/cgroup.procs > /sys/fs/cgroup/init/cgroup.procs || :
-  # enable controllers
-  sed -e 's/ / +/g' -e 's/^/+/' < /sys/fs/cgroup/cgroup.controllers \
-    > /sys/fs/cgroup/cgroup.subtree_control
+
+  # loop to make sure this succeeds
+  while ! {
+    # move the processes from the root group to the /init group,
+    # otherwise writing subtree_control fails with EBUSY.
+    # An error during moving non-existent process (i.e., "cat") is ignored.
+    xargs -rn1 < /sys/fs/cgroup/cgroup.procs > /sys/fs/cgroup/init/cgroup.procs || :
+    # enable controllers
+    sed -e 's/ / +/g' -e 's/^/+/' < /sys/fs/cgroup/cgroup.controllers \
+      > /sys/fs/cgroup/cgroup.subtree_control
+  }
+  do
+    # loop again!
+    true
+  done
   echo "done"
 fi
 
@@ -62,13 +78,13 @@ then
   if [ -f "/var/run/docker/libcontainerd/docker-containerd.pid" ] && [ -z "${CONTAINERD_PID}" ]
   then
     # pid file exists and containerd isn't running
-    echo -n "INFO: Removing stale pid file (/var/run/docker/libcontainerd/docker-containerd.pid)..."
+    echo -n "INFO: removing stale pid file (/var/run/docker/libcontainerd/docker-containerd.pid)..."
     rm /var/run/docker/libcontainerd/docker-containerd.pid
     echo "done"
   fi
 else
   # /usr/bin/containerd exists; we should start containerd because docker will start it differently than systemd would have
-  echo "INFO: Starting containerd..."
+  echo "INFO: starting containerd..."
   /usr/bin/containerd &
 
   # wait to make sure containerd starts
@@ -80,5 +96,5 @@ else
   echo "INFO: containerd started successfully"
 fi
 
-echo "INFO: Executing CMD: ${*}"
+echo "INFO: executing CMD: ${*}"
 exec "${@}"
